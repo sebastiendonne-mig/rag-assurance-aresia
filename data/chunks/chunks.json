@@ -1,0 +1,512 @@
+[
+  {
+    "text": "ARESIA Assurances\nConditions Générales — Prévoyance\nInvalidité\nRéf. : CG-PREV-INV-2024 | Approuvé ACPR\nVersion 4.2 — Janvier 2024 — Document fictif à usage de démonstration\nSOMMAIRE",
+    "metadata": {
+      "source_doc": "CG-PREV-INV-2024",
+      "version": "4.2",
+      "titre_humain": "CG Prévoyance Invalidité",
+      "chapitre_titre": "",
+      "article_num": ""
+    }
+  },
+  {
+    "text": "Article 1 — Définitions\nAssuré : Toute personne physique désignée aux Conditions Particulières, âgée de 18 ans révolus et de moins\nde 65 ans à la date d'adhésion, exerçant une activité professionnelle déclarée sur le territoire de l'Espace\nÉconomique Européen.\nSouscripteur : La personne morale ou physique qui conclut le contrat avec ARESIA Assurances et s'engage\nau paiement des cotisations.\nBénéficiaire : La personne désignée pour recevoir les prestations en cas de sinistre. À défaut de désignation\nexpresse, il s'agit de l'assuré lui-même pour les garanties de son vivant, et de sa succession pour la garantie\ndécès.\nIncapacité Temporaire de Travail (ITT) : Impossibilité médicalement constatée et totale pour l'assuré\nd'exercer son activité professionnelle habituelle, résultant d'un accident ou d'une maladie, pour une durée\ncontinue supérieure à la franchise contractuelle.\nInvalidité Permanente Totale (IPT) : État de l'assuré dont le taux d'invalidité fonctionnelle est supérieur ou égal\nà 66%, reconnu par le médecin conseil de l'assureur après consolidation, rendant impossible tout exercice\nd'une activité professionnelle rémunérée.\nInvalidité Permanente Partielle (IPP) : État de l'assuré dont le taux d'invalidité fonctionnelle est compris entre\n33% et 65% inclus, après consolidation et avis du médecin conseil.\nFranchise : Délai exprimé en jours continus d'arrêt de travail à partir duquel l'assureur commence à verser les\nindemnités journalières. La franchise est non rachetable sauf mention contraire aux Conditions Particulières.\nSinistre : Tout événement (accident ou maladie) entraînant une incapacité ou une invalidité ouvrant droit aux\ngaranties du présent contrat, survenu pendant la période de couverture.\nDate de consolidation : Date à laquelle l'état de santé de l'assuré est considéré comme stabilisé et ne pouvant\nplus être amélioré par un traitement approprié, constatée par le médecin traitant et confirmée par le médecin\nconseil de l'assureur.",
+    "metadata": {
+      "source_doc": "CG-PREV-INV-2024",
+      "version": "4.2",
+      "titre_humain": "CG Prévoyance Invalidité",
+      "chapitre_titre": "TITRE I — DÉFINITIONS ET CHAMP D'APPLICATION",
+      "article_num": "1"
+    }
+  },
+  {
+    "text": "Article 2 — Champ d'application territorial\nLe présent contrat couvre les sinistres survenus et les soins reçus dans l'ensemble des pays membres de\nl'Espace Économique Européen (EEE), ainsi qu'en Suisse. Pour les déplacements professionnels hors EEE\nd'une durée inférieure à 90 jours consécutifs, la garantie est maintenue sous réserve que l'activité exercée\nfigure sur la liste des professions couvertes en Annexe 3.\nTout déplacement hors EEE supérieur à 90 jours doit faire l'objet d'une déclaration préalable à ARESIA\nAssurances. L'absence de déclaration entraîne la suspension de la garantie pour la durée du séjour non\ndéclaré.\nn Les expatriés fiscaux bénéficient d'un régime spécifique détaillé à l'Article 2.3 des présentes Conditions Générales.",
+    "metadata": {
+      "source_doc": "CG-PREV-INV-2024",
+      "version": "4.2",
+      "titre_humain": "CG Prévoyance Invalidité",
+      "chapitre_titre": "TITRE I — DÉFINITIONS ET CHAMP D'APPLICATION",
+      "article_num": "2"
+    }
+  },
+  {
+    "text": "Article 3 — Conditions d'adhésion\nPour être éligible à l'adhésion, l'assuré doit remplir l'ensemble des conditions cumulatives suivantes :\n(cid:127) Être âgé de 18 ans révolus et de moins de 60 ans à la date d'effet de l'adhésion\n(cid:127) Exercer une activité professionnelle principale génératrice de revenus, déclarée aux organismes sociaux\ncompétents\n(cid:127) Résider fiscalement en France métropolitaine ou dans les départements et régions d'outre-mer (DROM)\n(cid:127) Ne pas être en arrêt de travail ou en invalidité à la date de souscription\n(cid:127) Avoir complété et signé le questionnaire médical de santé (QMS) sans réserve, ou avec réserves\nacceptées par le service médical de l'assureur\n(cid:127) S'acquitter de la cotisation initiale dans les 30 jours suivant la date d'effet\nn Toute fausse déclaration intentionnelle lors du questionnaire médical de santé entraîne la nullité du contrat\nconformément à l'Article L.113-8 du Code des assurances. Les primes versées restent acquises à l'assureur à titre\nde dommages et intérêts.",
+    "metadata": {
+      "source_doc": "CG-PREV-INV-2024",
+      "version": "4.2",
+      "titre_humain": "CG Prévoyance Invalidité",
+      "chapitre_titre": "TITRE I — DÉFINITIONS ET CHAMP D'APPLICATION",
+      "article_num": "3"
+    }
+  },
+  {
+    "text": "Article 4 — Définition et déclenchement de la garantie ITT\nLa garantie Incapacité Temporaire de Travail est déclenchée lorsque l'assuré se trouve dans l'impossibilité\ntotale, médicalement constatée, d'exercer son activité professionnelle habituelle, et ce de façon continue\npendant une durée supérieure à la franchise choisie aux Conditions Particulières.",
+    "metadata": {
+      "source_doc": "CG-PREV-INV-2024",
+      "version": "4.2",
+      "titre_humain": "CG Prévoyance Invalidité",
+      "chapitre_titre": "TITRE II — GARANTIES INCAPACITÉ TEMPORAIRE DE TRAVAIL",
+      "article_num": "4"
+    }
+  },
+  {
+    "text": "Article 4.1 — Franchise\nLa franchise applicable est celle définie aux Conditions Particulières parmi les options suivantes :\nOption franchise Délai carence (jours) Impact cotisation\nFranchise 15 jours 15 jours consécutifs Cotisation de base × 1,00\nFranchise 30 jours 30 jours consécutifs Cotisation de base × 0,82\nFranchise 60 jours 60 jours consécutifs Cotisation de base × 0,64\nFranchise 90 jours 90 jours consécutifs Cotisation de base × 0,51\nn Article 4.1 — La franchise est calculée par sinistre et non par année civile. En cas de rechute survenant dans les 30\njours suivant la reprise d'activité, l'arrêt est considéré comme la continuité du sinistre initial et aucune nouvelle franchise ne\ns'applique.",
+    "metadata": {
+      "source_doc": "CG-PREV-INV-2024",
+      "version": "4.2",
+      "titre_humain": "CG Prévoyance Invalidité",
+      "chapitre_titre": "TITRE II — GARANTIES INCAPACITÉ TEMPORAIRE DE TRAVAIL",
+      "article_num": "4.1"
+    }
+  },
+  {
+    "text": "Article 4.2 — Montant des indemnités journalières\nL'indemnité journalière (IJ) est versée à terme échu, mensuellement. Son montant est déterminé aux Conditions\nParticulières en fonction du revenu professionnel déclaré et de l'option choisie, dans les limites suivantes :\nTranche de revenu annuel net IJ maximale (Option Standard) IJ maximale (Option Premium)\nJusqu'à 30 000 € 90 €/jour 120 €/jour\nDe 30 001 € à 60 000 € 150 €/jour 200 €/jour\nDe 60 001 € à 100 000 € 220 €/jour 295 €/jour\nDe 100 001 € à 150 000 € 310 €/jour 415 €/jour\nSupérieur à 150 000 € Sur devis médical Sur devis médical\nLe cumul des indemnités perçues au titre de ce contrat et des prestations versées par les régimes obligatoires\nne peut excéder 100% du revenu net journalier habituel de l'assuré, calculé sur la base des 12 derniers mois\nprécédant le sinistre.",
+    "metadata": {
+      "source_doc": "CG-PREV-INV-2024",
+      "version": "4.2",
+      "titre_humain": "CG Prévoyance Invalidité",
+      "chapitre_titre": "TITRE II — GARANTIES INCAPACITÉ TEMPORAIRE DE TRAVAIL",
+      "article_num": "4.2"
+    }
+  },
+  {
+    "text": "Article 4.3 — Durée maximale d'indemnisation ITT\nLa durée maximale d'indemnisation au titre de la garantie ITT est de 1 095 jours (soit 3 ans) par sinistre et par\nassuré, tous sinistres confondus sur la durée du contrat.\nAu-delà de cette durée, si l'assuré ne peut reprendre son activité professionnelle, le dossier est\nautomatiquement orienté vers l'évaluation de la garantie Invalidité Permanente (Articles 5 à 7 des présentes).",
+    "metadata": {
+      "source_doc": "CG-PREV-INV-2024",
+      "version": "4.2",
+      "titre_humain": "CG Prévoyance Invalidité",
+      "chapitre_titre": "TITRE II — GARANTIES INCAPACITÉ TEMPORAIRE DE TRAVAIL",
+      "article_num": "4.3"
+    }
+  },
+  {
+    "text": "Article 5 — Prise en charge des affections longue durée (ALD)\nLes pathologies reconnues comme Affections de Longue Durée (ALD) par l'Assurance Maladie bénéficient d'un\ntraitement spécifique. La liste des ALD prises en charge sans surprime est disponible en Annexe 1.\nPour les ALD non listées en Annexe 1, ou pour les affections psychiatriques, une surprime ou une exclusion\nspécifique peut être appliquée sur la base du questionnaire médical de santé, après avis du médecin conseil de\nl'assureur.\nn Article 5.1 — Les affections psychiatriques (dépression, burn-out, troubles anxieux) sont couvertes sans limitation de\ndurée spécifique pour les assurés ayant souscrit l'option Premium, sous réserve d'un suivi psychiatrique régulier attesté.",
+    "metadata": {
+      "source_doc": "CG-PREV-INV-2024",
+      "version": "4.2",
+      "titre_humain": "CG Prévoyance Invalidité",
+      "chapitre_titre": "TITRE II — GARANTIES INCAPACITÉ TEMPORAIRE DE TRAVAIL",
+      "article_num": "5"
+    }
+  },
+  {
+    "text": "Article 6 — Conditions de reconnaissance de l'IPT\nLa garantie IPT est acquise lorsque le médecin conseil de l'assureur, après examen du dossier médical complet\net, si nécessaire, expertise médicale contradictoire, reconnaît un taux d'invalidité fonctionnelle supérieur ou égal\nà 66%.",
+    "metadata": {
+      "source_doc": "CG-PREV-INV-2024",
+      "version": "4.2",
+      "titre_humain": "CG Prévoyance Invalidité",
+      "chapitre_titre": "TITRE III — GARANTIES INVALIDITÉ PERMANENTE TOTALE (IPT)",
+      "article_num": "6"
+    }
+  },
+  {
+    "text": "Article 6.1 — Procédure d'évaluation du taux d'invalidité\nÉtape 1 — L'assuré transmet le formulaire de déclaration d'invalidité complété et signé\nÉtape 2 — Transmission du rapport du médecin traitant et des spécialistes impliqués\nÉtape 3 — Examen du dossier par le médecin conseil de l'assureur dans un délai de 45 jours ouvrés\nÉtape 4 — Notification de la décision par lettre recommandée avec accusé de réception\nÉtape 5 — En cas de contestation : expertise médicale contradictoire selon l'Article 6.3",
+    "metadata": {
+      "source_doc": "CG-PREV-INV-2024",
+      "version": "4.2",
+      "titre_humain": "CG Prévoyance Invalidité",
+      "chapitre_titre": "TITRE III — GARANTIES INVALIDITÉ PERMANENTE TOTALE (IPT)",
+      "article_num": "6.1"
+    }
+  },
+  {
+    "text": "Article 6.2 — Barème d'évaluation\nL'évaluation du taux d'invalidité est réalisée conformément au barème médical en vigueur, publié par le Comité\nConsultatif du Secteur Financier (CCSF) et adopté par ARESIA Assurances. Ce barème est disponible sur\nsimple demande au service médical de l'assureur.\nTaux d'invalidité fonctionnelle Statut Prestation\n< 33% Non couvert Aucune prestation IPT/IPP\n33% à 65% IPP — Invalidité Permanente Partielle Rente mensuelle IPP (voir Art. 8)\n66% à 99% IPT — Invalidité Permanente Totale Rente mensuelle IPT (voir Art. 7)\nRente IPT majorée + aide tierce\n100% Invalide absolu\npersonne",
+    "metadata": {
+      "source_doc": "CG-PREV-INV-2024",
+      "version": "4.2",
+      "titre_humain": "CG Prévoyance Invalidité",
+      "chapitre_titre": "TITRE III — GARANTIES INVALIDITÉ PERMANENTE TOTALE (IPT)",
+      "article_num": "6.2"
+    }
+  },
+  {
+    "text": "Article 7 — Montant de la rente invalidité IPT\nEn cas de reconnaissance de l'IPT, ARESIA Assurances verse à l'assuré une rente mensuelle viagère, dont le\nmontant est déterminé aux Conditions Particulières et indexé annuellement sur l'indice des prix à la\nconsommation (IPC) publié par l'INSEE.\nOption souscrite Rente mensuelle maximale Revalorisation annuelle\nEssentiel 1 500 €/mois IPC — plafonnée à +3%/an\nConfort 3 000 €/mois IPC — plafonnée à +4%/an\nPremium 6 000 €/mois IPC — plafonnée à +5%/an\nDirigeant 10 000 €/mois IPC sans plafond\nn Article 7.2 — La rente est suspendue en cas de reprise d'une activité professionnelle dont les revenus annuels\ndépassent 30% du revenu pré-sinistre pendant plus de 6 mois consécutifs. L'assuré doit déclarer toute reprise\nd'activité dans les 30 jours sous peine de remboursement des indemnités indûment perçues.",
+    "metadata": {
+      "source_doc": "CG-PREV-INV-2024",
+      "version": "4.2",
+      "titre_humain": "CG Prévoyance Invalidité",
+      "chapitre_titre": "TITRE III — GARANTIES INVALIDITÉ PERMANENTE TOTALE (IPT)",
+      "article_num": "7"
+    }
+  },
+  {
+    "text": "Article 12 — Exclusions générales applicables à toutes les garanties\nSont exclus de toutes les garanties du présent contrat, les sinistres ayant pour origine :\n(cid:127) Les faits volontaires de l'assuré, y compris les tentatives de suicide et automutilations\n(cid:127) La guerre civile ou étrangère, les actes de terrorisme (sauf garantie complémentaire optionnelle souscrite)\n(cid:127) Les catastrophes naturelles non reconnues par arrêté interministériel\n(cid:127) Les effets des radiations ionisantes ou de la radioactivité\n(cid:127) La pratique de sports dangereux tels que définis à l'Annexe 2 (parachutisme, base jump, sports de combat\nprofessionnels, etc.), sauf option \"Sports Extrêmes\" souscrite\n(cid:127) La conduite en état d'ivresse (alcoolémie > 0,8 g/l) ou sous l'emprise de stupéfiants non prescrits\n(cid:127) L'exercice d'une profession non déclarée ou différente de celle mentionnée aux Conditions Particulières",
+    "metadata": {
+      "source_doc": "CG-PREV-INV-2024",
+      "version": "4.2",
+      "titre_humain": "CG Prévoyance Invalidité",
+      "chapitre_titre": "TITRE VI — EXCLUSIONS ET LIMITATIONS DE GARANTIE",
+      "article_num": "12"
+    }
+  },
+  {
+    "text": "Article 13 — Exclusions spécifiques à la garantie ITT\n(cid:127) Les maternités et complications de grossesse (sauf souscription avant conception et option Maternité\nactivée)\n(cid:127) Les soins de confort ou d'esthétique non prescrits par un médecin pour raison thérapeutique\n(cid:127) Les arrêts de travail prescrits pendant les 12 premiers mois du contrat pour une affection préexistante non\ndéclarée\n(cid:127) Les rechutes consécutives à une affection exclue lors de la souscription, même si survenant après la\nlevée de l'exclusion temporaire\nn Article 13.5 — Les pathologies psychiatriques et le burn-out sont couverts sans exclusion temporaire pour les adhérents\nayant fourni un questionnaire médical de santé favorable et souscrit avant toute prescription médicale liée à ces\npathologies.",
+    "metadata": {
+      "source_doc": "CG-PREV-INV-2024",
+      "version": "4.2",
+      "titre_humain": "CG Prévoyance Invalidité",
+      "chapitre_titre": "TITRE VI — EXCLUSIONS ET LIMITATIONS DE GARANTIE",
+      "article_num": "13"
+    }
+  },
+  {
+    "text": "Article 15 — Délais et modalités de déclaration\nL'assuré ou son représentant légal doit déclarer le sinistre à ARESIA Assurances dans les délais suivants :\nType de sinistre Délai de déclaration Sanction en cas de retard\n15 jours après expiration de la Déchéance des indemnités pour la période de\nITT (maladie)\nfranchise retard, sauf cas de force majeure\n5 jours ouvrés après le fait\nITT (accident) Déchéance partielle proportionnelle au retard\ngénérateur\n30 jours après notification Suspension du traitement du dossier jusqu'à\nIPT / IPP\nmédicale réception\nDécès 30 jours après le décès Pas de déchéance mais intérêts de retard",
+    "metadata": {
+      "source_doc": "CG-PREV-INV-2024",
+      "version": "4.2",
+      "titre_humain": "CG Prévoyance Invalidité",
+      "chapitre_titre": "TITRE VII — PROCÉDURE DE DÉCLARATION DE SINISTRE",
+      "article_num": "15"
+    }
+  },
+  {
+    "text": "Article 16 — Pièces justificatives à fournir\nLe dossier de déclaration de sinistre doit impérativement comprendre :\n(cid:127) Le formulaire de déclaration de sinistre dûment complété et signé (disponible sur l'espace assuré en ligne)\n(cid:127) Un certificat médical initial établi par le médecin traitant, précisant le diagnostic et la durée prévisionnelle\nd'arrêt\n(cid:127) Une copie de la prescription d'arrêt de travail ou du certificat d'hospitalisation\n(cid:127) Un justificatif de revenus professionnels (avis d'imposition, bulletins de salaire des 3 derniers mois ou\nbilans des 2 dernières années pour les TNS)\n(cid:127) Un relevé d'identité bancaire (RIB) à jour\n(cid:127) Pour les arrêts de plus de 90 jours : certificats médicaux de prolongation mensuels",
+    "metadata": {
+      "source_doc": "CG-PREV-INV-2024",
+      "version": "4.2",
+      "titre_humain": "CG Prévoyance Invalidité",
+      "chapitre_titre": "TITRE VII — PROCÉDURE DE DÉCLARATION DE SINISTRE",
+      "article_num": "16"
+    }
+  },
+  {
+    "text": "Article 20 — Traitement fiscal des cotisations\nLe traitement fiscal des cotisations dépend du statut de l'assuré et du mode de souscription :\nStatut assuré Cotisations Prestations reçues\nDéductibles des revenus imposables dans la Imposables comme revenus de\nSalarié — contrat collectif obligatoire\nlimite de 7% du PASS remplacement\nNon déductibles (cotisées sur revenus après\nSalarié — contrat individuel Exonérées d'impôt sur le revenu\nimpôt)\nDéductibles sous plafond Madelin (voir Imposables comme revenus de\nTravailleur Non Salarié (TNS)\nbarème Madelin annuel) remplacement\nGérant majoritaire Déductibles partiellement selon statut Régime TNS applicable\nn Article 20.3 — Les règles fiscales applicables sont susceptibles d'évoluer. ARESIA Assurances recommande de\nconsulter un expert-comptable ou un conseiller fiscal pour toute question relative au traitement fiscal de ce\ncontrat. Les informations ci-dessus sont fournies à titre indicatif et ne constituent pas un conseil fiscal.",
+    "metadata": {
+      "source_doc": "CG-PREV-INV-2024",
+      "version": "4.2",
+      "titre_humain": "CG Prévoyance Invalidité",
+      "chapitre_titre": "TITRE IX — DISPOSITIONS FISCALES ET SOCIALES",
+      "article_num": "20"
+    }
+  },
+  {
+    "text": "Article 21 — Régime social des prestations\nLes indemnités journalières versées au titre de la garantie ITT sont soumises aux cotisations sociales selon les\nrègles applicables aux revenus de remplacement, conformément aux dispositions du Code de la sécurité\nsociale en vigueur à la date de versement. L'assureur établit une attestation fiscale annuelle récapitulant les\nsommes versées, transmise avant le 31 janvier de l'année suivante.",
+    "metadata": {
+      "source_doc": "CG-PREV-INV-2024",
+      "version": "4.2",
+      "titre_humain": "CG Prévoyance Invalidité",
+      "chapitre_titre": "TITRE IX — DISPOSITIONS FISCALES ET SOCIALES",
+      "article_num": "21"
+    }
+  },
+  {
+    "text": "Article 22 — Procédure de réclamation\nTout différend relatif à l'interprétation ou à l'exécution du contrat doit d'abord être soumis au Service\nRéclamations d'ARESIA Assurances, par courrier recommandé ou via l'espace assuré en ligne.\nARESIA Assurances s'engage à accuser réception de la réclamation dans un délai de 10 jours ouvrés et à\napporter une réponse définitive dans un délai de 60 jours ouvrés.",
+    "metadata": {
+      "source_doc": "CG-PREV-INV-2024",
+      "version": "4.2",
+      "titre_humain": "CG Prévoyance Invalidité",
+      "chapitre_titre": "TITRE X — RÉCLAMATIONS ET MÉDIATION",
+      "article_num": "22"
+    }
+  },
+  {
+    "text": "Article 23 — Médiation\nEn cas de désaccord persistant après épuisement de la procédure interne de réclamation, l'assuré peut saisir\ngratuitement le Médiateur de l'Assurance :\nMédiateur de l'Assurance — TSA 50110 — 75441 Paris Cedex 09 | www.mediation-assurance.org\nDocument fictif — ARESIA Assurances (société imaginaire) — Créé pour AssurConseil 365 / tkoidra.com — Juin 2026",
+    "metadata": {
+      "source_doc": "CG-PREV-INV-2024",
+      "version": "4.2",
+      "titre_humain": "CG Prévoyance Invalidité",
+      "chapitre_titre": "TITRE X — RÉCLAMATIONS ET MÉDIATION",
+      "article_num": "23"
+    }
+  },
+  {
+    "text": "ARESIA Assurances\nConditions Générales — Assurance Vie\nMultisupport\nRéf. : CG-AV-MULTI-2024 | Produit : ARESIA Patrimoine+\nVersion 3.1 — Mars 2024 — Document fictif à usage de démonstration\nSOMMAIRE",
+    "metadata": {
+      "source_doc": "CG-AV-MULTI-2024",
+      "version": "3.1",
+      "titre_humain": "CG Assurance Vie ARESIA Patrimoine+",
+      "chapitre_titre": "",
+      "article_num": ""
+    }
+  },
+  {
+    "text": "Article 1 — Nature et caractéristiques du contrat\nARESIA Patrimoine+ est un contrat d'assurance vie individuel à versements libres, multisupport, libellé en euros\net en unités de compte, soumis aux dispositions du Code des assurances et plus particulièrement à ses articles\nL.131-1 et suivants.\nCe contrat n'est pas un produit d'épargne bancaire. La valeur des unités de compte n'est pas garantie et est\nsujette à des fluctuations à la hausse comme à la baisse, dépendant des marchés financiers. ARESIA\nAssurances ne s'engage que sur le nombre d'unités de compte, non sur leur valeur.\nn Article 1.2 — MISE EN GARDE : Les investissements sur les supports en unités de compte comportent un\nrisque de perte en capital. Les performances passées ne préjugent pas des performances futures. Ce contrat est\nsoumis aux risques inhérents aux marchés financiers.",
+    "metadata": {
+      "source_doc": "CG-AV-MULTI-2024",
+      "version": "3.1",
+      "titre_humain": "CG Assurance Vie ARESIA Patrimoine+",
+      "chapitre_titre": "CHAPITRE 1 — PRÉSENTATION DU CONTRAT ET PARTIES",
+      "article_num": "1"
+    }
+  },
+  {
+    "text": "Article 2 — Définitions\nSouscripteur / Adhérent : Personne physique ou morale qui conclut le contrat avec ARESIA Assurances et\neffectue les versements.\nAssuré : Personne physique sur la tête de laquelle repose le risque assuré (décès ou vie). Par défaut, le\nsouscripteur est également l'assuré.\nBénéficiaire en cas de vie : Personne désignée pour recevoir la valeur de rachat ou le capital à l'échéance du\ncontrat.\nBénéficiaire en cas de décès : Personne désignée pour recevoir le capital décès à la survenance du décès de\nl'assuré.\nSupport en euros : Fonds général de l'assureur offrant une garantie en capital. Les intérêts crédités sont\ndéfinitivement acquis.\nSupport en unités de compte (UC) : Support financier dont la valeur est exprimée en unités, non garantie,\nreflétant la valeur des actifs sous-jacents (OPCVM, ETF, SCPI, etc.).\nValeur de rachat : Montant que le souscripteur peut obtenir en cas de rachat total ou partiel, calculé à la date\nde valorisation.\nDate de valorisation : Date à laquelle est calculée la valeur liquidative des supports, généralement chaque jour\nouvré de Bourse.\nPrélèvements sociaux : Contribution Sociale Généralisée (CSG), Contribution au Remboursement de la Dette\nSociale (CRDS) et prélèvements annexes applicables aux revenus du patrimoine.",
+    "metadata": {
+      "source_doc": "CG-AV-MULTI-2024",
+      "version": "3.1",
+      "titre_humain": "CG Assurance Vie ARESIA Patrimoine+",
+      "chapitre_titre": "CHAPITRE 1 — PRÉSENTATION DU CONTRAT ET PARTIES",
+      "article_num": "2"
+    }
+  },
+  {
+    "text": "Article 8 — Versement initial et versements complémentaires\nType de versement Montant minimum Modalités\nVersement initial à l'ouverture 1 000 € Par virement bancaire ou prélèvement\nVersement complémentaire libre 300 € À tout moment, sans préavis\nVersement programmé mensuel 100 €/mois Prélèvement automatique le 5 ou 15 du mois\nPrélèvement automatique au choix du\nVersement programmé trimestriel 250 €/trimestre\nsouscripteur\nVersement programmé annuel 1 000 €/an Date anniversaire du contrat",
+    "metadata": {
+      "source_doc": "CG-AV-MULTI-2024",
+      "version": "3.1",
+      "titre_humain": "CG Assurance Vie ARESIA Patrimoine+",
+      "chapitre_titre": "CHAPITRE 3 — VERSEMENTS ET GESTION DES PRIMES",
+      "article_num": "8"
+    }
+  },
+  {
+    "text": "Article 9 — Frais applicables aux versements\nNature des frais Taux standard Taux partenaire conseiller\nFrais sur versements 0% à 4,5% selon le réseau 0% pour les versements programmés\nFrais de gestion annuels — Fonds euros 0,60% par an Non négociable\nFrais de gestion annuels — Unités de\n0,80% par an Non négociable\ncompte\n0,50% du montant arbitré (min. 15 Gratuit pour 4 arbitrages/an en gestion\nFrais d'arbitrage\n€) libre\nFrais de rachat partiel 0€ 0€\nFrais de rachat total anticipé (< 1 an) 1% de la valeur de rachat 1% de la valeur de rachat\nn Article 9.4 — Les frais de gestion annuels sont prélevés par réduction du nombre d'unités de compte pour les supports\nUC, et déduits des intérêts crédités pour le fonds euros. Ils n'apparaissent pas comme un prélèvement visible mais\nimpactent la performance nette.",
+    "metadata": {
+      "source_doc": "CG-AV-MULTI-2024",
+      "version": "3.1",
+      "titre_humain": "CG Assurance Vie ARESIA Patrimoine+",
+      "chapitre_titre": "CHAPITRE 3 — VERSEMENTS ET GESTION DES PRIMES",
+      "article_num": "9"
+    }
+  },
+  {
+    "text": "Article 10 — Fonds en euros ARESIA Sécurité\nLe fonds en euros ARESIA Sécurité est le support garanti du contrat. Il est investi principalement en obligations\nd'État et d'entreprises notées investment grade (‡ BBB-), avec une poche de diversification immobilière ne\ndépassant pas 20% de l'actif.\nCaractéristique Valeur 2024\nTaux de rendement servi 2023 2,80% net de frais de gestion\nParticipation aux bénéfices minimale 85% des bénéfices techniques et financiers\nGarantie en capital 100% du capital versé net de frais sur versements\nRéserve de capitalisation Conforme aux exigences Solvabilité II\nNotation S&P; de l'assureur AA- (fictif — à vérifier)\nn Article 10.3 — Le taux de rendement du fonds euros est susceptible de varier chaque année. Le taux 2023\naffiché ne préjuge pas du taux qui sera servi pour les exercices suivants. ARESIA Assurances se réserve le droit\nde limiter les versements sur le fonds euros ou d'imposer une diversification minimale en unités de compte.",
+    "metadata": {
+      "source_doc": "CG-AV-MULTI-2024",
+      "version": "3.1",
+      "titre_humain": "CG Assurance Vie ARESIA Patrimoine+",
+      "chapitre_titre": "CHAPITRE 4 — SUPPORTS D'INVESTISSEMENT ET GESTION",
+      "article_num": "10"
+    }
+  },
+  {
+    "text": "Article 11 — Supports en unités de compte disponibles\nLa liste complète des supports en unités de compte disponibles figure à l'Annexe 4, mise à jour\ntrimestriellement. À titre indicatif, voici les catégories proposées :\n(cid:127) Fonds actions Europe (OPCVM — risque 5/7 à 7/7 selon le profil)\n(cid:127) Fonds actions monde (ETF indiciels — réplication physique ou synthétique)\n(cid:127) Fonds obligataires (court terme, long terme, haut rendement)\n(cid:127) Fonds diversifiés / patrimoniaux (flexibles, résilients, multi-actifs)\n(cid:127) Supports immobiliers (SCPI, OPCI — liquidité limitée, délai de jouissance de 6 mois)\n(cid:127) Fonds à impact / ISR labellisés (label ISR, Greenfin, ou équivalent)\n(cid:127) Produits structurés à capital partiellement protégé (durée minimale 5 ans)",
+    "metadata": {
+      "source_doc": "CG-AV-MULTI-2024",
+      "version": "3.1",
+      "titre_humain": "CG Assurance Vie ARESIA Patrimoine+",
+      "chapitre_titre": "CHAPITRE 4 — SUPPORTS D'INVESTISSEMENT ET GESTION",
+      "article_num": "11"
+    }
+  },
+  {
+    "text": "Article 12 — Profils de gestion\nLe souscripteur peut opter pour l'un des profils de gestion suivants, modifiable une fois par an :\nProfil Allocation indicative Risque indicatif (SRI)\nPrudent 80% Fonds euros | 20% UC obligations 2/7\nÉquilibré 50% Fonds euros | 30% UC diversifié | 20% UC actions 3/7\nDynamique 20% Fonds euros | 30% UC diversifié | 50% UC actions 5/7\nOffensif 0% Fonds euros | 100% UC actions / thématiques 6/7\nLibre Allocation 100% personnalisable Variable",
+    "metadata": {
+      "source_doc": "CG-AV-MULTI-2024",
+      "version": "3.1",
+      "titre_humain": "CG Assurance Vie ARESIA Patrimoine+",
+      "chapitre_titre": "CHAPITRE 4 — SUPPORTS D'INVESTISSEMENT ET GESTION",
+      "article_num": "12"
+    }
+  },
+  {
+    "text": "Article 14 — Calcul de la valeur de rachat\nLa valeur de rachat à une date donnée est égale à la somme :\n(cid:127) De la valeur de la part fonds euros (capital + intérêts crédités à ce jour)\n(cid:127) De la valeur de liquidation des unités de compte détenues, calculée au cours de valorisation du jour\n(cid:127) Diminuée des frais de rachat anticipé le cas échéant (Article 9)\n(cid:127) Diminuée des éventuelles avances non remboursées et de leurs intérêts",
+    "metadata": {
+      "source_doc": "CG-AV-MULTI-2024",
+      "version": "3.1",
+      "titre_humain": "CG Assurance Vie ARESIA Patrimoine+",
+      "chapitre_titre": "CHAPITRE 5 — VALEUR DE RACHAT ET AVANCES",
+      "article_num": "14"
+    }
+  },
+  {
+    "text": "Article 15 — Avances sur contrat\nLe souscripteur peut demander une avance sur son contrat à tout moment, dans la limite de 80% de la valeur\nde rachat pour le fonds euros et 60% pour les unités de compte, avec un minimum de 1 500 € par avance.\nDurée de l'avance Taux d'intérêt annuel Renouvellement\n1 an Taux moyen des OAT 10 ans + 1,5% Renouvelable 2 fois\n2 ans Taux moyen des OAT 10 ans + 2% Non renouvelable\n3 ans (maximum) Taux moyen des OAT 10 ans + 2,5% Non renouvelable\nn Article 15.4 — L'avance ne constitue pas un rachat et n'est pas fiscalisée. Elle n'interrompt pas l'antériorité fiscale du\ncontrat. En cas de non-remboursement à l'échéance, l'avance est transformée en rachat partiel et fiscalisée en\nconséquence.",
+    "metadata": {
+      "source_doc": "CG-AV-MULTI-2024",
+      "version": "3.1",
+      "titre_humain": "CG Assurance Vie ARESIA Patrimoine+",
+      "chapitre_titre": "CHAPITRE 5 — VALEUR DE RACHAT ET AVANCES",
+      "article_num": "15"
+    }
+  },
+  {
+    "text": "Article 23 — Fiscalité des rachats\nLa fiscalité applicable aux rachats dépend de la durée de détention du contrat et de la date de versement des\nprimes. Seule la part des plus-values (intérêts et gains) est imposable, non le capital versé.\nDurée contrat Primes versées avant 09/2017 Primes versées après 09/2017 (PFU)\n35% IR ou barème progressif + PS\n< 4 ans 12,8% PFU + 17,2% PS = 30% flat tax\n17,2%\n15% IR ou barème progressif + PS\n4 à 8 ans 12,8% PFU + 17,2% PS = 30% flat tax\n17,2%\n7,5% IR après abattement + PS 7,5% après abattement 4 600 €/9 200 € +\n> 8 ans (contrat < 150 k€)\n17,2% PS\n7,5% IR sur 150 k€ + 12,8% au-delà +\n> 8 ans (contrat > 150 k€) Même règle — seuil 150 k€ tous contrats\nPS\nn Article 23.1 — Les abattements après 8 ans s'élèvent à 4 600 € pour une personne seule et 9 200 € pour un couple\nsoumis à imposition commune, par an et tous contrats confondus. Ces seuils sont susceptibles d'évoluer selon la\nlégislation fiscale en vigueur.\nn Article 23.3 — La fiscalité de l'assurance vie est complexe et personnelle. ARESIA Assurances recommande\nvivement de consulter un conseiller fiscal ou un notaire pour toute décision de rachat ayant un impact fiscal\nsignificatif. Les informations du présent chapitre sont données à titre indicatif et ne constituent pas un conseil\nfiscal.",
+    "metadata": {
+      "source_doc": "CG-AV-MULTI-2024",
+      "version": "3.1",
+      "titre_humain": "CG Assurance Vie ARESIA Patrimoine+",
+      "chapitre_titre": "CHAPITRE 9 — FISCALITÉ DU CONTRAT",
+      "article_num": "23"
+    }
+  },
+  {
+    "text": "Article 24 — Fiscalité en cas de décès\nLa transmission du capital décès d'un contrat d'assurance vie bénéficie d'un régime fiscal favorable, distinct des\nrègles de succession ordinaires, conformément à l'Article 990-I du Code général des impôts.\nÂge des versements Abattement par bénéficiaire Taxation au-delà\n20% de 152 500 € à 852 500 € |\nPrimes versées avant 70 ans 152 500 € par bénéficiaire\n31,25% au-delà\nDroits de succession ordinaires\nPrimes versées après 70 ans 30 500 € global (tous bénéficiaires)\nsur le surplus\nn Article 24.2 — Le conjoint ou partenaire de PACS bénéficiaire est totalement exonéré de toute taxation sur les capitaux\ndécès d'assurance vie, quel que soit le montant et la date des versements.\nDocument fictif — ARESIA Assurances (société imaginaire) — Créé pour AssurConseil 365 / tkoidra.com — Juin 2026",
+    "metadata": {
+      "source_doc": "CG-AV-MULTI-2024",
+      "version": "3.1",
+      "titre_humain": "CG Assurance Vie ARESIA Patrimoine+",
+      "chapitre_titre": "CHAPITRE 9 — FISCALITÉ DU CONTRAT",
+      "article_num": "24"
+    }
+  },
+  {
+    "text": "ARESIA Assurances\nBarème des Garanties IARD 2024\nRéf. : BAR-IARD-2024-V2 | Document tarifaire\nVersion 2.0 — Janvier 2024 — Document fictif à usage de démonstration\nCe barème présente les plafonds de garanties, franchises et primes indicatives applicables aux contrats\nd'assurances IARD (Incendie, Accidents, Risques Divers) commercialisés par ARESIA Assurances pour\nl'exercice 2024. Toutes les valeurs sont exprimées en euros TTC sauf mention contraire.",
+    "metadata": {
+      "source_doc": "BAR-IARD-2024-V2",
+      "version": "2.0",
+      "titre_humain": "Barème Garanties IARD 2024",
+      "chapitre_titre": "",
+      "article_num": ""
+    }
+  },
+  {
+    "text": "Article 1.1 — Garanties de base incluses\nGarantie Plafond de couverture Franchise standard\nIncendie, explosion, dégâts des eaux Valeur à neuf du bien immobilier 150 €\nCatastrophes naturelles Valeur à neuf — arrêté Cat Nat requis 380 € (légale)\nVol et actes de vandalisme 30 000 € (meubles) / 5 000 € (espèces) 300 €\nBris de glace 3 000 € par sinistre 0 €\nResponsabilité civile vie privée 3 000 000 € par sinistre 0 €\nDéfense pénale et recours 15 000 € par sinistre 0 €\nAssistance et hébergement d'urgence Hôtel 30 nuits | 80 €/nuit 0 €",
+    "metadata": {
+      "source_doc": "BAR-IARD-2024-V2",
+      "version": "2.0",
+      "titre_humain": "Barème Garanties IARD 2024",
+      "chapitre_titre": "SECTION 1 — MULTIRISQUE HABITATION",
+      "article_num": "1.1"
+    }
+  },
+  {
+    "text": "Article 1.2 — Options et extensions disponibles\nPrime mensuelle\nOption Couverture supplémentaire\nadditionnelle\nÉquipements électroniques Jusqu'à 5 000 € (PC, TV, hi-fi, photo) +3,50 €/mois\nObjets de valeur identifiés Jusqu'à 15 000 € sur déclaration et photos +8,00 €/mois\nPiscine et dépendances Plafond aligné bâtiment principal +5,50 €/mois\nActivité libérale au domicile RC Pro incluse jusqu'à 500 k€ +12,00 €/mois\nProtection juridique renforcée 25 000 € / porté à 50 000 € en option +4,20 €/mois",
+    "metadata": {
+      "source_doc": "BAR-IARD-2024-V2",
+      "version": "2.0",
+      "titre_humain": "Barème Garanties IARD 2024",
+      "chapitre_titre": "SECTION 1 — MULTIRISQUE HABITATION",
+      "article_num": "1.2"
+    }
+  },
+  {
+    "text": "Article 1.3 — Barème tarifaire MRH 2024\nPrimes annuelles indicatives selon la surface habitable et le type de logement (locataire ou propriétaire) :\nSurface Studio / T1 T2-T3 (locataire) T2-T3 (propriétaire) T4+ (propriétaire)\n< 35 m² 108 € /an — — —\n35 à 70 m² — 156 € /an 195 € /an —\nSurface Studio / T1 T2-T3 (locataire) T2-T3 (propriétaire) T4+ (propriétaire)\n71 à 120 m² — — 248 € /an 312 € /an\n121 à 180 m² — — — 398 € /an\n> 180 m² — — — Sur devis\nn Article 1.3.2 — Ces tarifs sont indicatifs et constituent le point de départ du calcul de prime. Des majorations peuvent\ns'appliquer selon la zone géographique, les antécédents sinistres, la nature des installations électriques et le type de\nchauffage.",
+    "metadata": {
+      "source_doc": "BAR-IARD-2024-V2",
+      "version": "2.0",
+      "titre_humain": "Barème Garanties IARD 2024",
+      "chapitre_titre": "SECTION 1 — MULTIRISQUE HABITATION",
+      "article_num": "1.3"
+    }
+  },
+  {
+    "text": "Article 2.1 — Formules disponibles\nFormule Tiers Simple (obligatoire) : Responsabilité civile obligatoire uniquement — protection des tiers lésés\nFormule Tiers+ : Tiers Simple + incendie + vol + bris de glace + catastrophes naturelles\nFormule Intermédiaire : Tiers+ + dommages tous accidents tiers identifiés + assistance 0 km\nFormule Tous Risques : Couverture intégrale y compris accident responsable — recommandée pour\nvéhicules < 5 ans",
+    "metadata": {
+      "source_doc": "BAR-IARD-2024-V2",
+      "version": "2.0",
+      "titre_humain": "Barème Garanties IARD 2024",
+      "chapitre_titre": "SECTION 2 — ASSURANCE AUTOMOBILE",
+      "article_num": "2.1"
+    }
+  },
+  {
+    "text": "Article 2.2 — Plafonds de garantie par formule\nGarantie Tiers Simple Tiers+ Intermédiaire Tous Risques\nResponsabilité civile dommages\nIllimitée Illimitée Illimitée Illimitée\nmatériels\nResponsabilité civile dommages\nIllimitée Illimitée Illimitée Illimitée\ncorporels\nIncendie / Explosion — Valeur Argus Valeur Argus Valeur expertise\nVol (tentative incluse) — Valeur Argus Valeur Argus Valeur expertise\nBris de glace — 2 000 € 2 000 € Sans limite\nDommages acc. responsable — — Tiers identifié seul Tous accidents\nAssistance 0 km — — 3 incluse 3 incluse\nProtection du conducteur — — Option 3 incluse",
+    "metadata": {
+      "source_doc": "BAR-IARD-2024-V2",
+      "version": "2.0",
+      "titre_humain": "Barème Garanties IARD 2024",
+      "chapitre_titre": "SECTION 2 — ASSURANCE AUTOMOBILE",
+      "article_num": "2.2"
+    }
+  },
+  {
+    "text": "Article 2.3 — Franchises automobiles 2024\nFranchise avec option Zéro\nType de sinistre Franchise standard\nFranchise\nDommages collision (responsabilité partagée) 500 € 0 €\nDommages collision (responsable tiers) 0 € 0 €\nIncendie 300 € 0 €\nVol (véhicule entier) 500 € 0 €\n0 € après réparateur agréé | 75 €\nBris de glace (pare-brise) 0 €\nautre\nBris de glace (autres vitrages) 75 € 0 €\nCatastrophes naturelles 380 € (légale) 380 € (non rachetable)",
+    "metadata": {
+      "source_doc": "BAR-IARD-2024-V2",
+      "version": "2.0",
+      "titre_humain": "Barème Garanties IARD 2024",
+      "chapitre_titre": "SECTION 2 — ASSURANCE AUTOMOBILE",
+      "article_num": "2.3"
+    }
+  },
+  {
+    "text": "Article 3.1 — Professions couvertes et plafonds\nLa garantie RC Professionnelle couvre les dommages causés à des tiers dans le cadre de l'exercice de l'activité\nprofessionnelle déclarée. Les plafonds ci-dessous sont les maximums par sinistre et par an, tous sinistres\nconfondus.\nCatégorie professionnelle Plafond par sinistre Plafond annuel Franchise\nProfessions libérales (hors santé) 500 000 € 1 000 000 € 500 €\nProfessions médicales et paramédicales 3 000 000 € 5 000 000 € 1 000 €\nProfessions du bâtiment (hors décennale) 1 000 000 € 2 000 000 € 1 000 €\nProfessions financières (CGPI, CIF, CGP) 1 500 000 € 3 000 000 € 1 500 €\nProfessions informatiques / SSII 800 000 € 1 500 000 € 750 €\nCommerce (B2B) 500 000 € 1 000 000 € 500 €\nArtisans et commerçants (B2C) 300 000 € 600 000 € 300 €\nn Article 3.1.5 — Pour les Conseillers en Gestion de Patrimoine (CGP) et les Conseillers en Investissements Financiers\n(CIF), la garantie RC Pro est obligatoire en vertu des exigences de l'ORIAS et de l'AMF. La couverture minimale légale de\n1 500 000 € par sinistre est incluse dans la formule standard.",
+    "metadata": {
+      "source_doc": "BAR-IARD-2024-V2",
+      "version": "2.0",
+      "titre_humain": "Barème Garanties IARD 2024",
+      "chapitre_titre": "SECTION 3 — RESPONSABILITÉ CIVILE PROFESSIONNELLE",
+      "article_num": "3.1"
+    }
+  },
+  {
+    "text": "Article 4.1 — Délais de déclaration par type de sinistre\nType de sinistre Délai de déclaration Modalités\nDégâts des eaux 5 jours ouvrés Déclaration en ligne ou par téléphone\nIncendie / Explosion 5 jours ouvrés Déclaration en ligne ou par téléphone\nVol / Cambriolage 48 heures après constat Dépôt de plainte obligatoire + déclaration\n5 jours ouvrés (+ constat\nAccident automobile Constat signé dans les 48h si possible\namiable)\n30 jours après arrêté\nCatastrophe naturelle Arrêté JORF requis pour ouverture dossier\nministériel\nDès connaissance de la\nRC Pro Jamais tarder — risque de déchéance\nréclamation\nDocument fictif — ARESIA Assurances (société imaginaire) — Créé pour AssurConseil 365 / tkoidra.com — Juin 2026",
+    "metadata": {
+      "source_doc": "BAR-IARD-2024-V2",
+      "version": "2.0",
+      "titre_humain": "Barème Garanties IARD 2024",
+      "chapitre_titre": "SECTION 4 — PROCÉDURE DE GESTION DES SINISTRES IARD",
+      "article_num": "4.1"
+    }
+  },
+  {
+    "text": "AUTORITÉ DE CONTRÔLE PRUDENTIEL ET DE RÉSOLUTION\nExtrait — Recommandation sur le Devoir de\nConseil en Assurance\nRéf. fictive : ACPR-REC-2024-12 | À usage de démonstration uniquement\nCe document est 100% fictif. Il ne représente pas une publication officielle de l'ACPR.\nPRÉAMBULE ET CHAMP D'APPLICATION\nLa présente recommandation s'inscrit dans le cadre de la directive sur la distribution d'assurances (DDA),\ntransposée en droit français par l'ordonnance n° 2018-361 du 16 mai 2018, et s'applique à l'ensemble des\nintermédiaires d'assurance et entreprises d'assurance soumis au contrôle de l'ACPR pour leurs activités de\ndistribution de produits d'assurance.\nCette recommandation vise à préciser les attentes du superviseur en matière de :\n(cid:127) Recueil des informations sur le client (Connaissance Client — KYC)\n(cid:127) Analyse des besoins et de la situation patrimoniale du client\n(cid:127) Formulation d'un conseil personnalisé et documenté\n(cid:127) Traçabilité des interactions et de la justification du conseil\n(cid:127) Formation continue des distributeurs\nSECTION I — EXIGENCES DE CONNAISSANCE CLIENT (KYC)",
+    "metadata": {
+      "source_doc": "ACPR-REC-2024-12",
+      "version": "1.0",
+      "titre_humain": "Circulaire ACPR Devoir de Conseil",
+      "chapitre_titre": "SECTION I — EXIGENCES DE CONNAISSANCE CLIENT (KYC)",
+      "article_num": ""
+    }
+  },
+  {
+    "text": "Article 1 — Recueil des informations obligatoires\nAvant toute recommandation ou distribution d'un produit d'assurance, le distributeur doit recueillir auprès du\nclient potentiel, au minimum, les informations suivantes :\nSituation personnelle : Âge, situation familiale, personnes à charge, régime matrimonial\nSituation professionnelle : Statut (salarié, TNS, fonctionnaire, retraité), secteur d'activité, ancienneté\nSituation patrimoniale : Revenus, épargne existante, patrimoine immobilier, dettes et engagements\nObjectifs et horizon : Objectif du contrat (prévoyance, capitalisation, transmission), horizon de placement,\nbesoin de liquidité\nProfil de risque : Tolérance aux pertes en capital, expérience financière, connaissance des produits\nSituation fiscale : Tranche marginale d'imposition, dispositifs fiscaux en cours (Madelin, PER, etc.)\nCouvertures existantes : Contrats d'assurance en cours, garanties sociales obligatoires",
+    "metadata": {
+      "source_doc": "ACPR-REC-2024-12",
+      "version": "1.0",
+      "titre_humain": "Circulaire ACPR Devoir de Conseil",
+      "chapitre_titre": "SECTION I — EXIGENCES DE CONNAISSANCE CLIENT (KYC)",
+      "article_num": "1"
+    }
+  },
+  {
+    "text": "Article 2 — Mise à jour des informations client\nLes informations collectées doivent être mises à jour :\n(cid:127) À minima tous les 2 ans pour les contrats en cours\n(cid:127) À chaque modification substantielle de la situation du client déclarée par celui-ci\n(cid:127) À l'occasion de tout nouvel acte contractuel (versement complémentaire supérieur à 10 000 €, arbitrage\nsignificatif, modification de bénéficiaires)\n(cid:127) Systématiquement lors d'un changement de conseiller référent\nSECTION II — CONTENU ET FORMALISATION DU DEVOIR DE CONSEIL",
+    "metadata": {
+      "source_doc": "ACPR-REC-2024-12",
+      "version": "1.0",
+      "titre_humain": "Circulaire ACPR Devoir de Conseil",
+      "chapitre_titre": "SECTION II — CONTENU ET FORMALISATION DU DEVOIR DE CONSEIL",
+      "article_num": "2"
+    }
+  },
+  {
+    "text": "Article 3 — Exigences relatives à la recommandation personnalisée\nLa recommandation formulée au client doit être :\n(cid:127) Personnalisée, c'est-à-dire fondée sur les informations spécifiques collectées sur ce client, et non\ngénérique\n(cid:127) Motivée, avec une explication claire du lien entre les besoins identifiés et le produit recommandé\n(cid:127) Comparative, lorsque plusieurs produits peuvent répondre aux besoins du client (justification du choix\nretenu)\n(cid:127) Honnête, notamment concernant les risques, les frais et les limitations de garantie\n(cid:127) Compréhensible par le client, en évitant le jargon technique non expliqué",
+    "metadata": {
+      "source_doc": "ACPR-REC-2024-12",
+      "version": "1.0",
+      "titre_humain": "Circulaire ACPR Devoir de Conseil",
+      "chapitre_titre": "SECTION II — CONTENU ET FORMALISATION DU DEVOIR DE CONSEIL",
+      "article_num": "3"
+    }
+  },
+  {
+    "text": "Article 4 — Document de Recueil des Informations et des Besoins (DRIB)\nLe distributeur doit établir un Document de Recueil des Informations et des Besoins (DRIB) avant toute\nsouscription. Ce document doit contenir :\n(cid:127) L'identité complète du client et du distributeur\n(cid:127) La date du recueil\n(cid:127) La synthèse des informations collectées (situation, objectifs, profil de risque)\n(cid:127) L'analyse des besoins réalisée\n(cid:127) La ou les recommandations formulées avec leur justification\n(cid:127) La mention explicite des produits étudiés mais non recommandés, avec la raison de leur exclusion\n(cid:127) La signature du client attestant de la réception et de la compréhension du document\nn Article 4.3 — Le DRIB doit être remis au client avant la souscription, sous format papier ou électronique avec accusé de\nréception. L'assureur doit conserver ce document pendant toute la durée du contrat et 5 ans après sa résiliation.\nSECTION III — EXIGENCES DE TRAÇABILITÉ",
+    "metadata": {
+      "source_doc": "ACPR-REC-2024-12",
+      "version": "1.0",
+      "titre_humain": "Circulaire ACPR Devoir de Conseil",
+      "chapitre_titre": "SECTION III — EXIGENCES DE TRAÇABILITÉ",
+      "article_num": "4"
+    }
+  },
+  {
+    "text": "Article 5 — Journalisation des interactions de conseil\nL'ACPR attend des distributeurs qu'ils maintiennent un journal horodaté de l'ensemble des interactions de\nconseil, incluant les échanges par tout canal (présentiel, téléphone, messagerie électronique, chat en ligne).\nCe journal doit permettre, lors d'un contrôle, de reconstituer intégralement :\n(cid:127) La chronologie des échanges avec le client\n(cid:127) Les informations sur lesquelles reposait la recommandation à chaque date\n(cid:127) La nature exacte du conseil fourni et les documents remis\n(cid:127) Les modifications éventuelles du conseil suite à une évolution de la situation client\n(cid:127) Les refus de conseil éventuels et les raisons de l'impossibilité de formuler une recommandation",
+    "metadata": {
+      "source_doc": "ACPR-REC-2024-12",
+      "version": "1.0",
+      "titre_humain": "Circulaire ACPR Devoir de Conseil",
+      "chapitre_titre": "SECTION III — EXIGENCES DE TRAÇABILITÉ",
+      "article_num": "5"
+    }
+  },
+  {
+    "text": "Article 6 — Durées de conservation\nDurée de conservation\nType de document Support recommandé\nminimale\nDRIB (Document de Recueil des Informations Système de gestion sécurisé, accès\nDurée contrat + 5 ans\net Besoins) auditable\nJournal des interactions de conseil Durée contrat + 5 ans Base de données horodatée et immuable\nArchivage électronique NF Z42-013\nCorrespondances contractuelles Durée contrat + 5 ans\nrecommandé\nDocuments d'identité KYC 5 ans après fin de la relation Stockage séparé et chiffré (RGPD)\n5 ans après clôture de la Système de gestion des réclamations\nRéclamations et réponses\nréclamation dédié\nn Article 6.3 — Les systèmes de stockage des données KYC doivent être conformes au Règlement Général sur la\nProtection des Données (RGPD — Règlement UE 2016/679). La conservation des pièces d'identité est encadrée :\ndurée maximale de 5 ans après la fin de la relation contractuelle, avec chiffrement des données au repos et en\ntransit.\nSECTION IV — EXIGENCES DE FORMATION CONTINUE",
+    "metadata": {
+      "source_doc": "ACPR-REC-2024-12",
+      "version": "1.0",
+      "titre_humain": "Circulaire ACPR Devoir de Conseil",
+      "chapitre_titre": "SECTION IV — EXIGENCES DE FORMATION CONTINUE",
+      "article_num": "6"
+    }
+  },
+  {
+    "text": "Article 7 — Obligations de formation DDA\nConformément à la directive DDA et aux textes de transposition, tout distributeur d'assurance doit suivre au\nminimum 15 heures de formation continue par an. Cette obligation s'applique à toute personne physique\nintervenant dans la distribution, y compris les mandataires et sous-agents.\nDurée minimale\nDomaine de formation Exemples de sujets\nrecommandée\nÉvolutions réglementaires produits, nouveaux\nProduits et marchés d'assurance 5 heures/an\nrisques couverts\nRéglementation et conformité 4 heures/an DDA, RGPD, LAB-FT, Solvabilité II\nCompétences relationnelles 3 heures/an Gestion des réclamations, communication client\nPrévention des conflits d'intérêts 2 heures/an Identification, gestion et déclaration\nÉthique professionnelle 1 heure/an Code de conduite, intégrité du conseil",
+    "metadata": {
+      "source_doc": "ACPR-REC-2024-12",
+      "version": "1.0",
+      "titre_humain": "Circulaire ACPR Devoir de Conseil",
+      "chapitre_titre": "SECTION IV — EXIGENCES DE FORMATION CONTINUE",
+      "article_num": "7"
+    }
+  },
+  {
+    "text": "Article 8 — Sanctions en cas de manquement\nL'ACPR peut, en cas de manquement constaté aux obligations de devoir de conseil, prononcer les sanctions\nsuivantes :\n(cid:127) Avertissement ou blâme publié au Journal Officiel\n(cid:127) Interdiction temporaire ou définitive d'exercer pour une ou plusieurs activités\n(cid:127) Sanction pécuniaire pouvant atteindre 100 millions d'euros ou 10% du chiffre d'affaires annuel\n(cid:127) Retrait total ou partiel de l'agrément\n(cid:127) Injonction de prendre toute mesure de nature à corriger les pratiques défaillantes\nn Article 8.2 — L'ACPR tient compte dans l'appréciation des sanctions de la coopération de l'établissement, de la réalité et\nde l'étendue du préjudice causé aux clients, et des mesures correctrices mises en place.\nDOCUMENT ENTIÈREMENT FICTIF — Créé à des fins de démonstration pour AssurConseil 365 | tkoidra.com — Juin 2026 Ce texte ne\nconstitue pas une publication officielle de l'ACPR. Il ne doit pas être utilisé comme référence réglementaire réelle.",
+    "metadata": {
+      "source_doc": "ACPR-REC-2024-12",
+      "version": "1.0",
+      "titre_humain": "Circulaire ACPR Devoir de Conseil",
+      "chapitre_titre": "SECTION IV — EXIGENCES DE FORMATION CONTINUE",
+      "article_num": "8"
+    }
+  }
+]

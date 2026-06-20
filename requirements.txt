@@ -1,0 +1,10 @@
+# RAG agentique assurance — AssurConseil 365
+anthropic>=0.111.0
+langgraph>=1.2.0
+langchain-core>=1.4.0
+chromadb>=1.5.0
+sentence-transformers>=5.0.0
+pypdf>=6.0.0
+pdfplumber>=0.11.0
+streamlit>=1.58.0
+python-dotenv>=1.2.0

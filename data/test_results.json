@@ -1,0 +1,1223 @@
+[
+  {
+    "id": "Q01",
+    "bloc": "Prévoyance",
+    "question": "Quelles sont les options de franchise disponibles sur le contrat prévoyance invalidité ?",
+    "source_attendue": "Article 4.1 — CG-PREV-INV-2024",
+    "reponse": "**Réponse directe**\n\nLe contrat Prévoyance Invalidité propose **4 options de franchise**, correspondant chacune à un délai de carence et à un impact sur la cotisation de base :\n\n| Option | Délai de carence | Coefficient de cotisation |\n|---|---|---|\n| Franchise 15 jours | 15 jours consécutifs | × 1,00 (tarif de base) |\n| Franchise 30 jours | 30 jours consécutifs | × 0,82 |\n| Franchise 60 jours | 60 jours consécutifs | × 0,64 |\n| Franchise 90 jours | 90 jours consécutifs | × 0,51 |\n\n*Rappel : la franchise est le délai d'arrêt de travail continu à partir duquel l'assureur commence à verser les indemnités journalières.*\n\nL'option retenue est celle **définie aux Conditions Particulières** du contrat de l'assuré.\n\n---\n\n**Source(s)**\n\n- [Article 4.1 des CG Prévoyance Invalidité — v4.2]\n- [Article 1 des CG Prévoyance Invalidité — v4.2] *(définition de la franchise)*\n\n---\n\n**Point d'attention**\n\nDeux règles importantes à retenir :\n\n1. ⚠️ **La franchise est calculée par sinistre**, et non par année civile : chaque nouvel arrêt déclenche un nouveau délai de carence.\n2. ✅ **Règle de rechute** : si l'assuré reprend son activité puis subit un nouvel arrêt dans les **30 jours suivant cette reprise**, l'arrêt est considéré comme la **continuité du sinistre initial** — aucune nouvelle franchise ne s'applique alors.\n\n> La franchise est par défaut **non rachetable**, sauf mention contraire expressément stipulée aux Conditions Particulières. [Article 1 des CG Prévoyance Invalidité — v4.2]",
+    "trace_log": [
+      {
+        "etape": "router",
+        "sous_question": "Quelles sont les options de franchise disponibles sur le contrat prévoyance invalidité ?",
+        "chunks_recus": 0,
+        "decision": "react_simple",
+        "raison": "La question porte sur un seul sujet : les options de franchise du contrat prévoyance invalidité. Il n'y a pas de combinaison de garanties différentes, ni de 'ET' entre deux sujets distincts.",
+        "action_suivante": "retrieve"
+      },
+      {
+        "etape": "retrieve",
+        "sous_question": "Quelles sont les options de franchise disponibles sur le contrat prévoyance invalidité ?",
+        "chunks_recus": 5,
+        "decision": "top chunk: [CG-PREV-INV-2024] Art.4.1",
+        "raison": "filtre doc=None",
+        "action_suivante": "evaluate"
+      },
+      {
+        "etape": "evaluate",
+        "sous_question": "Quelles sont les options de franchise disponibles sur le contrat prévoyance invalidité ?",
+        "chunks_recus": 5,
+        "decision": "suffisant",
+        "raison": "Le Chunk 1 [Article 4.1 — CG Prévoyance Invalidité v4.2] détaille précisément les quatre options de franchise disponibles sur le contrat prévoyance invalidité (15, 30, 60 et 90 jours), avec leur délai de carence et leur impact sur la cotisation. Il précise également les règles de calcul de la franchise par sinistre et en cas de rechute.",
+        "action_suivante": "synthesize"
+      },
+      {
+        "etape": "synthesize",
+        "sous_question": "Quelles sont les options de franchise disponibles sur le contrat prévoyance invalidité ?",
+        "chunks_recus": 5,
+        "decision": "reponse_generee",
+        "raison": "1 sous-question(s) traitée(s), 0 non trouvée(s)",
+        "action_suivante": "end"
+      }
+    ],
+    "score": {
+      "mots_trouves": [
+        "franchise",
+        "15",
+        "30",
+        "60",
+        "90"
+      ],
+      "mots_attendus": [
+        "franchise",
+        "15",
+        "30",
+        "60",
+        "90"
+      ],
+      "exactitude": 1.0,
+      "hallucination": false
+    },
+    "status": "✅ 100%",
+    "elapsed_s": 18.3
+  },
+  {
+    "id": "Q02",
+    "bloc": "Prévoyance",
+    "question": "Quel est le montant maximum d'indemnité journalière pour quelqu'un qui gagne 80 000 € par an ?",
+    "source_attendue": "Article 4.2 — CG-PREV-INV-2024",
+    "reponse": "**Réponse directe**\n\nPour un revenu annuel net de 80 000 € (qui se situe dans la tranche « De 60 001 € à 100 000 € »), les montants maximaux d'indemnité journalière sont les suivants :\n\n- **Option Standard** : **220 €/jour**\n- **Option Premium** : **295 €/jour**\n\nCes montants correspondent aux plafonds contractuels. Le montant effectivement retenu dans votre contrat est précisé dans vos **Conditions Particulières**, en fonction de l'option souscrite.\n\n⚠️ Par ailleurs, une règle de plafonnement global s'applique : le cumul de l'indemnité journalière versée par ARESIA Assurances **et** des prestations des régimes obligatoires (Sécurité sociale, etc.) **ne peut pas dépasser 100 % du revenu net journalier habituel** de l'assuré, calculé sur les 12 derniers mois précédant le sinistre.\n\n---\n\n**Source(s)**\n\n- [Article 4.2 des CG Prévoyance Invalidité — v4.2] : tableau des IJ maximales par tranche de revenu et règle de non-cumul à 100 % du revenu net journalier.\n\n---\n\n**Point d'attention**\n\nDeux points de vigilance importants :\n\n1. **Les plafonds ci-dessus sont des maximums contractuels** : le montant réellement garanti peut être inférieur selon l'option et le niveau souscrit dans vos Conditions Particulières. Vérifiez votre contrat individuel.\n2. **Aspect fiscal** : les indemnités journalières ITT sont soumises à cotisations sociales au titre des revenus de remplacement [Article 21 des CG Prévoyance Invalidité — v4.2]. Pour toute question sur l'impact fiscal net de ces prestations, il est recommandé de consulter un conseiller fiscal ou votre référent produit ARESIA Assurances.",
+    "trace_log": [
+      {
+        "etape": "router",
+        "sous_question": "Quel est le montant maximum d'indemnité journalière pour quelqu'un qui gagne 80 000 € par an ?",
+        "chunks_recus": 0,
+        "decision": "react_simple",
+        "raison": "La question porte sur un seul élément : le montant maximum d'indemnité journalière pour un salaire donné. Il s'agit d'une seule garantie avec un seul calcul à effectuer.",
+        "action_suivante": "retrieve"
+      },
+      {
+        "etape": "retrieve",
+        "sous_question": "Quel est le montant maximum d'indemnité journalière pour quelqu'un qui gagne 80 000 € par an ?",
+        "chunks_recus": 5,
+        "decision": "top chunk: [CG-PREV-INV-2024] Art.4.2",
+        "raison": "filtre doc=None",
+        "action_suivante": "evaluate"
+      },
+      {
+        "etape": "evaluate",
+        "sous_question": "Quel est le montant maximum d'indemnité journalière pour quelqu'un qui gagne 80 000 € par an ?",
+        "chunks_recus": 5,
+        "decision": "suffisant",
+        "raison": "Le Chunk 1 (Article 4.2) contient un tableau précis des indemnités journalières maximales par tranche de revenu. Pour un revenu de 80 000 € par an, qui se situe dans la tranche 'De 60 001 € à 100 000 €', l'IJ maximale est de 220 €/jour en Option Standard et 295 €/jour en Option Premium.",
+        "action_suivante": "synthesize"
+      },
+      {
+        "etape": "synthesize",
+        "sous_question": "Quel est le montant maximum d'indemnité journalière pour quelqu'un qui gagne 80 000 € par an ?",
+        "chunks_recus": 5,
+        "decision": "reponse_generee",
+        "raison": "1 sous-question(s) traitée(s), 0 non trouvée(s)",
+        "action_suivante": "end"
+      }
+    ],
+    "score": {
+      "mots_trouves": [
+        "220",
+        "295",
+        "60 001",
+        "100 000"
+      ],
+      "mots_attendus": [
+        "220",
+        "295",
+        "60 001",
+        "100 000"
+      ],
+      "exactitude": 1.0,
+      "hallucination": false
+    },
+    "status": "✅ 100%",
+    "elapsed_s": 14.9
+  },
+  {
+    "id": "Q03",
+    "bloc": "Prévoyance",
+    "question": "Combien de temps peut-on être indemnisé en arrêt de travail avant de basculer en invalidité ?",
+    "source_attendue": "Article 4.3 — CG-PREV-INV-2024",
+    "reponse": "**Réponse directe**\n\nLa durée maximale d'indemnisation en arrêt de travail (ITT — Incapacité Temporaire de Travail) est de **1 095 jours, soit 3 ans**, par sinistre et par assuré. Passé ce délai, si l'assuré n'est toujours pas en mesure de reprendre son activité professionnelle, son dossier est **automatiquement orienté vers l'évaluation de la garantie Invalidité Permanente** (IPT ou IPP selon le taux d'invalidité constaté).\n\n---\n\n**Source(s)**\n\n- [Article 4.3 des CG Prévoyance Invalidité — v4.2] : durée maximale d'indemnisation ITT fixée à 1 095 jours, avec bascule automatique vers l'évaluation invalidité au-delà.\n- [Article 1 des CG Prévoyance Invalidité — v4.2] : définitions de l'ITT, de l'IPT (taux ≥ 66%) et de l'IPP (taux compris entre 33% et 65%), ainsi que la notion de date de consolidation.\n- [Article 6.1 des CG Prévoyance Invalidité — v4.2] : procédure d'évaluation du taux d'invalidité une fois le dossier transmis.\n\n---\n\n**Point d'attention**\n\n⚠️ La bascule vers la garantie Invalidité ne signifie pas une reconnaissance automatique de celle-ci. Elle déclenche une **procédure d'évaluation médicale** (Article 6.1) pouvant durer jusqu'à **45 jours ouvrés**, à l'issue de laquelle le médecin conseil de l'assureur notifie sa décision. Il est donc conseillé d'anticiper cette démarche **avant** l'expiration des 1 095 jours afin d'éviter toute interruption de versement.",
+    "trace_log": [
+      {
+        "etape": "router",
+        "sous_question": "Combien de temps peut-on être indemnisé en arrêt de travail avant de basculer en invalidité ?",
+        "chunks_recus": 0,
+        "decision": "react_simple",
+        "raison": "La question porte sur un seul sujet : la durée maximale d'indemnisation en arrêt de travail avant le passage en invalidité. Une seule information est recherchée.",
+        "action_suivante": "retrieve"
+      },
+      {
+        "etape": "retrieve",
+        "sous_question": "Combien de temps peut-on être indemnisé en arrêt de travail avant de basculer en invalidité ?",
+        "chunks_recus": 5,
+        "decision": "top chunk: [CG-PREV-INV-2024] Art.4.3",
+        "raison": "filtre doc=None",
+        "action_suivante": "evaluate"
+      },
+      {
+        "etape": "evaluate",
+        "sous_question": "Combien de temps peut-on être indemnisé en arrêt de travail avant de basculer en invalidité ?",
+        "chunks_recus": 5,
+        "decision": "suffisant",
+        "raison": "Le Chunk 1 (Article 4.3) indique explicitement que la durée maximale d'indemnisation au titre de la garantie ITT est de 1 095 jours (3 ans), et qu'au-delà, le dossier est automatiquement orienté vers l'évaluation de la garantie Invalidité Permanente. Cela répond précisément à la question.",
+        "action_suivante": "synthesize"
+      },
+      {
+        "etape": "synthesize",
+        "sous_question": "Combien de temps peut-on être indemnisé en arrêt de travail avant de basculer en invalidité ?",
+        "chunks_recus": 5,
+        "decision": "reponse_generee",
+        "raison": "1 sous-question(s) traitée(s), 0 non trouvée(s)",
+        "action_suivante": "end"
+      }
+    ],
+    "score": {
+      "mots_trouves": [
+        "1 095",
+        "3 ans"
+      ],
+      "mots_attendus": [
+        "1 095",
+        "3 ans"
+      ],
+      "exactitude": 1.0,
+      "hallucination": false
+    },
+    "status": "✅ 100%",
+    "elapsed_s": 14.0
+  },
+  {
+    "id": "Q04",
+    "bloc": "Prévoyance",
+    "question": "À partir de quel taux d'invalidité est-on reconnu en Invalidité Permanente Totale ?",
+    "source_attendue": "Article 6 — CG-PREV-INV-2024",
+    "reponse": "**Réponse directe**\n\nL'Invalidité Permanente Totale (IPT) est reconnue à partir d'un taux d'invalidité fonctionnelle **supérieur ou égal à 66%**, tel qu'évalué par le médecin conseil d'ARESIA Assurances après la date de consolidation de l'état de santé de l'assuré.\n\nPour rappel, le taux d'invalidité fonctionnelle mesure l'atteinte aux capacités physiques et/ou mentales d'une personne, indépendamment de sa profession.\n\n---\n\n**Source(s)**\n\n- [Article 6 des CG Prévoyance Invalidité — v4.2] : *\"La garantie IPT est acquise lorsque le médecin conseil de l'assureur [...] reconnaît un taux d'invalidité fonctionnelle supérieur ou égal à 66%.\"*\n- [Article 1 des CG Prévoyance Invalidité — v4.2] : *\"Invalidité Permanente Totale (IPT) : État de l'assuré dont le taux d'invalidité fonctionnelle est supérieur ou égal à 66%, [...] rendant impossible tout exercice d'une activité professionnelle rémunérée.\"*\n- [Article 6.2 des CG Prévoyance Invalidité — v4.2] : le barème récapitulatif confirme la plage **66% à 99%** comme correspondant au statut IPT.\n\n---\n\n**Point d'attention**\n\nLe seuil de 66% n'est pas automatiquement acquis sur déclaration : c'est le **médecin conseil de l'assureur** qui statue, après examen complet du dossier médical (dans un délai de 45 jours ouvrés). En cas de désaccord avec cette évaluation, l'assuré dispose d'un droit à **expertise médicale contradictoire** prévu à l'Article 6.3. Par ailleurs, un taux entre 33% et 65% ne relève pas de l'IPT mais de l'**IPP (Invalidité Permanente Partielle)**, qui ouvre droit à des prestations différentes.",
+    "trace_log": [
+      {
+        "etape": "router",
+        "sous_question": "À partir de quel taux d'invalidité est-on reconnu en Invalidité Permanente Totale ?",
+        "chunks_recus": 0,
+        "decision": "react_simple",
+        "raison": "La question porte sur un seul critère : le taux d'invalidité seuil pour l'IPT. Une seule composante à rechercher dans un seul article.",
+        "action_suivante": "retrieve"
+      },
+      {
+        "etape": "retrieve",
+        "sous_question": "À partir de quel taux d'invalidité est-on reconnu en Invalidité Permanente Totale ?",
+        "chunks_recus": 5,
+        "decision": "top chunk: [CG-PREV-INV-2024] Art.6.2",
+        "raison": "filtre doc=None",
+        "action_suivante": "evaluate"
+      },
+      {
+        "etape": "evaluate",
+        "sous_question": "À partir de quel taux d'invalidité est-on reconnu en Invalidité Permanente Totale ?",
+        "chunks_recus": 5,
+        "decision": "suffisant",
+        "raison": "Plusieurs chunks répondent précisément à la question. Le Chunk 2 (Article 6) indique explicitement que l'IPT est reconnue à partir d'un taux d'invalidité fonctionnelle supérieur ou égal à 66%. Le Chunk 1 (Article 6.2) confirme cette information dans le tableau (66% à 99% = IPT). Le Chunk 3 (Article 1) reprend également cette définition dans les définitions contractuelles.",
+        "action_suivante": "synthesize"
+      },
+      {
+        "etape": "synthesize",
+        "sous_question": "À partir de quel taux d'invalidité est-on reconnu en Invalidité Permanente Totale ?",
+        "chunks_recus": 5,
+        "decision": "reponse_generee",
+        "raison": "1 sous-question(s) traitée(s), 0 non trouvée(s)",
+        "action_suivante": "end"
+      }
+    ],
+    "score": {
+      "mots_trouves": [
+        "66%",
+        "66"
+      ],
+      "mots_attendus": [
+        "66%",
+        "66"
+      ],
+      "exactitude": 1.0,
+      "hallucination": false
+    },
+    "status": "✅ 100%",
+    "elapsed_s": 15.3
+  },
+  {
+    "id": "Q05",
+    "bloc": "Prévoyance",
+    "question": "Le burn-out est-il couvert par le contrat prévoyance invalidité ?",
+    "source_attendue": "Articles 13 et 13.5 — CG-PREV-INV-2024",
+    "reponse": "**Réponse directe**\n\nOui, le burn-out est couvert par le contrat Prévoyance Invalidité ARESIA, mais sous des conditions précises :\n\n- **Pour la garantie ITT (Incapacité Temporaire de Travail)** : le burn-out est couvert **sans exclusion temporaire**, à condition que l'assuré ait fourni un **questionnaire médical de santé favorable** et ait souscrit le contrat **avant toute prescription médicale** liée à cette pathologie.\n\n- **Pour une couverture sans limitation de durée spécifique** : le burn-out (classé parmi les affections psychiatriques) est pris en charge à condition d'avoir souscrit l'**option Premium** et de justifier d'un **suivi psychiatrique régulier attesté**.\n\nEn dehors de ces conditions, une **surprime ou une exclusion spécifique** peut être appliquée sur la base du questionnaire médical, après avis du médecin conseil de l'assureur.\n\n---\n\n**Source(s)**\n\n- [Article 13.5 des CG Prévoyance Invalidité — v4.2] : couverture du burn-out sans exclusion temporaire sous réserve du questionnaire médical favorable et de l'absence de prescription préalable.\n- [Article 5.1 des CG Prévoyance Invalidité — v4.2] : prise en charge sans limitation de durée pour les assurés ayant souscrit l'option Premium, avec suivi psychiatrique régulier attesté.\n- [Article 5 des CG Prévoyance Invalidité — v4.2] : possibilité de surprime ou d'exclusion pour les affections psychiatriques selon le questionnaire médical.\n\n---\n\n**Point d'attention**\n\n⚠️ Deux conditions cumulatives sont particulièrement critiques :\n\n1. **L'antériorité de la souscription** : si une prescription médicale liée au burn-out a déjà été émise **avant la souscription**, la couverture peut être **refusée ou limitée**, même si cette information n'a pas été déclarée — ce qui constituerait une fausse déclaration aux conséquences potentiellement graves sur le contrat.\n\n2. **L'option Premium** : sans cette option, la durée de prise en charge des pathologies psychiatriques peut être limitée. Il est recommandé de vérifier vos **Conditions Particulières** pour confirmer l'option souscrite.\n\nEn cas de doute sur votre situation personnelle, contactez votre référent produit ou le service technique de ARESIA Assurances.",
+    "trace_log": [
+      {
+        "etape": "router",
+        "sous_question": "Le burn-out est-il couvert par le contrat prévoyance invalidité ?",
+        "chunks_recus": 0,
+        "decision": "react_simple",
+        "raison": "La question porte sur un seul sujet : la couverture du burn-out dans le contrat prévoyance invalidité. Une seule garantie et un seul produit sont mentionnés.",
+        "action_suivante": "retrieve"
+      },
+      {
+        "etape": "retrieve",
+        "sous_question": "Le burn-out est-il couvert par le contrat prévoyance invalidité ?",
+        "chunks_recus": 5,
+        "decision": "top chunk: [CG-PREV-INV-2024] Art.13",
+        "raison": "filtre doc=None",
+        "action_suivante": "evaluate"
+      },
+      {
+        "etape": "evaluate",
+        "sous_question": "Le burn-out est-il couvert par le contrat prévoyance invalidité ?",
+        "chunks_recus": 5,
+        "decision": "suffisant",
+        "raison": "Les chunks 1 et 2 contiennent des informations précises sur la couverture du burn-out. L'article 13.5 indique que le burn-out est couvert sans exclusion temporaire sous conditions (questionnaire médical favorable et souscription avant toute prescription liée à ces pathologies). L'article 5.1 précise que le burn-out est couvert sans limitation de durée spécifique pour les assurés ayant souscrit l'option Premium, sous réserve d'un suivi psychiatrique régulier attesté.",
+        "action_suivante": "synthesize"
+      },
+      {
+        "etape": "synthesize",
+        "sous_question": "Le burn-out est-il couvert par le contrat prévoyance invalidité ?",
+        "chunks_recus": 5,
+        "decision": "reponse_generee",
+        "raison": "1 sous-question(s) traitée(s), 0 non trouvée(s)",
+        "action_suivante": "end"
+      }
+    ],
+    "score": {
+      "mots_trouves": [
+        "Premium",
+        "psychiatrique"
+      ],
+      "mots_attendus": [
+        "Premium",
+        "psychiatrique"
+      ],
+      "exactitude": 1.0,
+      "hallucination": false
+    },
+    "status": "✅ 100%",
+    "elapsed_s": 20.9
+  },
+  {
+    "id": "Q06",
+    "bloc": "Prévoyance",
+    "question": "Si un assuré reprend le travail pendant 3 semaines puis retombe en arrêt, doit-il resubir une franchise ?",
+    "source_attendue": "Article 4.1 — CG-PREV-INV-2024",
+    "reponse": "**Réponse directe**\n\nDans le cas décrit — reprise du travail pendant 3 semaines (21 jours) puis nouvel arrêt — **l'assuré devra subir une nouvelle franchise**. En effet, la règle de continuité de sinistre ne s'applique que si la rechute survient dans les **30 jours suivant la reprise d'activité**. Or, une reprise de 3 semaines (21 jours) reste **en dessous de ce seuil de 30 jours**, ce qui signifie que le nouvel arrêt serait considéré comme la **continuité du sinistre initial** et qu'**aucune nouvelle franchise ne s'appliquerait**.\n\n⚠️ Correction importante : 21 jours < 30 jours, donc **la reprise de 3 semaines ne dépasse pas le délai de 30 jours**. Par conséquent, l'arrêt serait bien traité comme une **continuité du sinistre initial**, et **aucune nouvelle franchise ne serait applicable**.\n\n---\n\n**Source(s)**\n\n> *« En cas de rechute survenant dans les 30 jours suivant la reprise d'activité, l'arrêt est considéré comme la continuité du sinistre initial et aucune nouvelle franchise ne s'applique. »*\n> [Article 4.1 des CG Prévoyance Invalidité — v4.2]\n\n---\n\n**Point d'attention**\n\nLe critère déclencheur est la **durée de la reprise du travail** entre les deux arrêts :\n\n| Durée de reprise | Conséquence |\n|---|---|\n| ≤ 30 jours (ex : 3 semaines = 21 jours) | ✅ Continuité du sinistre initial — **pas de nouvelle franchise** |\n| > 30 jours | ❌ Nouveau sinistre — **nouvelle franchise applicable** |\n\nDans le cas présenté (3 semaines = 21 jours), l'assuré est **protégé** : il n'a pas à resubir sa franchise. Il est toutefois recommandé de vérifier la **durée de franchise souscrite** dans les Conditions Particulières de son contrat, car celle-ci peut varier de 15 à 90 jours selon l'option choisie [Article 4.1 des CG Prévoyance Invalidité — v4.2].",
+    "trace_log": [
+      {
+        "etape": "router",
+        "sous_question": "Si un assuré reprend le travail pendant 3 semaines puis retombe en arrêt, doit-il resubir une franchise ?",
+        "chunks_recus": 0,
+        "decision": "react_simple",
+        "raison": "La question porte sur un seul concept : l'application de la franchise en cas de rechute après reprise du travail. Une seule garantie est concernée (indemnités journalières/franchise), pas de combinaison de sujets distincts.",
+        "action_suivante": "retrieve"
+      },
+      {
+        "etape": "retrieve",
+        "sous_question": "Si un assuré reprend le travail pendant 3 semaines puis retombe en arrêt, doit-il resubir une franchise ?",
+        "chunks_recus": 5,
+        "decision": "top chunk: [CG-PREV-INV-2024] Art.4.1",
+        "raison": "filtre doc=None",
+        "action_suivante": "evaluate"
+      },
+      {
+        "etape": "evaluate",
+        "sous_question": "Si un assuré reprend le travail pendant 3 semaines puis retombe en arrêt, doit-il resubir une franchise ?",
+        "chunks_recus": 5,
+        "decision": "suffisant",
+        "raison": "Le Chunk 1 (Article 4.1) répond précisément à la question : en cas de rechute survenant dans les 30 jours suivant la reprise d'activité, l'arrêt est considéré comme la continuité du sinistre initial et aucune nouvelle franchise ne s'applique. Or, dans le cas posé, l'assuré reprend le travail pendant 3 semaines (21 jours), ce qui est inférieur à 30 jours. Donc, si la rechute survient dans ce délai, aucune nouvelle franchise ne s'applique. La règle est clairement établie dans le document.",
+        "action_suivante": "synthesize"
+      },
+      {
+        "etape": "synthesize",
+        "sous_question": "Si un assuré reprend le travail pendant 3 semaines puis retombe en arrêt, doit-il resubir une franchise ?",
+        "chunks_recus": 5,
+        "decision": "reponse_generee",
+        "raison": "1 sous-question(s) traitée(s), 0 non trouvée(s)",
+        "action_suivante": "end"
+      }
+    ],
+    "score": {
+      "mots_trouves": [
+        "30 jours",
+        "continuité",
+        "nouvelle franchise"
+      ],
+      "mots_attendus": [
+        "30 jours",
+        "continuité",
+        "nouvelle franchise"
+      ],
+      "exactitude": 1.0,
+      "hallucination": false
+    },
+    "status": "✅ 100%",
+    "elapsed_s": 18.4
+  },
+  {
+    "id": "Q07",
+    "bloc": "Assurance Vie",
+    "question": "Quelle est la fiscalité d'un rachat partiel sur une assurance vie ouverte il y a 10 ans ?",
+    "source_attendue": "Article 23 — CG-AV-MULTI-2024",
+    "reponse": "**Réponse directe**\n\nPour un contrat d'assurance vie ouvert il y a **10 ans** (donc au-delà de 8 ans), seule la part des **plus-values** (intérêts et gains) est imposable lors d'un rachat partiel — le capital versé, lui, n'est pas taxé.\n\nLe régime applicable dépend de la **date de versement des primes** :\n\n| Situation | Taux applicable |\n|---|---|\n| Primes versées **avant septembre 2017** | 7,5% d'IR après abattement + 17,2% de prélèvements sociaux (PS) |\n| Primes versées **après septembre 2017**, contrat **< 150 000 €** | 7,5% après abattement + 17,2% PS |\n| Primes versées **après septembre 2017**, contrat **> 150 000 €** | 7,5% jusqu'à 150 000 € + 12,8% au-delà + 17,2% PS |\n\nUn **abattement annuel** s'applique sur les gains :\n- **4 600 €** pour une personne seule\n- **9 200 €** pour un couple soumis à imposition commune\n*(tous contrats d'assurance vie confondus)*\n\n---\n\n**Source(s)**\n\n- [Article 23 des CG Assurance Vie ARESIA Patrimoine+ — v3.1] — Fiscalité des rachats selon durée de détention et date de versement des primes\n- [Article 23.1 des CG Assurance Vie ARESIA Patrimoine+ — v3.1] — Montants des abattements après 8 ans\n- [Article 23.3 des CG Assurance Vie ARESIA Patrimoine+ — v3.1] — Caractère indicatif des informations fiscales\n\n---\n\n**Point d'attention**\n\n⚠️ Ces informations sont données **à titre indicatif** et ne constituent pas un conseil fiscal. La fiscalité de l'assurance vie est **personnelle et complexe** : l'impact réel dépend de votre situation fiscale globale, du montant total de vos encours sur l'ensemble de vos contrats, et de l'évolution possible de la législation.\n\n> **ARESIA Assurances recommande vivement de consulter un conseiller fiscal ou un notaire avant toute décision de rachat ayant un impact fiscal significatif.** [Article 23.3 des CG Assurance Vie ARESIA Patrimoine+ — v3.1]",
+    "trace_log": [
+      {
+        "etape": "router",
+        "sous_question": "Quelle est la fiscalité d'un rachat partiel sur une assurance vie ouverte il y a 10 ans ?",
+        "chunks_recus": 0,
+        "decision": "react_simple",
+        "raison": "La question porte sur un seul sujet : la fiscalité d'un rachat partiel sur une assurance vie. Bien que la réponse puisse impliquer plusieurs aspects fiscaux, il s'agit d'une seule composante thématique ne combinant pas deux garanties, produits ou sujets distincts.",
+        "action_suivante": "retrieve"
+      },
+      {
+        "etape": "retrieve",
+        "sous_question": "Quelle est la fiscalité d'un rachat partiel sur une assurance vie ouverte il y a 10 ans ?",
+        "chunks_recus": 5,
+        "decision": "top chunk: [CG-AV-MULTI-2024] Art.23",
+        "raison": "filtre doc=None",
+        "action_suivante": "evaluate"
+      },
+      {
+        "etape": "evaluate",
+        "sous_question": "Quelle est la fiscalité d'un rachat partiel sur une assurance vie ouverte il y a 10 ans ?",
+        "chunks_recus": 5,
+        "decision": "suffisant",
+        "raison": "Le Chunk 1 (Article 23) contient exactement les informations nécessaires pour répondre à la question. Pour un contrat ouvert il y a 10 ans (donc > 8 ans), la fiscalité d'un rachat partiel est clairement détaillée : seules les plus-values sont imposables, avec un abattement de 4 600 € (personne seule) ou 9 200 € (couple), puis une taxation à 7,5% pour les encours < 150 000 € et 12,8% au-delà, plus 17,2% de prélèvements sociaux dans tous les cas. La distinction selon la date de versement des primes (avant/après septembre 2017) est également précisée.",
+        "action_suivante": "synthesize"
+      },
+      {
+        "etape": "synthesize",
+        "sous_question": "Quelle est la fiscalité d'un rachat partiel sur une assurance vie ouverte il y a 10 ans ?",
+        "chunks_recus": 5,
+        "decision": "reponse_generee",
+        "raison": "1 sous-question(s) traitée(s), 0 non trouvée(s)",
+        "action_suivante": "end"
+      }
+    ],
+    "score": {
+      "mots_trouves": [
+        "7,5%",
+        "8 ans",
+        "abattement",
+        "prélèvements sociaux"
+      ],
+      "mots_attendus": [
+        "7,5%",
+        "8 ans",
+        "abattement",
+        "prélèvements sociaux"
+      ],
+      "exactitude": 1.0,
+      "hallucination": false
+    },
+    "status": "✅ 100%",
+    "elapsed_s": 20.6
+  },
+  {
+    "id": "Q08",
+    "bloc": "Assurance Vie",
+    "question": "Quel est le montant minimum pour un versement complémentaire sur ARESIA Patrimoine+ ?",
+    "source_attendue": "Article 8 — CG-AV-MULTI-2024",
+    "reponse": "**Réponse directe**\n\nLe montant minimum pour un versement complémentaire libre sur ARESIA Patrimoine+ est de **300 €**, réalisable à tout moment et sans préavis. Si vous optez pour des versements programmés, les minimums sont différents : 100 €/mois pour un versement mensuel, 250 € par trimestre, ou 1 000 € par an.\n\n---\n\n**Source(s)**\n\n[Article 8 des CG Assurance Vie ARESIA Patrimoine+ — v3.1]\n\n> *\"Versement complémentaire libre : 300 € — À tout moment, sans préavis\"*\n\n---\n\n**Point d'attention**\n\nCes montants minimums s'appliquent par versement individuel. Notez que les versements complémentaires peuvent être orientés vers des supports en unités de compte, dont la valeur n'est **pas garantie** et est soumise aux fluctuations des marchés financiers. [Article 1 des CG Assurance Vie ARESIA Patrimoine+ — v3.1]",
+    "trace_log": [
+      {
+        "etape": "router",
+        "sous_question": "Quel est le montant minimum pour un versement complémentaire sur ARESIA Patrimoine+ ?",
+        "chunks_recus": 0,
+        "decision": "react_simple",
+        "raison": "Question simple portant sur un seul critère (montant minimum) pour un seul produit (ARESIA Patrimoine+).",
+        "action_suivante": "retrieve"
+      },
+      {
+        "etape": "retrieve",
+        "sous_question": "Quel est le montant minimum pour un versement complémentaire sur ARESIA Patrimoine+ ?",
+        "chunks_recus": 5,
+        "decision": "top chunk: [CG-AV-MULTI-2024] Art.1",
+        "raison": "filtre doc=None",
+        "action_suivante": "evaluate"
+      },
+      {
+        "etape": "evaluate",
+        "sous_question": "Quel est le montant minimum pour un versement complémentaire sur ARESIA Patrimoine+ ?",
+        "chunks_recus": 5,
+        "decision": "suffisant",
+        "raison": "Le chunk 3 (Article 8) contient un tableau explicite indiquant que le montant minimum pour un versement complémentaire libre sur ARESIA Patrimoine+ est de 300 €.",
+        "action_suivante": "synthesize"
+      },
+      {
+        "etape": "synthesize",
+        "sous_question": "Quel est le montant minimum pour un versement complémentaire sur ARESIA Patrimoine+ ?",
+        "chunks_recus": 5,
+        "decision": "reponse_generee",
+        "raison": "1 sous-question(s) traitée(s), 0 non trouvée(s)",
+        "action_suivante": "end"
+      }
+    ],
+    "score": {
+      "mots_trouves": [
+        "300"
+      ],
+      "mots_attendus": [
+        "300"
+      ],
+      "exactitude": 1.0,
+      "hallucination": false
+    },
+    "status": "✅ 100%",
+    "elapsed_s": 9.7
+  },
+  {
+    "id": "Q09",
+    "bloc": "Assurance Vie",
+    "question": "Peut-on faire une avance sur son contrat d'assurance vie et jusqu'à quel montant ?",
+    "source_attendue": "Article 15 — CG-AV-MULTI-2024",
+    "reponse": "**Réponse directe**\n\nOui, il est possible de demander une avance sur le contrat ARESIA Patrimoine+ à tout moment. Les plafonds sont les suivants :\n\n- **Fonds euros** : jusqu'à **80% de la valeur de rachat**\n- **Unités de compte** *(supports dont la valeur fluctue selon les marchés financiers)* : jusqu'à **60% de la valeur de rachat**\n- **Montant minimum** : 1 500 € par avance\n\nTrois durées sont disponibles, avec des taux d'intérêt annuels indexés sur le taux moyen des OAT 10 ans :\n\n| Durée | Taux | Renouvellement |\n|-------|------|----------------|\n| 1 an | OAT 10 ans + 1,5% | Renouvelable 2 fois |\n| 2 ans | OAT 10 ans + 2% | Non renouvelable |\n| 3 ans (maximum) | OAT 10 ans + 2,5% | Non renouvelable |\n\n> ⚠️ **Attention au non-remboursement** : si l'avance n'est pas remboursée à l'échéance, elle est automatiquement transformée en **rachat partiel et fiscalisée** en conséquence.\n\n---\n\n**Source(s)**\n\n- [Article 15 des CG Assurance Vie ARESIA Patrimoine+ — v3.1] — Avances sur contrat\n- [Article 15.4 des CG Assurance Vie ARESIA Patrimoine+ — v3.1] — Régime fiscal de l'avance\n\n---\n\n**Point d'attention**\n\nL'avance **ne constitue pas un rachat** et **n'est pas fiscalisée** tant qu'elle est remboursée dans les délais. Elle ne rompt pas non plus l'antériorité fiscale du contrat, ce qui en fait un outil de liquidité potentiellement intéressant. Toutefois, en cas de non-remboursement, la transformation en rachat partiel peut entraîner des conséquences fiscales selon la durée de détention du contrat. Pour évaluer l'impact fiscal dans votre situation personnelle, il est recommandé de consulter un conseiller fiscal ou un notaire, conformément à [l'Article 23.3 des CG Assurance Vie ARESIA Patrimoine+ — v3.1].",
+    "trace_log": [
+      {
+        "etape": "router",
+        "sous_question": "Peut-on faire une avance sur son contrat d'assurance vie et jusqu'à quel montant ?",
+        "chunks_recus": 0,
+        "decision": "plan_and_execute",
+        "raison": "La question combine deux composantes distinctes : (1) la possibilité de faire une avance sur contrat d'assurance vie (définition/principe), ET (2) le montant maximum autorisé (barème/plafond), nécessitant potentiellement des articles différents pour répondre à chacune.",
+        "action_suivante": "planner"
+      },
+      {
+        "etape": "planner",
+        "sous_question": "Peut-on faire une avance sur son contrat d'assurance vie et jusqu'à quel montant ?",
+        "chunks_recus": 0,
+        "decision": "2 sous-questions",
+        "raison": "Décomposition : [\"Est-il possible de faire une avance sur un contrat d'assurance vie ?\", \"Quel est le montant maximum d'une avance sur un contrat d'assurance vie ?\"]",
+        "action_suivante": "retrieve"
+      },
+      {
+        "etape": "retrieve",
+        "sous_question": "Est-il possible de faire une avance sur un contrat d'assurance vie ?",
+        "chunks_recus": 5,
+        "decision": "top chunk: [CG-AV-MULTI-2024] Art.15",
+        "raison": "filtre doc=CG-AV-MULTI-2024",
+        "action_suivante": "evaluate"
+      },
+      {
+        "etape": "retrieve",
+        "sous_question": "Quel est le montant maximum d'une avance sur un contrat d'assurance vie ?",
+        "chunks_recus": 5,
+        "decision": "top chunk: [CG-AV-MULTI-2024] Art.15",
+        "raison": "filtre doc=CG-AV-MULTI-2024",
+        "action_suivante": "evaluate"
+      },
+      {
+        "etape": "evaluate",
+        "sous_question": "Est-il possible de faire une avance sur un contrat d'assurance vie ?",
+        "chunks_recus": 5,
+        "decision": "suffisant",
+        "raison": "Le Chunk 1 (Article 15) répond précisément à la question : il confirme que des avances sur contrat sont possibles, en détaille les conditions (limites de 80% pour le fonds euros, 60% pour les UC, minimum 1500€), les taux d'intérêt selon la durée, les modalités de renouvellement, et précise que l'avance ne constitue pas un rachat et n'est pas fiscalisée.",
+        "action_suivante": "synthesize"
+      },
+      {
+        "etape": "evaluate",
+        "sous_question": "Quel est le montant maximum d'une avance sur un contrat d'assurance vie ?",
+        "chunks_recus": 5,
+        "decision": "insuffisant",
+        "raison": "Les chunks disponibles fournissent des informations sur les limites d'avance (80% pour le fonds euros, 60% pour les unités de compte) mais ne mentionnent pas de montant maximum absolu en euros. Il existe un minimum (1 500 €) mais pas de plafond maximum explicitement défini dans les documents fournis.",
+        "action_suivante": "reformulate_niveau_1"
+      },
+      {
+        "etape": "reformulate",
+        "sous_question": "Quel est le montant maximum d'une avance sur un contrat d'assurance vie ?",
+        "decision": "niveau 1 → 'Quel est le montant maximum d'une avance sur un contrat d'assurance vie ?'",
+        "raison": "Reformulation lexicale (synonymes)",
+        "action_suivante": "retrieve"
+      },
+      {
+        "etape": "evaluate",
+        "sous_question": "Quel est le montant maximum d'une avance sur un contrat d'assurance vie ?",
+        "chunks_recus": 5,
+        "decision": "suffisant",
+        "raison": "Les chunks disponibles ne mentionnent pas de montant maximum absolu pour une avance sur contrat. Le Chunk 1 indique des limites relatives (80% de la valeur de rachat pour le fonds euros, 60% pour les unités de compte) et un minimum (1 500 €), mais aucun plafond maximum en valeur absolue n'est précisé.",
+        "action_suivante": "non_trouve"
+      },
+      {
+        "etape": "synthesize",
+        "sous_question": "Peut-on faire une avance sur son contrat d'assurance vie et jusqu'à quel montant ?",
+        "chunks_recus": 10,
+        "decision": "reponse_generee",
+        "raison": "2 sous-question(s) traitée(s), 1 non trouvée(s)",
+        "action_suivante": "end"
+      }
+    ],
+    "score": {
+      "mots_trouves": [
+        "80%",
+        "60%",
+        "1 500"
+      ],
+      "mots_attendus": [
+        "80%",
+        "60%",
+        "1 500"
+      ],
+      "exactitude": 1.0,
+      "hallucination": false
+    },
+    "status": "✅ 100%",
+    "elapsed_s": 26.3
+  },
+  {
+    "id": "Q10",
+    "bloc": "Assurance Vie",
+    "question": "Le fonds en euros ARESIA Sécurité garantit-il le capital investi ?",
+    "source_attendue": "Article 10 — CG-AV-MULTI-2024",
+    "reponse": "**Réponse directe**\n\nOui, le fonds en euros ARESIA Sécurité garantit **100% du capital versé, net de frais sur versements**. Concrètement, cela signifie que le montant que vous avez effectivement investi (après déduction des éventuels frais d'entrée) ne peut pas diminuer. De plus, les intérêts crédités chaque année sont **définitivement acquis** : ils s'ajoutent au capital garanti et ne peuvent pas être repris. Pour 2023, le taux de rendement servi était de **2,80% net de frais de gestion**.\n\n---\n\n**Source(s)**\n\n- Garantie en capital à 100% du capital versé net de frais sur versements : [Article 10 des CG Assurance Vie ARESIA Patrimoine+ — v3.1]\n- Caractère définitivement acquis des intérêts crédités sur le support en euros : [Article 2 des CG Assurance Vie ARESIA Patrimoine+ — v3.1]\n- Taux de rendement 2023 à 2,80% net de frais de gestion : [Article 10 des CG Assurance Vie ARESIA Patrimoine+ — v3.1]\n\n---\n\n**Point d'attention**\n\nDeux nuances importantes à garder en tête :\n\n1. **Le taux de rendement n'est pas garanti d'une année sur l'autre** : le taux 2023 (2,80%) ne préjuge pas des taux futurs, qui peuvent varier à la hausse comme à la baisse. [Article 10.3 des CG Assurance Vie ARESIA Patrimoine+ — v3.1]\n\n2. **ARESIA Assurances se réserve le droit de limiter les versements** sur le fonds euros ou d'imposer une diversification minimale vers des unités de compte — lesquelles, elles, **ne bénéficient d'aucune garantie en capital** et sont soumises aux fluctuations des marchés financiers. [Article 10.3 et Article 1.2 des CG Assurance Vie ARESIA Patrimoine+ — v3.1]",
+    "trace_log": [
+      {
+        "etape": "router",
+        "sous_question": "Le fonds en euros ARESIA Sécurité garantit-il le capital investi ?",
+        "chunks_recus": 0,
+        "decision": "react_simple",
+        "raison": "La question porte sur une seule composante : la garantie du capital du fonds en euros ARESIA Sécurité.",
+        "action_suivante": "retrieve"
+      },
+      {
+        "etape": "retrieve",
+        "sous_question": "Le fonds en euros ARESIA Sécurité garantit-il le capital investi ?",
+        "chunks_recus": 5,
+        "decision": "top chunk: [CG-AV-MULTI-2024] Art.10",
+        "raison": "filtre doc=None",
+        "action_suivante": "evaluate"
+      },
+      {
+        "etape": "evaluate",
+        "sous_question": "Le fonds en euros ARESIA Sécurité garantit-il le capital investi ?",
+        "chunks_recus": 5,
+        "decision": "suffisant",
+        "raison": "Le Chunk 1 (Article 10) indique explicitement que le fonds en euros ARESIA Sécurité offre une 'Garantie en capital' de '100% du capital versé net de frais sur versements', ce qui répond directement à la question.",
+        "action_suivante": "synthesize"
+      },
+      {
+        "etape": "synthesize",
+        "sous_question": "Le fonds en euros ARESIA Sécurité garantit-il le capital investi ?",
+        "chunks_recus": 5,
+        "decision": "reponse_generee",
+        "raison": "1 sous-question(s) traitée(s), 0 non trouvée(s)",
+        "action_suivante": "end"
+      }
+    ],
+    "score": {
+      "mots_trouves": [
+        "100%",
+        "frais sur versements",
+        "net"
+      ],
+      "mots_attendus": [
+        "100%",
+        "frais sur versements",
+        "net"
+      ],
+      "exactitude": 1.0,
+      "hallucination": false
+    },
+    "status": "✅ 100%",
+    "elapsed_s": 15.9
+  },
+  {
+    "id": "Q11",
+    "bloc": "Assurance Vie",
+    "question": "Un conjoint bénéficiaire d'une assurance vie est-il exonéré de droits de succession ?",
+    "source_attendue": "Article 24.2 — CG-AV-MULTI-2024",
+    "reponse": "**Réponse directe**\n\nOui. Selon les Conditions Générales du contrat ARESIA Patrimoine+, le conjoint ou le partenaire de PACS désigné comme bénéficiaire est **totalement exonéré de toute taxation** sur les capitaux décès d'assurance vie, **quel que soit le montant des sommes transmises et quelle que soit la date à laquelle les versements ont été effectués** (avant ou après 70 ans).\n\nCette exonération est distincte du régime fiscal de droit commun applicable aux autres bénéficiaires (abattement de 152 500 € par bénéficiaire pour les primes versées avant 70 ans, puis taxation progressive au-delà).\n\n---\n\n**Source(s)**\n\n- [Article 24.2 des CG Assurance Vie ARESIA Patrimoine+ — v3.1] :\n*\"Le conjoint ou partenaire de PACS bénéficiaire est totalement exonéré de toute taxation sur les capitaux décès d'assurance vie, quel que soit le montant et la date des versements.\"*\n\n- [Article 24 des CG Assurance Vie ARESIA Patrimoine+ — v3.1] : tableau général de la fiscalité en cas de décès (abattements et taux applicables aux autres bénéficiaires, conformément à l'Article 990-I du Code général des impôts).\n\n---\n\n**Point d'attention**\n\n⚠️ La fiscalité de l'assurance vie est une matière **complexe et soumise à l'évolution législative**. Bien que l'exonération du conjoint/partenaire de PACS soit clairement établie par les documents contractuels ARESIA, **sa situation personnelle et patrimoniale globale** (droits de succession sur d'autres actifs, régime matrimonial, implications successorales, etc.) peut nécessiter une analyse plus approfondie.\n\n➡️ **Il est vivement recommandé de consulter un notaire ou un conseiller fiscal** avant toute décision, conformément d'ailleurs à l'esprit de prudence rappelé à [Article 23.3 des CG Assurance Vie ARESIA Patrimoine+ — v3.1].",
+    "trace_log": [
+      {
+        "etape": "router",
+        "sous_question": "Un conjoint bénéficiaire d'une assurance vie est-il exonéré de droits de succession ?",
+        "chunks_recus": 0,
+        "decision": "react_simple",
+        "raison": "La question porte sur un seul sujet : l'exonération de droits de succession pour le conjoint bénéficiaire d'une assurance vie.",
+        "action_suivante": "retrieve"
+      },
+      {
+        "etape": "retrieve",
+        "sous_question": "Un conjoint bénéficiaire d'une assurance vie est-il exonéré de droits de succession ?",
+        "chunks_recus": 5,
+        "decision": "top chunk: [CG-AV-MULTI-2024] Art.24",
+        "raison": "filtre doc=None",
+        "action_suivante": "evaluate"
+      },
+      {
+        "etape": "evaluate",
+        "sous_question": "Un conjoint bénéficiaire d'une assurance vie est-il exonéré de droits de succession ?",
+        "chunks_recus": 5,
+        "decision": "suffisant",
+        "raison": "Le Chunk 1 (Article 24.2) indique explicitement que le conjoint ou partenaire de PACS bénéficiaire est totalement exonéré de toute taxation sur les capitaux décès d'assurance vie, quel que soit le montant et la date des versements.",
+        "action_suivante": "synthesize"
+      },
+      {
+        "etape": "synthesize",
+        "sous_question": "Un conjoint bénéficiaire d'une assurance vie est-il exonéré de droits de succession ?",
+        "chunks_recus": 5,
+        "decision": "reponse_generee",
+        "raison": "1 sous-question(s) traitée(s), 0 non trouvée(s)",
+        "action_suivante": "end"
+      }
+    ],
+    "score": {
+      "mots_trouves": [
+        "exonéré",
+        "conjoint",
+        "PACS"
+      ],
+      "mots_attendus": [
+        "exonéré",
+        "conjoint",
+        "PACS"
+      ],
+      "exactitude": 1.0,
+      "hallucination": false
+    },
+    "status": "✅ 100%",
+    "elapsed_s": 17.3
+  },
+  {
+    "id": "Q12",
+    "bloc": "Assurance Vie",
+    "question": "Combien coûte un arbitrage entre supports sur ARESIA Patrimoine+ ?",
+    "source_attendue": "Article 9 — CG-AV-MULTI-2024",
+    "reponse": "**Réponse directe** :\n\nJe ne trouve pas cette information dans les documents disponibles. Je vous recommande de contacter votre référent produit ou le service technique de ARESIA Assurances.\n\n---\n\n**Source(s)** :\n\nAucun document pertinent disponible sur ce point précis. Aucune citation ne peut donc être fournie.\n\n---\n\n**Point d'attention** :\n\nLes frais d'arbitrage peuvent varier selon les contrats (frais fixes, frais en pourcentage des montants arbitrés, ou arbitrages gratuits sous certaines conditions). Il est important d'obtenir l'information directement auprès de ARESIA Assurances pour disposer du détail exact applicable à votre contrat **ARESIA Patrimoine+**, afin d'évaluer l'impact de ces frais sur vos opérations de gestion.",
+    "trace_log": [
+      {
+        "etape": "router",
+        "sous_question": "Combien coûte un arbitrage entre supports sur ARESIA Patrimoine+ ?",
+        "chunks_recus": 0,
+        "decision": "react_simple",
+        "raison": "Question simple portant sur un seul élément: le coût d'un arbitrage entre supports sur un produit spécifique.",
+        "action_suivante": "retrieve"
+      },
+      {
+        "etape": "retrieve",
+        "sous_question": "Combien coûte un arbitrage entre supports sur ARESIA Patrimoine+ ?",
+        "chunks_recus": 5,
+        "decision": "top chunk: [CG-AV-MULTI-2024] Art.1",
+        "raison": "filtre doc=None",
+        "action_suivante": "evaluate"
+      },
+      {
+        "etape": "evaluate",
+        "sous_question": "Combien coûte un arbitrage entre supports sur ARESIA Patrimoine+ ?",
+        "chunks_recus": 5,
+        "decision": "insuffisant",
+        "raison": "Les chunks disponibles ne contiennent aucune information sur les frais d'arbitrage entre supports pour le contrat ARESIA Patrimoine+. Les chunks couvrent la nature du contrat, les définitions, le fonds en euros, et la fiscalité des rachats, mais aucun ne mentionne les frais d'arbitrage.",
+        "action_suivante": "reformulate_niveau_1"
+      },
+      {
+        "etape": "reformulate",
+        "sous_question": "Combien coûte un arbitrage entre supports sur ARESIA Patrimoine+ ?",
+        "decision": "niveau 1 → 'Combien coûte un arbitrage entre supports sur ARESIA Patrimoine+ ?'",
+        "raison": "Reformulation lexicale (synonymes)",
+        "action_suivante": "retrieve"
+      },
+      {
+        "etape": "evaluate",
+        "sous_question": "Combien coûte un arbitrage entre supports sur ARESIA Patrimoine+ ?",
+        "chunks_recus": 5,
+        "decision": "suffisant",
+        "raison": "Les chunks disponibles ne contiennent aucune information sur les frais d'arbitrage entre supports sur ARESIA Patrimoine+. Les articles présentés couvrent la nature du contrat, les définitions, le fonds en euros et la fiscalité des rachats, mais aucun ne mentionne les coûts liés aux arbitrages entre supports.",
+        "action_suivante": "non_trouve"
+      },
+      {
+        "etape": "synthesize",
+        "sous_question": "Combien coûte un arbitrage entre supports sur ARESIA Patrimoine+ ?",
+        "chunks_recus": 5,
+        "decision": "reponse_generee",
+        "raison": "1 sous-question(s) traitée(s), 1 non trouvée(s)",
+        "action_suivante": "end"
+      }
+    ],
+    "score": {
+      "mots_trouves": [
+        "gratuit"
+      ],
+      "mots_attendus": [
+        "0,50%",
+        "gratuit",
+        "4"
+      ],
+      "exactitude": 0.3333333333333333,
+      "hallucination": false
+    },
+    "status": "⚠️  33%",
+    "elapsed_s": 14.6
+  },
+  {
+    "id": "Q13",
+    "bloc": "IARD",
+    "question": "Quelle est la franchise en cas de bris de pare-brise avec un réparateur agréé ?",
+    "source_attendue": "Article 2.3 — BAR-IARD-2024-V2",
+    "reponse": "**Réponse directe**\n\nEn cas de bris de pare-brise, la franchise applicable dépend du choix du réparateur :\n- **Avec un réparateur agréé** : la franchise est de **0 €** (aucune franchise)\n- **Sans réparateur agréé** : la franchise est de **75 €**\n\nPar ailleurs, si vous avez souscrit l'**option Zéro**, la franchise est également de **0 €** quel que soit le réparateur choisi.\n\n---\n\n**Source(s)**\n\n[Article 2.3 — Barème Garanties IARD 2024 v2.0] — Tableau des franchises automobiles 2024, ligne « Bris de glace (pare-brise) » : *« 0 € après réparateur agréé | 75 € autre »*, avec franchise standard ramenée à 0 € via l'option Zéro.\n\n---\n\n**Point d'attention**\n\n⚠️ La notion de **réparateur agréé** est déterminante : le choix d'un réparateur hors réseau agréé entraîne automatiquement une franchise de 75 € à votre charge. Avant toute intervention, il est conseillé de vérifier auprès de ARESIA Assurances la liste des réparateurs agréés afin de bénéficier de la franchise à 0 €. À noter également que le plafond de garantie bris de glace varie selon la formule souscrite (2 000 € en Tiers+ et Intermédiaire, sans limite en Tous Risques) [Article 2.2 — Barème Garanties IARD 2024 v2.0].",
+    "trace_log": [
+      {
+        "etape": "router",
+        "sous_question": "Quelle est la franchise en cas de bris de pare-brise avec un réparateur agréé ?",
+        "chunks_recus": 0,
+        "decision": "react_simple",
+        "raison": "La question porte sur une seule garantie (bris de pare-brise) avec une seule condition (réparateur agréé) et demande un seul type d'information (la franchise).",
+        "action_suivante": "retrieve"
+      },
+      {
+        "etape": "retrieve",
+        "sous_question": "Quelle est la franchise en cas de bris de pare-brise avec un réparateur agréé ?",
+        "chunks_recus": 5,
+        "decision": "top chunk: [BAR-IARD-2024-V2] Art.2.3",
+        "raison": "filtre doc=None",
+        "action_suivante": "evaluate"
+      },
+      {
+        "etape": "evaluate",
+        "sous_question": "Quelle est la franchise en cas de bris de pare-brise avec un réparateur agréé ?",
+        "chunks_recus": 5,
+        "decision": "suffisant",
+        "raison": "Le Chunk 1 (Article 2.3) indique explicitement que la franchise pour le bris de glace (pare-brise) est de 0 € avec un réparateur agréé, et de 75 € avec un autre réparateur.",
+        "action_suivante": "synthesize"
+      },
+      {
+        "etape": "synthesize",
+        "sous_question": "Quelle est la franchise en cas de bris de pare-brise avec un réparateur agréé ?",
+        "chunks_recus": 5,
+        "decision": "reponse_generee",
+        "raison": "1 sous-question(s) traitée(s), 0 non trouvée(s)",
+        "action_suivante": "end"
+      }
+    ],
+    "score": {
+      "mots_trouves": [
+        "0",
+        "agréé",
+        "75"
+      ],
+      "mots_attendus": [
+        "0",
+        "agréé",
+        "75"
+      ],
+      "exactitude": 1.0,
+      "hallucination": false
+    },
+    "status": "✅ 100%",
+    "elapsed_s": 13.1
+  },
+  {
+    "id": "Q14",
+    "bloc": "IARD",
+    "question": "Quel est le plafond de RC Professionnelle pour un conseiller en gestion de patrimoine ?",
+    "source_attendue": "Article 3.1 — BAR-IARD-2024-V2",
+    "reponse": "**Réponse directe**\n\nPour un Conseiller en Gestion de Patrimoine (CGP), les plafonds de RC Professionnelle sont les suivants :\n\n| Plafond par sinistre | Plafond annuel (tous sinistres) | Franchise |\n|---|---|---|\n| **1 500 000 €** | **3 000 000 €** | **1 500 €** |\n\nLes CGP (ainsi que les CIF — Conseillers en Investissements Financiers) relèvent de la catégorie **\"Professions financières\"**. La couverture minimale de 1 500 000 € par sinistre est **obligatoire** au titre des exigences réglementaires de l'ORIAS et de l'AMF, et elle est incluse dans la formule standard ARESIA.\n\n> 💡 *Rappel de jargon : la \"franchise\" est la somme qui reste à la charge de l'assuré en cas de sinistre, avant intervention de l'assureur.*\n\n---\n\n**Source(s)**\n\n- [Article 3.1 du Barème Garanties IARD 2024 — v2.0] : tableau des catégories professionnelles et plafonds associés, ligne \"Professions financières (CGPI, CIF, CGP)\".\n- [Article 3.1.5 du Barème Garanties IARD 2024 — v2.0] : obligation de RC Pro pour les CGP/CIF au regard des exigences ORIAS et AMF, et inclusion de la couverture minimale légale de 1 500 000 € dans la formule standard.\n\n---\n\n**Point d'attention**\n\nCes plafonds correspondent aux **maximums de la formule standard**. Si votre activité présente un volume de gestion sous mandat ou un encours client élevé, une couverture supérieure peut s'avérer nécessaire. Je vous recommande de vous rapprocher de votre **référent produit ARESIA Assurances** pour vérifier l'adéquation de ces plafonds avec votre profil de risque réel, notamment si vous exercez également en tant que CIF sous agrément AMF.",
+    "trace_log": [
+      {
+        "etape": "router",
+        "sous_question": "Quel est le plafond de RC Professionnelle pour un conseiller en gestion de patrimoine ?",
+        "chunks_recus": 0,
+        "decision": "react_simple",
+        "raison": "Question unique portant sur un seul élément (plafond) d'une seule garantie (RC Professionnelle) pour un seul type de professionnel.",
+        "action_suivante": "retrieve"
+      },
+      {
+        "etape": "retrieve",
+        "sous_question": "Quel est le plafond de RC Professionnelle pour un conseiller en gestion de patrimoine ?",
+        "chunks_recus": 5,
+        "decision": "top chunk: [BAR-IARD-2024-V2] Art.3.1",
+        "raison": "filtre doc=None",
+        "action_suivante": "evaluate"
+      },
+      {
+        "etape": "evaluate",
+        "sous_question": "Quel est le plafond de RC Professionnelle pour un conseiller en gestion de patrimoine ?",
+        "chunks_recus": 5,
+        "decision": "suffisant",
+        "raison": "Le Chunk 1 (Article 3.1) fournit explicitement les plafonds RC Professionnelle pour les professions financières incluant les CGP (Conseillers en Gestion de Patrimoine) : 1 500 000 € par sinistre et 3 000 000 € annuel, avec une franchise de 1 500 €. L'article 3.1.5 confirme également la couverture minimale légale de 1 500 000 € par sinistre pour les CGP.",
+        "action_suivante": "synthesize"
+      },
+      {
+        "etape": "synthesize",
+        "sous_question": "Quel est le plafond de RC Professionnelle pour un conseiller en gestion de patrimoine ?",
+        "chunks_recus": 5,
+        "decision": "reponse_generee",
+        "raison": "1 sous-question(s) traitée(s), 0 non trouvée(s)",
+        "action_suivante": "end"
+      }
+    ],
+    "score": {
+      "mots_trouves": [
+        "1 500 000",
+        "3 000 000",
+        "CGP"
+      ],
+      "mots_attendus": [
+        "1 500 000",
+        "3 000 000",
+        "CGP"
+      ],
+      "exactitude": 1.0,
+      "hallucination": false
+    },
+    "status": "✅ 100%",
+    "elapsed_s": 18.1
+  },
+  {
+    "id": "Q15",
+    "bloc": "IARD",
+    "question": "Dans quel délai doit-on déclarer un cambriolage à son assureur ?",
+    "source_attendue": "Article 4.1 — BAR-IARD-2024-V2",
+    "reponse": "**Réponse directe**\n\nEn cas de cambriolage, vous disposez de **48 heures après le constat** pour déclarer le sinistre à ARESIA Assurances. Deux démarches sont obligatoires et cumulatives :\n- **Déposer une plainte** auprès des autorités (police ou gendarmerie)\n- **Effectuer la déclaration** auprès de votre assureur (en ligne ou par téléphone)\n\n---\n\n**Source(s)**\n\n[Article 4.1 — Barème Garanties IARD 2024 v2.0]\n> *\"Vol / Cambriolage — 48 heures après constat — Dépôt de plainte obligatoire + déclaration\"*\n\n---\n\n**Point d'attention**\n\n⚠️ Le délai de **48 heures** est particulièrement court. Si vous n'êtes pas en mesure de respecter ce délai (découverte tardive, hospitalisation, etc.), contactez immédiatement ARESIA Assurances pour en informer votre interlocuteur, car un retard de déclaration peut entraîner des conséquences sur la prise en charge de votre sinistre. Le document consulté ne précise pas explicitement la sanction applicable en cas de dépassement pour ce type de sinistre : je vous recommande de **contacter votre référent produit ou le service technique de ARESIA Assurances** pour en connaître les modalités exactes.",
+    "trace_log": [
+      {
+        "etape": "router",
+        "sous_question": "Dans quel délai doit-on déclarer un cambriolage à son assureur ?",
+        "chunks_recus": 0,
+        "decision": "react_simple",
+        "raison": "La question porte sur un seul sujet : le délai de déclaration d'un cambriolage à l'assureur.",
+        "action_suivante": "retrieve"
+      },
+      {
+        "etape": "retrieve",
+        "sous_question": "Dans quel délai doit-on déclarer un cambriolage à son assureur ?",
+        "chunks_recus": 5,
+        "decision": "top chunk: [BAR-IARD-2024-V2] Art.4.1",
+        "raison": "filtre doc=None",
+        "action_suivante": "evaluate"
+      },
+      {
+        "etape": "evaluate",
+        "sous_question": "Dans quel délai doit-on déclarer un cambriolage à son assureur ?",
+        "chunks_recus": 5,
+        "decision": "suffisant",
+        "raison": "Le Chunk 1 (Article 4.1 — Barème Garanties IARD 2024 v2.0) indique explicitement que le délai de déclaration pour un Vol/Cambriolage est de 48 heures après constat, avec dépôt de plainte obligatoire.",
+        "action_suivante": "synthesize"
+      },
+      {
+        "etape": "synthesize",
+        "sous_question": "Dans quel délai doit-on déclarer un cambriolage à son assureur ?",
+        "chunks_recus": 5,
+        "decision": "reponse_generee",
+        "raison": "1 sous-question(s) traitée(s), 0 non trouvée(s)",
+        "action_suivante": "end"
+      }
+    ],
+    "score": {
+      "mots_trouves": [
+        "48 heures",
+        "plainte"
+      ],
+      "mots_attendus": [
+        "48 heures",
+        "plainte"
+      ],
+      "exactitude": 1.0,
+      "hallucination": false
+    },
+    "status": "✅ 100%",
+    "elapsed_s": 13.2
+  },
+  {
+    "id": "Q16",
+    "bloc": "IARD",
+    "question": "La multirisque habitation couvre-t-elle le vol d'espèces au domicile et jusqu'à quel montant ?",
+    "source_attendue": "Article 1.1 — BAR-IARD-2024-V2",
+    "reponse": "**Réponse directe**\n\nOui, la multirisque habitation ARESIA Assurances couvre bien le vol d'espèces (argent liquide) au domicile. Le plafond de couverture pour les espèces est de **5 000 €**, avec une franchise standard de **300 €** applicable au sinistre. À titre de comparaison, le plafond pour le vol de mobilier (meubles, objets) est distinct et fixé à 30 000 €.\n\n---\n\n**Source(s)**\n\n- [Article 1.1 — Barème Garanties IARD 2024 v2.0] : *\"Vol et actes de vandalisme — 30 000 € (meubles) / 5 000 € (espèces) — Franchise standard : 300 €\"*\n\n---\n\n**Point d'attention**\n\nDeux éléments importants à retenir :\n\n1. **La franchise de 300 €** s'applique à tout sinistre vol, y compris sur les espèces. Concrètement, si le montant volé est inférieur ou égal à 300 €, aucune indemnisation ne sera versée.\n2. Les documents disponibles ne précisent **aucune condition particulière** (effraction, témoins, etc.) requise pour déclencher la garantie vol d'espèces. Je vous recommande de vérifier les **Conditions Générales du contrat** ou de contacter votre référent produit ARESIA Assurances pour connaître les modalités exactes de mise en jeu de cette garantie.",
+    "trace_log": [
+      {
+        "etape": "router",
+        "sous_question": "La multirisque habitation couvre-t-elle le vol d'espèces au domicile et jusqu'à quel montant ?",
+        "chunks_recus": 0,
+        "decision": "plan_and_execute",
+        "raison": "La question combine une demande de couverture (définition/existence de la garantie vol d'espèces) ET un montant/plafond associé, nécessitant potentiellement des articles différents pour répondre aux deux aspects.",
+        "action_suivante": "planner"
+      },
+      {
+        "etape": "planner",
+        "sous_question": "La multirisque habitation couvre-t-elle le vol d'espèces au domicile et jusqu'à quel montant ?",
+        "chunks_recus": 0,
+        "decision": "2 sous-questions",
+        "raison": "Décomposition : [\"La multirisque habitation couvre-t-elle le vol d'espèces (argent liquide) au domicile ?\", \"Quel est le montant maximum de garantie pour le vol d'espèces ou d'argent liquide dans le cadre d'un contrat multirisque habitation ?\"]",
+        "action_suivante": "retrieve"
+      },
+      {
+        "etape": "retrieve",
+        "sous_question": "La multirisque habitation couvre-t-elle le vol d'espèces (argent liquide) au domicile ?",
+        "chunks_recus": 5,
+        "decision": "top chunk: [BAR-IARD-2024-V2] Art.1.1",
+        "raison": "filtre doc=BAR-IARD-2024-V2",
+        "action_suivante": "evaluate"
+      },
+      {
+        "etape": "retrieve",
+        "sous_question": "Quel est le montant maximum de garantie pour le vol d'espèces ou d'argent liquide dans le cadre d'un contrat multirisque habitation ?",
+        "chunks_recus": 5,
+        "decision": "top chunk: [BAR-IARD-2024-V2] Art.1.1",
+        "raison": "filtre doc=BAR-IARD-2024-V2",
+        "action_suivante": "evaluate"
+      },
+      {
+        "etape": "evaluate",
+        "sous_question": "La multirisque habitation couvre-t-elle le vol d'espèces (argent liquide) au domicile ?",
+        "chunks_recus": 5,
+        "decision": "suffisant",
+        "raison": "Le Chunk 1 (Article 1.1) indique explicitement que la garantie 'Vol et actes de vandalisme' de la multirisque habitation couvre les espèces avec un plafond de 5 000 € et une franchise de 300 €, ce qui répond directement à la question.",
+        "action_suivante": "synthesize"
+      },
+      {
+        "etape": "evaluate",
+        "sous_question": "Quel est le montant maximum de garantie pour le vol d'espèces ou d'argent liquide dans le cadre d'un contrat multirisque habitation ?",
+        "chunks_recus": 5,
+        "decision": "suffisant",
+        "raison": "Le Chunk 1 (Article 1.1) indique explicitement le plafond de garantie pour le vol d'espèces dans le cadre d'un contrat multirisque habitation : 5 000 € pour les espèces, avec une franchise de 300 €.",
+        "action_suivante": "synthesize"
+      },
+      {
+        "etape": "synthesize",
+        "sous_question": "La multirisque habitation couvre-t-elle le vol d'espèces au domicile et jusqu'à quel montant ?",
+        "chunks_recus": 10,
+        "decision": "reponse_generee",
+        "raison": "2 sous-question(s) traitée(s), 0 non trouvée(s)",
+        "action_suivante": "end"
+      }
+    ],
+    "score": {
+      "mots_trouves": [
+        "5 000",
+        "espèces"
+      ],
+      "mots_attendus": [
+        "5 000",
+        "espèces"
+      ],
+      "exactitude": 1.0,
+      "hallucination": false
+    },
+    "status": "✅ 100%",
+    "elapsed_s": 21.5
+  },
+  {
+    "id": "Q17",
+    "bloc": "ACPR",
+    "question": "Quels éléments doit obligatoirement contenir le Document de Recueil des Informations et des Besoins ?",
+    "source_attendue": "Article 4 — ACPR-REC-2024-12",
+    "reponse": "**Réponse directe**\n\nLe Document de Recueil des Informations et des Besoins (DRIB) doit obligatoirement contenir les éléments suivants :\n\n- ✅ **L'identité complète** du client et du distributeur\n- ✅ **La date** du recueil\n- ✅ **La synthèse des informations collectées** : situation personnelle, objectifs et profil de risque\n- ✅ **L'analyse des besoins** réalisée\n- ✅ **Les recommandations formulées**, accompagnées de leur justification\n- ✅ **La mention explicite des produits étudiés mais non recommandés**, avec la raison de leur exclusion\n- ✅ **La signature du client**, attestant de la réception et de la compréhension du document\n\nPar ailleurs, ce document doit être **remis au client avant la souscription**, en format papier ou électronique avec accusé de réception.\n\n---\n\n**Source(s)**\n\n- [Article 4 — Circulaire ACPR Devoir de Conseil v1.0] : contenu obligatoire du DRIB\n- [Article 4.3 — Circulaire ACPR Devoir de Conseil v1.0] : modalités de remise et de conservation\n\n---\n\n**Point d'attention**\n\n⚠️ Le DRIB doit être conservé par l'assureur **pendant toute la durée du contrat et 5 ans après sa résiliation**, sur un système de gestion sécurisé et auditable. [Article 6 — Circulaire ACPR Devoir de Conseil v1.0]\n\nIl est également important de noter que les informations qui alimentent le DRIB (situation personnelle, patrimoniale, fiscale, profil de risque, etc.) doivent être **mises à jour a minima tous les 2 ans** ou à l'occasion de tout acte contractuel significatif. [Article 2 — Circulaire ACPR Devoir de Conseil v1.0]",
+    "trace_log": [
+      {
+        "etape": "router",
+        "sous_question": "Quels éléments doit obligatoirement contenir le Document de Recueil des Informations et des Besoins ?",
+        "chunks_recus": 0,
+        "decision": "react_simple",
+        "raison": "La question porte sur un seul document (DRIB) et ses éléments obligatoires, ce qui constitue une seule composante thématique.",
+        "action_suivante": "retrieve"
+      },
+      {
+        "etape": "retrieve",
+        "sous_question": "Quels éléments doit obligatoirement contenir le Document de Recueil des Informations et des Besoins ?",
+        "chunks_recus": 5,
+        "decision": "top chunk: [ACPR-REC-2024-12] Art.4",
+        "raison": "filtre doc=None",
+        "action_suivante": "evaluate"
+      },
+      {
+        "etape": "evaluate",
+        "sous_question": "Quels éléments doit obligatoirement contenir le Document de Recueil des Informations et des Besoins ?",
+        "chunks_recus": 5,
+        "decision": "suffisant",
+        "raison": "Le Chunk 1 (Article 4) détaille explicitement et exhaustivement les éléments obligatoires que doit contenir le Document de Recueil des Informations et des Besoins (DRIB) : identité complète, date du recueil, synthèse des informations collectées, analyse des besoins, recommandations avec justification, mention des produits non recommandés, et signature du client.",
+        "action_suivante": "synthesize"
+      },
+      {
+        "etape": "synthesize",
+        "sous_question": "Quels éléments doit obligatoirement contenir le Document de Recueil des Informations et des Besoins ?",
+        "chunks_recus": 5,
+        "decision": "reponse_generee",
+        "raison": "1 sous-question(s) traitée(s), 0 non trouvée(s)",
+        "action_suivante": "end"
+      }
+    ],
+    "score": {
+      "mots_trouves": [
+        "identité",
+        "besoins",
+        "recommandation",
+        "signature"
+      ],
+      "mots_attendus": [
+        "identité",
+        "besoins",
+        "recommandation",
+        "signature"
+      ],
+      "exactitude": 1.0,
+      "hallucination": false
+    },
+    "status": "✅ 100%",
+    "elapsed_s": 12.5
+  },
+  {
+    "id": "Q18",
+    "bloc": "ACPR",
+    "question": "Pendant combien de temps dois-je conserver le DRIB et le journal des interactions de conseil ?",
+    "source_attendue": "Article 6 — ACPR-REC-2024-12",
+    "reponse": "**Réponse directe**\n\nLe DRIB et le journal des interactions de conseil doivent être conservés pendant **toute la durée du contrat + 5 ans après sa résiliation**. Ces documents doivent être stockés sur des supports sécurisés et auditables :\n- Le **DRIB** : sur un système de gestion sécurisé à accès auditable\n- Le **journal des interactions de conseil** : sur une base de données horodatée et immuable, avec l'archivage électronique au format **NF Z42-013** recommandé\n\n---\n\n**Source(s)**\n\n- [Article 6 — Circulaire ACPR Devoir de Conseil v1.0] : tableau des durées de conservation (DRIB et journal des interactions → *Durée contrat + 5 ans*)\n- [Article 4.3 — Circulaire ACPR Devoir de Conseil v1.0] : *\"L'assureur doit conserver ce document pendant toute la durée du contrat et 5 ans après sa résiliation.\"*\n\n---\n\n**Point d'attention**\n\n⚠️ Les durées de conservation des **autres documents** ne sont pas identiques :\n- Les **documents d'identité (KYC)** : 5 ans après la **fin de la relation** (et non après la résiliation du contrat), avec chiffrement obligatoire conformément au RGPD\n- Les **réclamations et réponses** : 5 ans après la **clôture de la réclamation**\n\nVeillez donc à ne pas appliquer une durée unique à l'ensemble de vos documents, au risque de vous exposer à un manquement lors d'un contrôle ACPR.",
+    "trace_log": [
+      {
+        "etape": "router",
+        "sous_question": "Pendant combien de temps dois-je conserver le DRIB et le journal des interactions de conseil ?",
+        "chunks_recus": 0,
+        "decision": "react_simple",
+        "raison": "La question porte sur un seul sujet : la durée de conservation de documents (DRIB et journal des interactions de conseil). Bien que deux documents soient mentionnés, ils relèvent du même thème réglementaire et peuvent être traités dans un même article.",
+        "action_suivante": "retrieve"
+      },
+      {
+        "etape": "retrieve",
+        "sous_question": "Pendant combien de temps dois-je conserver le DRIB et le journal des interactions de conseil ?",
+        "chunks_recus": 5,
+        "decision": "top chunk: [ACPR-REC-2024-12] Art.6",
+        "raison": "filtre doc=None",
+        "action_suivante": "evaluate"
+      },
+      {
+        "etape": "evaluate",
+        "sous_question": "Pendant combien de temps dois-je conserver le DRIB et le journal des interactions de conseil ?",
+        "chunks_recus": 5,
+        "decision": "suffisant",
+        "raison": "Le Chunk 1 (Article 6) indique explicitement que la durée de conservation minimale du DRIB et du journal des interactions de conseil est 'Durée contrat + 5 ans'. Le Chunk 3 (Article 4.3) confirme également cette durée pour le DRIB : 'toute la durée du contrat et 5 ans après sa résiliation'.",
+        "action_suivante": "synthesize"
+      },
+      {
+        "etape": "synthesize",
+        "sous_question": "Pendant combien de temps dois-je conserver le DRIB et le journal des interactions de conseil ?",
+        "chunks_recus": 5,
+        "decision": "reponse_generee",
+        "raison": "1 sous-question(s) traitée(s), 0 non trouvée(s)",
+        "action_suivante": "end"
+      }
+    ],
+    "score": {
+      "mots_trouves": [
+        "5 ans",
+        "durée contrat"
+      ],
+      "mots_attendus": [
+        "5 ans",
+        "durée contrat"
+      ],
+      "exactitude": 1.0,
+      "hallucination": false
+    },
+    "status": "✅ 100%",
+    "elapsed_s": 16.1
+  },
+  {
+    "id": "Q19",
+    "bloc": "ACPR",
+    "question": "Combien d'heures de formation continue un conseiller doit-il suivre par an au titre de la DDA ?",
+    "source_attendue": "Article 7 — ACPR-REC-2024-12",
+    "reponse": "**Réponse directe**\n\nTout distributeur d'assurance (y compris les mandataires et sous-agents) doit suivre **au minimum 15 heures de formation continue par an** au titre de la DDA. Ces heures sont réparties sur plusieurs domaines :\n\n| Domaine de formation | Durée minimale recommandée |\n|---|---|\n| Produits et marchés d'assurance | 5 heures/an |\n| Réglementation et conformité | 4 heures/an |\n| Compétences relationnelles | 3 heures/an |\n| Prévention des conflits d'intérêts | 2 heures/an |\n| Éthique professionnelle | 1 heure/an |\n\n---\n\n**Source(s)**\n\n[Article 7 — Circulaire ACPR Devoir de Conseil v1.0]\n\n---\n\n**Point d'attention**\n\n⚠️ Ce document est explicitement identifié comme **fictif et à usage de démonstration uniquement** — il ne constitue pas une publication officielle de l'ACPR [Article (Préambule) — Circulaire ACPR Devoir de Conseil v1.0]. Pour toute mise en conformité réelle, il convient de se référer aux textes officiels de transposition de la DDA (ordonnance n° 2018-361 du 16 mai 2018) et aux publications authentiques de l'ACPR. Je vous recommande de contacter votre référent produit ou le service technique de ARESIA Assurances pour validation.",
+    "trace_log": [
+      {
+        "etape": "router",
+        "sous_question": "Combien d'heures de formation continue un conseiller doit-il suivre par an au titre de la DDA ?",
+        "chunks_recus": 0,
+        "decision": "react_simple",
+        "raison": "La question porte sur un seul sujet précis : le nombre d'heures de formation continue DDA pour un conseiller. Pas de combinaison de garanties, produits ou sujets distincts.",
+        "action_suivante": "retrieve"
+      },
+      {
+        "etape": "retrieve",
+        "sous_question": "Combien d'heures de formation continue un conseiller doit-il suivre par an au titre de la DDA ?",
+        "chunks_recus": 5,
+        "decision": "top chunk: [ACPR-REC-2024-12] Art.7",
+        "raison": "filtre doc=None",
+        "action_suivante": "evaluate"
+      },
+      {
+        "etape": "evaluate",
+        "sous_question": "Combien d'heures de formation continue un conseiller doit-il suivre par an au titre de la DDA ?",
+        "chunks_recus": 5,
+        "decision": "suffisant",
+        "raison": "Le Chunk 1 indique explicitement que tout distributeur d'assurance doit suivre au minimum 15 heures de formation continue par an au titre de la DDA, avec le détail des domaines couverts.",
+        "action_suivante": "synthesize"
+      },
+      {
+        "etape": "synthesize",
+        "sous_question": "Combien d'heures de formation continue un conseiller doit-il suivre par an au titre de la DDA ?",
+        "chunks_recus": 5,
+        "decision": "reponse_generee",
+        "raison": "1 sous-question(s) traitée(s), 0 non trouvée(s)",
+        "action_suivante": "end"
+      }
+    ],
+    "score": {
+      "mots_trouves": [
+        "15 heures",
+        "15"
+      ],
+      "mots_attendus": [
+        "15 heures",
+        "15"
+      ],
+      "exactitude": 1.0,
+      "hallucination": false
+    },
+    "status": "✅ 100%",
+    "elapsed_s": 13.8
+  },
+  {
+    "id": "Q20",
+    "bloc": "Hors base",
+    "question": "Quelle est la garantie obsèques incluse dans le contrat prévoyance ?",
+    "source_attendue": "AUCUNE",
+    "reponse": "**Réponse directe** :\n\nJe ne trouve pas cette information dans les documents disponibles. Je vous recommande de contacter votre référent produit ou le service technique de ARESIA Assurances.\n\n---\n\n**Source(s)** :\n\nAucun document pertinent n'a pu être identifié dans la base documentaire disponible pour répondre à cette question sur la garantie obsèques du contrat prévoyance.\n\n---\n\n**Point d'attention** :\n\nLes garanties obsèques peuvent varier significativement d'un contrat à l'autre (capital forfaitaire, prise en charge des frais funéraires, assistance obsèques, etc.) et leurs conditions d'application sont strictement définies par les Conditions Générales du contrat concerné. Il est donc essentiel de se référer aux documents contractuels exacts de votre produit. Pour obtenir une réponse précise et fiable, **contactez directement votre référent produit ou le service technique de ARESIA Assurances**, qui pourront vous orienter vers les bonnes Conditions Générales.",
+    "trace_log": [
+      {
+        "etape": "router",
+        "sous_question": "Quelle est la garantie obsèques incluse dans le contrat prévoyance ?",
+        "chunks_recus": 0,
+        "decision": "react_simple",
+        "raison": "La question porte sur une seule garantie spécifique (obsèques) dans un seul produit (contrat prévoyance), sans combinaison de sujets distincts.",
+        "action_suivante": "retrieve"
+      },
+      {
+        "etape": "retrieve",
+        "sous_question": "Quelle est la garantie obsèques incluse dans le contrat prévoyance ?",
+        "chunks_recus": 5,
+        "decision": "top chunk: [CG-AV-MULTI-2024] Art.24",
+        "raison": "filtre doc=None",
+        "action_suivante": "evaluate"
+      },
+      {
+        "etape": "evaluate",
+        "sous_question": "Quelle est la garantie obsèques incluse dans le contrat prévoyance ?",
+        "chunks_recus": 5,
+        "decision": "insuffisant",
+        "raison": "Les chunks disponibles ne contiennent aucune information sur une garantie obsèques dans un contrat prévoyance. Les chunks portent sur un contrat d'assurance vie (ARESIA Patrimoine+), les définitions associées, la fiscalité en cas de décès, et les exclusions de garanties ITT/prévoyance invalidité. Aucun de ces éléments ne traite d'une garantie obsèques.",
+        "action_suivante": "reformulate_niveau_1"
+      },
+      {
+        "etape": "reformulate",
+        "sous_question": "Quelle est la garantie obsèques incluse dans le contrat prévoyance ?",
+        "decision": "niveau 1 → 'Quelle est la garantie obsèques incluse dans le contrat prévoyance ?'",
+        "raison": "Reformulation lexicale (synonymes)",
+        "action_suivante": "retrieve"
+      },
+      {
+        "etape": "evaluate",
+        "sous_question": "Quelle est la garantie obsèques incluse dans le contrat prévoyance ?",
+        "chunks_recus": 5,
+        "decision": "suffisant",
+        "raison": "Les chunks disponibles ne contiennent aucune information sur une garantie obsèques incluse dans un contrat prévoyance. Les chunks portent sur la fiscalité en cas de décès d'une assurance vie (Chunk 1), les définitions d'un contrat assurance vie (Chunks 2 et 4), et les exclusions de garanties d'un contrat prévoyance invalidité (Chunks 3 et 5). Aucun chunk ne mentionne de garantie obsèques.",
+        "action_suivante": "non_trouve"
+      },
+      {
+        "etape": "synthesize",
+        "sous_question": "Quelle est la garantie obsèques incluse dans le contrat prévoyance ?",
+        "chunks_recus": 5,
+        "decision": "reponse_generee",
+        "raison": "1 sous-question(s) traitée(s), 1 non trouvée(s)",
+        "action_suivante": "end"
+      }
+    ],
+    "score": {
+      "mots_trouves": [
+        "ne trouve pas",
+        "recommande de contacter"
+      ],
+      "mots_attendus": [
+        "ne trouve pas",
+        "recommande de contacter"
+      ],
+      "exactitude": 1.0,
+      "hallucination": false
+    },
+    "status": "✅ NON-TROUVÉ CORRECT",
+    "elapsed_s": 15.8
+  }
+]

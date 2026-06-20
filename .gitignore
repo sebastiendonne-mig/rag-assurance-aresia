@@ -1,0 +1,25 @@
+# Secrets — ne jamais committer
+.env
+
+# Environnement Python local
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Logs de debug Streamlit
+data/*.log
+
+# Artefacts macOS
+.DS_Store
+
+# Cache outils
+.claude/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
