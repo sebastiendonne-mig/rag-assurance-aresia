@@ -25,7 +25,7 @@ load_dotenv()
 ROOT = Path(__file__).parent.parent
 CHROMA_PATH = ROOT / "chroma_db"
 COLLECTION_NAME = "assur_docs"
-MODEL_NAME = "intfloat/multilingual-e5-small"
+MODEL_NAME = "intfloat/multilingual-e5-large"
 CLAUDE_MODEL = "claude-sonnet-4-6"
 RETRIEVAL_K = 10
 
@@ -76,7 +76,7 @@ def log_memory(label: str) -> None:
 def get_embed_model() -> SentenceTransformer:
     global _embed_model
     if _embed_model is None:
-        # bfloat16 réduit les poids de ~1.34 Go (float32) à ~670 Mo sur CPU.
+        # bfloat16 réduit les poids de ~2.24 Go (float32) à ~1.12 Go sur CPU.
         # Sur Apple Silicon MPS, le warm-up encode() est toujours nécessaire pour
         # forcer la compilation Metal et éviter un premier vecteur incorrect.
         _embed_model = SentenceTransformer(MODEL_NAME, model_kwargs={"torch_dtype": torch.bfloat16})
@@ -87,11 +87,69 @@ def get_embed_model() -> SentenceTransformer:
     return _embed_model
 
 
+def _rebuild_chroma_index(client: chromadb.PersistentClient) -> chromadb.Collection:
+    """Reconstruit la collection Chroma avec le modèle d'embedding courant (déjà chargé en mémoire)."""
+    import hashlib as _hashlib
+
+    chunks_path = ROOT / "data" / "chunks" / "chunks.json"
+    with open(chunks_path, encoding="utf-8") as f:
+        chunks = json.load(f)
+    log.info("CHROMA rebuild: %d chunks, modèle=%s", len(chunks), MODEL_NAME)
+
+    try:
+        client.delete_collection(COLLECTION_NAME)
+    except Exception:
+        pass
+
+    collection = client.get_or_create_collection(
+        name=COLLECTION_NAME,
+        metadata={"hnsw:space": "cosine", "model_name": MODEL_NAME},
+    )
+
+    model = get_embed_model()
+    texts = ["passage: " + c["text"] for c in chunks]
+    embeddings = model.encode(texts, show_progress_bar=False, normalize_embeddings=True)
+    gc.collect()
+    log_memory("startup - rebuild ChromaDB embeddings calculés")
+
+    def _id(c: dict) -> str:
+        key = f"{c['metadata']['source_doc']}_{c['metadata']['article_num']}_{c['text'][:50]}"
+        return _hashlib.md5(key.encode()).hexdigest()
+
+    ids = [_id(c) for c in chunks]
+    emb_list = embeddings.tolist()
+    batch_size = 50
+    for i in range(0, len(chunks), batch_size):
+        collection.upsert(
+            ids=ids[i : i + batch_size],
+            embeddings=emb_list[i : i + batch_size],
+            documents=[c["text"] for c in chunks[i : i + batch_size]],
+            metadatas=[c["metadata"] for c in chunks[i : i + batch_size]],
+        )
+
+    log.info("CHROMA rebuild terminé — %d documents", collection.count())
+    return collection
+
+
 def get_chroma_col() -> chromadb.Collection:
     global _chroma_client, _chroma_col
     if _chroma_col is None:
         _chroma_client = chromadb.PersistentClient(path=str(CHROMA_PATH))
-        _chroma_col = _chroma_client.get_collection(COLLECTION_NAME)
+
+        needs_rebuild = False
+        try:
+            col = _chroma_client.get_collection(COLLECTION_NAME)
+            if col.metadata.get("model_name") != MODEL_NAME or col.count() == 0:
+                needs_rebuild = True
+            else:
+                _chroma_col = col
+        except Exception:
+            needs_rebuild = True
+
+        if needs_rebuild:
+            log_memory("startup - avant rebuild ChromaDB (model_name mismatch ou collection absente)")
+            _chroma_col = _rebuild_chroma_index(_chroma_client)
+
         log.info(
             "CHROMA loaded: collection=%r count=%d id=%s",
             _chroma_col.name,

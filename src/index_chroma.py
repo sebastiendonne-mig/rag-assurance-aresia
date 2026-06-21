@@ -14,7 +14,7 @@ ROOT = Path(__file__).parent.parent
 CHUNKS_PATH = ROOT / "data" / "chunks" / "chunks.json"
 CHROMA_PATH = ROOT / "chroma_db"
 COLLECTION_NAME = "assur_docs"
-MODEL_NAME = "intfloat/multilingual-e5-small"
+MODEL_NAME = "intfloat/multilingual-e5-large"
 
 
 def chunk_id(chunk: dict) -> str:
@@ -45,7 +45,7 @@ def build_index(force_reset: bool = False) -> chromadb.Collection:
     # mais on fournit les embeddings précalculés pour contrôler le préfixe e5
     collection = client.get_or_create_collection(
         name=COLLECTION_NAME,
-        metadata={"hnsw:space": "cosine"},
+        metadata={"hnsw:space": "cosine", "model_name": MODEL_NAME},
     )
 
     # Préfixe e5 obligatoire pour les passages
