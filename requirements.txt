@@ -1,10 +1,12 @@
 # RAG agentique assurance — AssurConseil 365
 #
-# torch CPU-only : l'index PyTorch CPU est le primaire pour éviter d'installer
-# les variantes CUDA (~2 Go de nvidia-* / cuda-* inutiles sur Streamlit Cloud).
-# PyPI reste disponible en extra-index pour tous les autres packages.
---index-url https://download.pytorch.org/whl/cpu
---extra-index-url https://pypi.org/simple/
+# Sur Streamlit Community Cloud, ce fichier est IGNORÉ au profit de uv.lock
+# (priorité 1 dans l'ordre de résolution Streamlit Cloud). La source d'index
+# CPU-only pour torch est déclarée dans pyproject.toml via [tool.uv.sources].
+#
+# Ce fichier sert uniquement de référence pour installation manuelle locale :
+#   pip install -r requirements.txt  (installe torch CUDA/standard depuis PyPI)
+#   uv sync                          (respecte pyproject.toml + uv.lock)
 
 torch==2.12.1
 anthropic>=0.111.0

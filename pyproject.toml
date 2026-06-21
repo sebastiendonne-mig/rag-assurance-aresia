@@ -1,0 +1,32 @@
+[project]
+name = "rag-assurance-aresia"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "torch==2.12.1",
+    "anthropic>=0.111.0",
+    "langgraph>=1.2.0",
+    "langchain-core>=1.4.0",
+    "chromadb>=1.5.0",
+    "sentence-transformers>=5.0.0",
+    "pypdf>=6.0.0",
+    "pdfplumber>=0.11.0",
+    "streamlit>=1.58.0",
+    "python-dotenv>=1.2.0",
+    "psutil>=6.0.0",
+]
+
+# Sur Linux (Streamlit Cloud) : torch résolu depuis l'index CPU-only PyTorch
+# (pas de wheels CUDA inutiles). Sur macOS/Windows : torch vient de PyPI
+# (MPS ou CPU standard selon la plateforme).
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cpu", marker = "platform_system == 'Linux'" },
+]
+
+# explicit = true : cet index n'est consulté QUE pour les paquets listés
+# dans [tool.uv.sources], pas pour les autres dépendances.
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
