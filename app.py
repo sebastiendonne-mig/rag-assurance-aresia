@@ -15,14 +15,16 @@ from agent import get_embed_model, get_chroma_col, get_anthropic, get_graph, run
 
 ROOT = Path(__file__).parent
 
-# Log fichier pour debug — visible même depuis le process Streamlit
+# Log fichier pour debug — visible même depuis le process Streamlit.
+# Guard : logging.root.handlers est non vide après le premier configure ; on évite
+# ainsi de créer un nouveau FileHandler à chaque rerun Streamlit (fuite de handles).
 LOG_PATH = ROOT / "data" / "streamlit_debug.log"
-logging.basicConfig(
-    filename=str(LOG_PATH),
-    level=logging.DEBUG,
-    format="%(asctime)s %(levelname)s %(message)s",
-    force=True,
-)
+if not logging.root.handlers:
+    logging.basicConfig(
+        filename=str(LOG_PATH),
+        level=logging.DEBUG,
+        format="%(asctime)s %(levelname)s %(message)s",
+    )
 log = logging.getLogger("streamlit_app")
 
 
@@ -35,6 +37,12 @@ st.set_page_config(
     page_icon="🛡️",
     layout="wide",
 )
+
+
+@st.cache_data(show_spinner=False)
+def _load_pdf_bytes(path: str) -> bytes:
+    """Lit un PDF une seule fois et met en cache les bytes pour toute la session."""
+    return Path(path).read_bytes()
 
 
 @st.cache_resource(show_spinner="Chargement du modèle d'embeddings…")
@@ -149,7 +157,7 @@ with col_chat:
                 if fpath.exists():
                     st.download_button(
                         label=label,
-                        data=fpath.read_bytes(),
+                        data=_load_pdf_bytes(str(fpath)),
                         file_name=fname,
                         mime="application/pdf",
                         use_container_width=True,

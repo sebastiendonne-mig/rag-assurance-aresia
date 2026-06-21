@@ -4,6 +4,7 @@ Agent RAG agentique — graphe LangGraph.
 """
 from __future__ import annotations
 
+import gc
 import json
 import logging
 import os
@@ -12,6 +13,7 @@ from typing import TypedDict
 
 import anthropic
 import chromadb
+import torch
 from dotenv import load_dotenv
 from langgraph.graph import END, StateGraph
 from sentence_transformers import SentenceTransformer
@@ -53,11 +55,13 @@ _anthropic_client: anthropic.Anthropic | None = None
 def get_embed_model() -> SentenceTransformer:
     global _embed_model
     if _embed_model is None:
-        _embed_model = SentenceTransformer(MODEL_NAME)
-        # Warm-up MPS : le premier appel encode() sur Apple Silicon compile les kernels Metal
-        # et peut retourner un vecteur incorrect. On force une passe à vide ici.
+        # bfloat16 réduit les poids de ~1.34 Go (float32) à ~670 Mo sur CPU.
+        # Sur Apple Silicon MPS, le warm-up encode() est toujours nécessaire pour
+        # forcer la compilation Metal et éviter un premier vecteur incorrect.
+        _embed_model = SentenceTransformer(MODEL_NAME, model_kwargs={"torch_dtype": torch.bfloat16})
         _ = _embed_model.encode(["query: warm-up"], normalize_embeddings=True)
-        log.info("EMBED_MODEL loaded + MPS warm-up done, device=%s", _embed_model.device)
+        gc.collect()
+        log.info("EMBED_MODEL loaded (bfloat16) + warm-up done, device=%s", _embed_model.device)
     return _embed_model
 
 
@@ -140,6 +144,7 @@ def embed_query(text: str) -> list[float]:
     import math
     model = get_embed_model()
     vec = model.encode(["query: " + text], normalize_embeddings=True).tolist()[0]
+    gc.collect()  # libère les tenseurs torch intermédiaires dès que le vecteur est en liste Python
     norm = math.sqrt(sum(x * x for x in vec))
     log.debug("EMBED query=%r norm=%.4f first5=%s", text[:60], norm, vec[:5])
     return vec
@@ -392,6 +397,7 @@ def _hyde_retrieve(question: str, doc_cible: str | None) -> list[dict]:
     # Embed avec le préfixe "passage:" — le vecteur d'un passage est plus proche des chunks réels
     model = get_embed_model()
     vec = model.encode(["passage: " + passage], normalize_embeddings=True).tolist()[0]
+    gc.collect()  # libère les tenseurs torch intermédiaires dès que le vecteur est en liste Python
     norm = _math.sqrt(sum(x * x for x in vec))
     log.info("HyDE passage='%s...' norm=%.4f", passage[:80], norm)
     col = get_chroma_col()
