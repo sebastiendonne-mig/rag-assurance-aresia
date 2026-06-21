@@ -114,12 +114,6 @@ _DEMO_QUESTIONS = [
         "Garde-fou anti-hallucination : cette garantie n'existe pas dans les documents — "
         "observez la trace à droite (reformulations puis « non trouvé »).",
     ),
-    (
-        "Quelle indemnisation pour une invalidité partielle suite à un accident, "
-        "avec une rente complémentaire ?",
-        "Plan-and-Execute : question décomposée en sous-questions traitées séparément. "
-        "Peut prendre 30 à 40 secondes — c'est normal.",
-    ),
 ]
 
 _PDF_SOURCES = [
