@@ -7,13 +7,14 @@ import hashlib
 from pathlib import Path
 
 import chromadb
+import torch
 from sentence_transformers import SentenceTransformer
 
 ROOT = Path(__file__).parent.parent
 CHUNKS_PATH = ROOT / "data" / "chunks" / "chunks.json"
 CHROMA_PATH = ROOT / "chroma_db"
 COLLECTION_NAME = "assur_docs"
-MODEL_NAME = "intfloat/multilingual-e5-large"
+MODEL_NAME = "intfloat/multilingual-e5-small"
 
 
 def chunk_id(chunk: dict) -> str:
@@ -24,7 +25,7 @@ def chunk_id(chunk: dict) -> str:
 
 def build_index(force_reset: bool = False) -> chromadb.Collection:
     print(f"Chargement modèle : {MODEL_NAME}")
-    model = SentenceTransformer(MODEL_NAME)
+    model = SentenceTransformer(MODEL_NAME, model_kwargs={"torch_dtype": torch.bfloat16})
 
     print("Chargement chunks...")
     with open(CHUNKS_PATH, encoding="utf-8") as f:

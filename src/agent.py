@@ -25,7 +25,7 @@ load_dotenv()
 ROOT = Path(__file__).parent.parent
 CHROMA_PATH = ROOT / "chroma_db"
 COLLECTION_NAME = "assur_docs"
-MODEL_NAME = "intfloat/multilingual-e5-large"
+MODEL_NAME = "intfloat/multilingual-e5-small"
 CLAUDE_MODEL = "claude-sonnet-4-6"
 RETRIEVAL_K = 10
 
