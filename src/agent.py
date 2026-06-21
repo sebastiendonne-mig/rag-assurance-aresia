@@ -51,6 +51,27 @@ _chroma_client: chromadb.PersistentClient | None = None  # référence forte pou
 _chroma_col: chromadb.Collection | None = None
 _anthropic_client: anthropic.Anthropic | None = None
 
+# ── Compteurs d'instrumentation mémoire ──────────────────────────────────────
+# _current_turn  : numéro de la question en cours (Q1, Q2, …), mis à jour dans run_agent()
+# _turn_llm_seq  : compteur d'appels LLM dans le tour courant (remis à 0 par run_agent)
+# _turn_encode_seq : compteur d'appels encode() dans le tour courant
+_turn_counter: int = 0
+_current_turn: int = 0
+_turn_llm_seq: int = 0
+_turn_encode_seq: int = 0
+
+
+def log_memory(label: str) -> None:
+    """Logue le RSS du process en MB. print flush=True garantit la visibilité dans Streamlit Cloud."""
+    try:
+        import psutil as _psutil
+        rss_mb = _psutil.Process(os.getpid()).memory_info().rss / 1024 / 1024
+        msg = f"[MEM] {label} — RSS={rss_mb:.1f} MB"
+    except Exception as exc:
+        msg = f"[MEM] {label} — psutil error: {exc}"
+    print(msg, flush=True)
+    log.info(msg)
+
 
 def get_embed_model() -> SentenceTransformer:
     global _embed_model
@@ -62,6 +83,7 @@ def get_embed_model() -> SentenceTransformer:
         _ = _embed_model.encode(["query: warm-up"], normalize_embeddings=True)
         gc.collect()
         log.info("EMBED_MODEL loaded (bfloat16) + warm-up done, device=%s", _embed_model.device)
+        log_memory("startup - SentenceTransformer bfloat16 chargé + warm-up")
     return _embed_model
 
 
@@ -111,6 +133,10 @@ Règles non négociables :
 # ─────────────────────────────────────────────
 
 def llm_call(messages: list[dict], system: str = SYSTEM_PROMPT) -> str:
+    global _turn_llm_seq
+    _turn_llm_seq += 1
+    seq = _turn_llm_seq
+    log_memory(f"Q{_current_turn} - llm#{seq} avant llm_call (synthesize, max_tokens=1500)")
     client = get_anthropic()
     response = client.messages.create(
         model=CLAUDE_MODEL,
@@ -118,11 +144,16 @@ def llm_call(messages: list[dict], system: str = SYSTEM_PROMPT) -> str:
         system=system,
         messages=messages,
     )
+    log_memory(f"Q{_current_turn} - llm#{seq} après llm_call (synthesize)")
     return response.content[0].text
 
 
 def llm_json(messages: list[dict], system: str) -> dict:
     """Appel LLM avec sortie JSON stricte. temperature=0 pour la reproductibilité."""
+    global _turn_llm_seq
+    _turn_llm_seq += 1
+    seq = _turn_llm_seq
+    log_memory(f"Q{_current_turn} - llm#{seq} avant llm_json (max_tokens=500)")
     client = get_anthropic()
     response = client.messages.create(
         model=CLAUDE_MODEL,
@@ -131,6 +162,7 @@ def llm_json(messages: list[dict], system: str) -> dict:
         system=system + "\n\nRéponds UNIQUEMENT avec un objet JSON valide, sans markdown, sans explication.",
         messages=messages,
     )
+    log_memory(f"Q{_current_turn} - llm#{seq} après llm_json")
     text = response.content[0].text.strip()
     # Nettoyer les balises markdown si présentes
     if text.startswith("```"):
@@ -142,9 +174,13 @@ def llm_json(messages: list[dict], system: str) -> dict:
 
 def embed_query(text: str) -> list[float]:
     import math
+    global _turn_encode_seq
+    _turn_encode_seq += 1
+    seq = _turn_encode_seq
     model = get_embed_model()
     vec = model.encode(["query: " + text], normalize_embeddings=True).tolist()[0]
     gc.collect()  # libère les tenseurs torch intermédiaires dès que le vecteur est en liste Python
+    log_memory(f"Q{_current_turn} - encode#{seq} après (retrieve) gc.collect")
     norm = math.sqrt(sum(x * x for x in vec))
     log.debug("EMBED query=%r norm=%.4f first5=%s", text[:60], norm, vec[:5])
     return vec
@@ -164,6 +200,7 @@ def retrieve_chunks(query: str, doc_filter: str | None = None, k: int = RETRIEVA
         where=where,
         include=["documents", "metadatas", "distances"],
     )
+    log_memory(f"Q{_current_turn} - après col.query (retrieve, filter={doc_filter!r})")
     chunks = []
     for doc, meta, dist in zip(
         results["documents"][0],
@@ -395,9 +432,13 @@ def _hyde_retrieve(question: str, doc_cible: str | None) -> list[dict]:
     result = llm_json([{"role": "user", "content": f"Question : {question}"}], system=system)
     passage = result.get("passage_hypothetique", question)
     # Embed avec le préfixe "passage:" — le vecteur d'un passage est plus proche des chunks réels
+    global _turn_encode_seq
+    _turn_encode_seq += 1
+    seq = _turn_encode_seq
     model = get_embed_model()
     vec = model.encode(["passage: " + passage], normalize_embeddings=True).tolist()[0]
     gc.collect()  # libère les tenseurs torch intermédiaires dès que le vecteur est en liste Python
+    log_memory(f"Q{_current_turn} - encode#{seq} après (HyDE) gc.collect")
     norm = _math.sqrt(sum(x * x for x in vec))
     log.info("HyDE passage='%s...' norm=%.4f", passage[:80], norm)
     col = get_chroma_col()
@@ -408,6 +449,7 @@ def _hyde_retrieve(question: str, doc_cible: str | None) -> list[dict]:
         where=where,
         include=["documents", "metadatas", "distances"],
     )
+    log_memory(f"Q{_current_turn} - après col.query (HyDE, filter={doc_cible!r})")
     chunks = []
     for doc, meta, dist in zip(
         results["documents"][0],
@@ -558,6 +600,13 @@ def get_graph():
 
 
 def run_agent(question: str, produit_filtre: str | None = None) -> AgentState:
+    global _turn_counter, _current_turn, _turn_llm_seq, _turn_encode_seq
+    _turn_counter += 1
+    _current_turn = _turn_counter
+    _turn_llm_seq = 0
+    _turn_encode_seq = 0
+    log_memory(f"Q{_current_turn} - début run_agent")
+
     graph = get_graph()
     initial_state: AgentState = {
         "question_originale": question,
@@ -567,7 +616,9 @@ def run_agent(question: str, produit_filtre: str | None = None) -> AgentState:
         "reponse_finale": "",
         "trace_log": [],
     }
-    return graph.invoke(initial_state)
+    result = graph.invoke(initial_state)
+    log_memory(f"Q{_current_turn} - fin run_agent (avant return)")
+    return result
 
 
 # ─────────────────────────────────────────────
