@@ -13,8 +13,10 @@ sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 from agent import get_embed_model, get_chroma_col, get_anthropic, get_graph, run_agent
 
+ROOT = Path(__file__).parent
+
 # Log fichier pour debug — visible même depuis le process Streamlit
-LOG_PATH = Path(__file__).parent / "data" / "streamlit_debug.log"
+LOG_PATH = ROOT / "data" / "streamlit_debug.log"
 logging.basicConfig(
     filename=str(LOG_PATH),
     level=logging.DEBUG,
@@ -102,23 +104,97 @@ col_chat, col_trace = st.columns([3, 2], gap="large")
 # Colonne gauche — Chat
 # ─────────────────────────────────────────────
 
+_DEMO_QUESTIONS = [
+    (
+        "Quelle est la franchise ITT sur le contrat prévoyance invalidité ?",
+        "Question simple : recherche directe dans les documents.",
+    ),
+    (
+        "Quelle est la garantie obsèques incluse dans le contrat prévoyance ?",
+        "Garde-fou anti-hallucination : cette garantie n'existe pas dans les documents — "
+        "observez la trace à droite (reformulations puis « non trouvé »).",
+    ),
+    (
+        "Quelle indemnisation pour une invalidité partielle suite à un accident, "
+        "avec une rente complémentaire ?",
+        "Plan-and-Execute : question décomposée en sous-questions traitées séparément. "
+        "Peut prendre 30 à 40 secondes — c'est normal.",
+    ),
+]
+
+_PDF_SOURCES = [
+    ("CG Prévoyance Invalidité (v4.2)",          "CG-prevoyance-invalidite.pdf"),
+    ("CG Assurance Vie Multisupport (v3.1)",      "CG-assurance-vie.pdf"),
+    ("Barème Garanties IARD 2024 (v2.0)",         "bareme-garanties-iard.pdf"),
+    ("Circulaire ACPR devoir de conseil (fictive)", "circulaire-acpr-conseil.pdf"),
+]
+
 with col_chat:
     st.title("🛡️ AssurConseil 365")
     st.caption("Agent RAG — Contrats ARESIA Assurances | Plan-and-Execute + ReAct")
 
-    # Afficher l'historique
+    st.markdown(
+        "Démonstration d'un agent RAG agentique (recherche augmentée par génération) "
+        "sur des contrats d'assurance fictifs, illustrant les patterns **Plan-and-Execute** "
+        "et **ReAct** avec traçabilité complète du raisonnement (panneau de droite)."
+    )
+
+    st.warning(
+        "⚠️ Tous les documents et contrats utilisés dans cette démo sont entièrement "
+        "fictifs (société « ARESIA Assurances » imaginaire), créés uniquement à des fins "
+        "de démonstration technique. Aucune valeur contractuelle ou réglementaire réelle."
+    )
+
+    # ── Documents sources téléchargeables ──
+    with st.expander("📄 Documents sources (fictifs) — cliquez pour télécharger"):
+        c1, c2 = st.columns(2)
+        for i, (label, fname) in enumerate(_PDF_SOURCES):
+            fpath = ROOT / fname
+            col = c1 if i % 2 == 0 else c2
+            with col:
+                if fpath.exists():
+                    st.download_button(
+                        label=label,
+                        data=fpath.read_bytes(),
+                        file_name=fname,
+                        mime="application/pdf",
+                        use_container_width=True,
+                        key=f"dl_{i}",
+                    )
+                else:
+                    st.caption(f"_(fichier introuvable : {fname})_")
+        st.caption(
+            "Ces documents constituent la base documentaire complète de l'agent — "
+            "toute réponse peut être vérifiée par recoupement avec leur contenu."
+        )
+
+    # ── Questions de test cliquables ──
+    st.markdown("**🧪 Questions de test suggérées**")
+    pending: str | None = None
+    for i, (question, legende) in enumerate(_DEMO_QUESTIONS):
+        col_btn, col_leg = st.columns([5, 4])
+        with col_btn:
+            if st.button(question, key=f"demo_q_{i}", use_container_width=True):
+                pending = question
+        with col_leg:
+            st.caption(f"↑ {legende}")
+
+    st.divider()
+
+    # ── Historique de la conversation ──
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
 
-    # Zone de saisie
-    if prompt := st.chat_input("Posez votre question sur les contrats ARESIA…"):
-        # Afficher la question
+    # ── Zone de saisie (chat_input + boutons de démo) ──
+    chat_prompt = st.chat_input("Posez votre question sur les contrats ARESIA…")
+    prompt = pending or chat_prompt
+
+    if prompt:
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
 
-        # Appel agent
         with st.chat_message("assistant"):
             with st.spinner("Recherche en cours…"):
                 try:
@@ -126,7 +202,7 @@ with col_chat:
                     state = run_agent(prompt)
                     reponse = state["reponse_finale"]
                     st.session_state.last_trace = state["trace_log"]
-                    trace_summary = [(e["etape"], e.get("decision","")[:40]) for e in state["trace_log"]]
+                    trace_summary = [(e["etape"], e.get("decision", "")[:40]) for e in state["trace_log"]]
                     log.info("RUN_AGENT done trace=%s reponse_start=%r", trace_summary, reponse[:80])
                 except Exception as e:
                     log.exception("RUN_AGENT exception: %s", e)
@@ -156,6 +232,7 @@ DECISION_ICONS = {
     "plan_and_execute": ("⚡", "trace-decision-ok"),
     "suffisant":        ("✅", "trace-decision-ok"),
     "insuffisant":      ("⚠️",  "trace-decision-warn"),
+    "non_trouve":       ("❌", "trace-decision-nok"),
     "reponse_generee":  ("✅", "trace-decision-ok"),
 }
 
@@ -167,7 +244,6 @@ with col_trace:
     if not trace:
         st.info("La trace du graphe apparaîtra ici après votre première question.")
     else:
-        # Résumé en haut
         etapes = [e["etape"] for e in trace]
         nb_reformulations = sum(1 for e in trace if e["etape"] == "reformulate")
         has_planner = any(e["etape"] == "planner" for e in trace)
@@ -179,7 +255,6 @@ with col_trace:
 
         st.divider()
 
-        # Accordéon par étape
         for i, entry in enumerate(trace):
             etape = entry["etape"]
             badge_cls, badge_label = BADGE.get(etape, ("badge-router", etape.upper()))
@@ -189,7 +264,6 @@ with col_trace:
             action_suivante = entry.get("action_suivante", "")
             sous_q = entry.get("sous_question", "")
 
-            # Icône décision
             for key, (icon, cls) in DECISION_ICONS.items():
                 if key in decision.lower():
                     decision_display = f'<span class="{cls}">{icon} {decision}</span>'
@@ -218,7 +292,5 @@ with col_trace:
                 if action_suivante:
                     st.markdown(f"**→ Action suivante :** `{action_suivante}`")
 
-        # JSON brut dépliable
         with st.expander("📋 JSON brut du trace_log"):
-            import json
             st.code(json.dumps(trace, ensure_ascii=False, indent=2), language="json")
