@@ -1,4 +1,12 @@
 # RAG agentique assurance — AssurConseil 365
+#
+# torch CPU-only : l'index PyTorch CPU est le primaire pour éviter d'installer
+# les variantes CUDA (~2 Go de nvidia-* / cuda-* inutiles sur Streamlit Cloud).
+# PyPI reste disponible en extra-index pour tous les autres packages.
+--index-url https://download.pytorch.org/whl/cpu
+--extra-index-url https://pypi.org/simple/
+
+torch==2.12.1
 anthropic>=0.111.0
 langgraph>=1.2.0
 langchain-core>=1.4.0

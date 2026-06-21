@@ -98,6 +98,7 @@ def get_chroma_col() -> chromadb.Collection:
             _chroma_col.count(),
             _chroma_col.id,
         )
+        log_memory("startup - après ChromaDB collection chargée")
     return _chroma_col
 
 
