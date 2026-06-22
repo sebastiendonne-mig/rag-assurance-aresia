@@ -110,7 +110,6 @@ def _rebuild_chroma_index(client: chromadb.PersistentClient) -> chromadb.Collect
     texts = ["passage: " + c["text"] for c in chunks]
     embeddings = model.encode(texts, show_progress_bar=False, normalize_embeddings=True)
     gc.collect()
-    log_memory("startup - rebuild ChromaDB embeddings calculés")
 
     def _id(c: dict) -> str:
         key = f"{c['metadata']['source_doc']}_{c['metadata']['article_num']}_{c['text'][:50]}"
@@ -147,7 +146,6 @@ def get_chroma_col() -> chromadb.Collection:
             needs_rebuild = True
 
         if needs_rebuild:
-            log_memory("startup - avant rebuild ChromaDB (model_name mismatch ou collection absente)")
             _chroma_col = _rebuild_chroma_index(_chroma_client)
 
         log.info(
@@ -156,7 +154,6 @@ def get_chroma_col() -> chromadb.Collection:
             _chroma_col.count(),
             _chroma_col.id,
         )
-        log_memory("startup - après ChromaDB collection chargée")
     return _chroma_col
 
 
@@ -195,7 +192,6 @@ def llm_call(messages: list[dict], system: str = SYSTEM_PROMPT) -> str:
     global _turn_llm_seq
     _turn_llm_seq += 1
     seq = _turn_llm_seq
-    log_memory(f"Q{_current_turn} - llm#{seq} avant llm_call (synthesize, max_tokens=1500)")
     client = get_anthropic()
     response = client.messages.create(
         model=CLAUDE_MODEL,
@@ -203,7 +199,6 @@ def llm_call(messages: list[dict], system: str = SYSTEM_PROMPT) -> str:
         system=system,
         messages=messages,
     )
-    log_memory(f"Q{_current_turn} - llm#{seq} après llm_call (synthesize)")
     return response.content[0].text
 
 
@@ -212,7 +207,6 @@ def llm_json(messages: list[dict], system: str) -> dict:
     global _turn_llm_seq
     _turn_llm_seq += 1
     seq = _turn_llm_seq
-    log_memory(f"Q{_current_turn} - llm#{seq} avant llm_json (max_tokens=500)")
     client = get_anthropic()
     response = client.messages.create(
         model=CLAUDE_MODEL,
@@ -221,7 +215,6 @@ def llm_json(messages: list[dict], system: str) -> dict:
         system=system + "\n\nRéponds UNIQUEMENT avec un objet JSON valide, sans markdown, sans explication.",
         messages=messages,
     )
-    log_memory(f"Q{_current_turn} - llm#{seq} après llm_json")
     text = response.content[0].text.strip()
     # Nettoyer les balises markdown si présentes
     if text.startswith("```"):
@@ -237,9 +230,8 @@ def embed_query(text: str) -> list[float]:
     _turn_encode_seq += 1
     seq = _turn_encode_seq
     model = get_embed_model()
-    vec = model.encode(["query: " + text], normalize_embeddings=True).tolist()[0]
+    vec = model.encode(["query: " + text], show_progress_bar=False, normalize_embeddings=True).tolist()[0]
     gc.collect()  # libère les tenseurs torch intermédiaires dès que le vecteur est en liste Python
-    log_memory(f"Q{_current_turn} - encode#{seq} après (retrieve) gc.collect")
     norm = math.sqrt(sum(x * x for x in vec))
     log.debug("EMBED query=%r norm=%.4f first5=%s", text[:60], norm, vec[:5])
     return vec
@@ -259,7 +251,6 @@ def retrieve_chunks(query: str, doc_filter: str | None = None, k: int = RETRIEVA
         where=where,
         include=["documents", "metadatas", "distances"],
     )
-    log_memory(f"Q{_current_turn} - après col.query (retrieve, filter={doc_filter!r})")
     chunks = []
     for doc, meta, dist in zip(
         results["documents"][0],
@@ -495,9 +486,8 @@ def _hyde_retrieve(question: str, doc_cible: str | None) -> list[dict]:
     _turn_encode_seq += 1
     seq = _turn_encode_seq
     model = get_embed_model()
-    vec = model.encode(["passage: " + passage], normalize_embeddings=True).tolist()[0]
+    vec = model.encode(["passage: " + passage], show_progress_bar=False, normalize_embeddings=True).tolist()[0]
     gc.collect()  # libère les tenseurs torch intermédiaires dès que le vecteur est en liste Python
-    log_memory(f"Q{_current_turn} - encode#{seq} après (HyDE) gc.collect")
     norm = _math.sqrt(sum(x * x for x in vec))
     log.info("HyDE passage='%s...' norm=%.4f", passage[:80], norm)
     col = get_chroma_col()
@@ -508,7 +498,6 @@ def _hyde_retrieve(question: str, doc_cible: str | None) -> list[dict]:
         where=where,
         include=["documents", "metadatas", "distances"],
     )
-    log_memory(f"Q{_current_turn} - après col.query (HyDE, filter={doc_cible!r})")
     chunks = []
     for doc, meta, dist in zip(
         results["documents"][0],
@@ -664,7 +653,6 @@ def run_agent(question: str, produit_filtre: str | None = None) -> AgentState:
     _current_turn = _turn_counter
     _turn_llm_seq = 0
     _turn_encode_seq = 0
-    log_memory(f"Q{_current_turn} - début run_agent")
 
     graph = get_graph()
     initial_state: AgentState = {
@@ -676,7 +664,6 @@ def run_agent(question: str, produit_filtre: str | None = None) -> AgentState:
         "trace_log": [],
     }
     result = graph.invoke(initial_state)
-    log_memory(f"Q{_current_turn} - fin run_agent (avant return)")
     return result
 
 
