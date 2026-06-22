@@ -20,11 +20,16 @@ ROOT = Path(__file__).parent
 # ainsi de créer un nouveau FileHandler à chaque rerun Streamlit (fuite de handles).
 LOG_PATH = ROOT / "data" / "streamlit_debug.log"
 if not logging.root.handlers:
-    logging.basicConfig(
-        filename=str(LOG_PATH),
-        level=logging.DEBUG,
-        format="%(asctime)s %(levelname)s %(message)s",
+    from logging.handlers import RotatingFileHandler
+    _handler = RotatingFileHandler(
+        str(LOG_PATH),
+        maxBytes=5 * 1024 * 1024,  # 5 MB
+        backupCount=1,
+        encoding="utf-8",
     )
+    _handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
+    logging.root.addHandler(_handler)
+    logging.root.setLevel(logging.INFO)
 log = logging.getLogger("streamlit_app")
 
 
@@ -99,8 +104,10 @@ with st.sidebar:
     st.caption(f"Messages : {len(st.session_state.messages)}")
     if LOG_PATH.exists():
         with st.expander("📋 Log debug (dernier appel)"):
-            lines = LOG_PATH.read_text().strip().split("\n")
-            st.code("\n".join(lines[-30:]), language="text")
+            from collections import deque
+            with open(LOG_PATH, encoding="utf-8", errors="replace") as _f:
+                last_lines = deque(_f, maxlen=30)
+            st.code("".join(last_lines), language="text")
 
 # ─────────────────────────────────────────────
 # Layout
@@ -214,6 +221,7 @@ with col_chat:
             st.markdown(reponse)
 
         st.session_state.messages.append({"role": "assistant", "content": reponse})
+        st.session_state.messages = st.session_state.messages[-40:]
         st.rerun()
 
 # ─────────────────────────────────────────────
