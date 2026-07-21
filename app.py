@@ -2,6 +2,7 @@
 Interface Streamlit — RAG agentique assurance ARESIA
 Colonne gauche : chat  |  Colonne droite : trace du graphe LangGraph
 """
+import base64
 import json
 import logging
 import sys
@@ -38,7 +39,7 @@ log = logging.getLogger("streamlit_app")
 # ─────────────────────────────────────────────
 
 st.set_page_config(
-    page_title="AssurConseil 365 — RAG agentique",
+    page_title="AssurConseil 365 · TKoidra",
     page_icon="🛡️",
     layout="wide",
 )
@@ -48,6 +49,12 @@ st.set_page_config(
 def _load_pdf_bytes(path: str) -> bytes:
     """Lit un PDF une seule fois et met en cache les bytes pour toute la session."""
     return Path(path).read_bytes()
+
+
+@st.cache_data(show_spinner=False)
+def _load_svg_b64(filename: str) -> str:
+    """Encode un SVG du brand-kit en base64 pour l'injecter en data URI (pas de serveur statique requis)."""
+    return base64.b64encode((ROOT / "assets" / filename).read_bytes()).decode()
 
 
 @st.cache_resource(show_spinner="Chargement du modèle d'embeddings…")
@@ -67,10 +74,10 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 .stApp, .stApp [class*="css"] { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
 
-.trace-header { font-size: 0.82rem; font-weight: 600; color: #94A3B8; }
-.trace-decision-ok   { color: #4ADE80; font-weight: 600; }
-.trace-decision-nok  { color: #FB7185; font-weight: 600; }
-.trace-decision-warn { color: #FBBF24; font-weight: 600; }
+.trace-header { font-size: 0.82rem; font-weight: 600; color: #555; }
+.trace-decision-ok   { color: #1a7f37; font-weight: 600; }
+.trace-decision-nok  { color: #cf222e; font-weight: 600; }
+.trace-decision-warn { color: #9a6700; font-weight: 600; }
 .etape-badge {
     display: inline-block;
     padding: 1px 7px;
@@ -86,7 +93,67 @@ st.markdown("""
 .badge-evaluate   { background: #f76707; }
 .badge-reformulate{ background: #d63384; }
 .badge-synthesize { background: #198754; }
+
+/* ── Header / footer TKoidra (brand-kit) ── */
+.tk-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 0 1rem 0;
+    border-bottom: 1px solid #E2E8F0;
+    margin-bottom: 1.5rem;
+}
+.tk-header img { display: block; }
+.tk-back-link {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #475569;
+    text-decoration: none;
+    transition: color 0.15s;
+}
+.tk-back-link:hover { color: #0D1F40; }
+
+.tk-footer {
+    background: #0D1F40;
+    margin-top: 2.5rem;
+    padding: 1.5rem;
+    border-radius: 12px;
+}
+.tk-footer-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    text-align: center;
+}
+.tk-footer-nav { display: flex; gap: 1.5rem; }
+.tk-footer-nav a {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #00B4D8;
+    text-decoration: none;
+    transition: color 0.15s;
+}
+.tk-footer-nav a:hover { color: #38C4E0; }
+.tk-footer-copy {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.4);
+    margin: 0;
+}
 </style>
+""", unsafe_allow_html=True)
+
+_logo_navy = _load_svg_b64("logo-horizontal.svg")
+st.markdown(f"""
+<div class="tk-header">
+  <a href="https://tkoidra.com" target="_blank" rel="noopener noreferrer">
+    <img src="data:image/svg+xml;base64,{_logo_navy}" height="32" alt="TKoidra">
+  </a>
+  <a href="https://tkoidra.com" target="_blank" rel="noopener noreferrer" class="tk-back-link">← Portfolio</a>
+</div>
 """, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────
@@ -307,3 +374,22 @@ with col_trace:
 
         with st.expander("📋 JSON brut du trace_log"):
             st.code(json.dumps(trace, ensure_ascii=False, indent=2), language="json")
+
+# ─────────────────────────────────────────────
+# Footer TKoidra
+# ─────────────────────────────────────────────
+
+_logo_white = _load_svg_b64("logo-horizontal-white.svg")
+st.markdown(f"""
+<div class="tk-footer">
+  <div class="tk-footer-inner">
+    <img src="data:image/svg+xml;base64,{_logo_white}" height="24" alt="TKoidra">
+    <nav class="tk-footer-nav">
+      <a href="https://tkoidra.com" target="_blank" rel="noopener noreferrer">Portfolio</a>
+      <a href="https://www.linkedin.com/in/sebastiendonne/" target="_blank" rel="noopener noreferrer">LinkedIn ↗</a>
+      <a href="https://tkoidra.com/fr/legal" target="_blank" rel="noopener noreferrer">Mentions légales</a>
+    </nav>
+    <p class="tk-footer-copy">© 2026 TKoidra · Documents fictifs · Démonstration technique · Corpus ARESIA Assurances</p>
+  </div>
+</div>
+""", unsafe_allow_html=True)

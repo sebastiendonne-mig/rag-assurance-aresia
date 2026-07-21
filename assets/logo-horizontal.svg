@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 230 60" role="img" aria-label="TKoidra">
+  <title>TKoidra</title>
+  <!-- Symbole (scaled 60/64 = 0.9375) -->
+  <g transform="scale(0.9375)">
+    <rect x="4" y="4" width="22" height="22" rx="3" fill="#0D1F40"/>
+    <rect x="30" y="4" width="22" height="22" rx="3" fill="#0D1F40"/>
+    <rect x="4" y="30" width="22" height="22" rx="3" fill="#0D1F40"/>
+    <rect x="30" y="30" width="22" height="22" rx="3" fill="none" stroke="#0D1F40" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.35"/>
+    <rect x="38" y="38" width="22" height="22" rx="3" fill="#00B4D8"/>
+  </g>
+  <!-- Wordmark -->
+  <text
+    x="76"
+    y="30"
+    font-family="Inter, system-ui, -apple-system, sans-serif"
+    font-size="26"
+    font-weight="600"
+    fill="#0D1F40"
+    dominant-baseline="middle"
+    text-anchor="start">TKoidra</text>
+</svg>
