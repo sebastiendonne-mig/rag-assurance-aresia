@@ -26,6 +26,9 @@ ROOT = Path(__file__).parent.parent
 CHROMA_PATH = ROOT / "chroma_db"
 COLLECTION_NAME = "assur_docs"
 MODEL_NAME = "intfloat/multilingual-e5-large"
+# Poids bf16 pré-convertis au build Docker (voir Dockerfile) : évite le pic mémoire
+# du chargement fp32 + cast a posteriori. Absent en dev local -> fallback ci-dessous.
+EMBED_MODEL_BF16_PATH = ROOT / "models" / "e5-large-bf16"
 CLAUDE_MODEL = "claude-sonnet-4-6"
 RETRIEVAL_K = 10
 
@@ -76,14 +79,30 @@ def log_memory(label: str) -> None:
 def get_embed_model() -> SentenceTransformer:
     global _embed_model
     if _embed_model is None:
-        # bfloat16 réduit les poids de ~2.24 Go (float32) à ~1.12 Go sur CPU.
+        if EMBED_MODEL_BF16_PATH.exists():
+            # Poids déjà bf16 sur disque (bakés au build) : pas de cast à charge,
+            # donc pas de coexistence transitoire fp32+bf16 en mémoire.
+            _embed_model = SentenceTransformer(str(EMBED_MODEL_BF16_PATH))
+            source = str(EMBED_MODEL_BF16_PATH)
+        else:
+            # Fallback dev local (pas de pré-conversion bakée) : cast bfloat16 à la
+            # volée, ~2.24 Go (float32) -> ~1.12 Go, avec un pic transitoire pendant
+            # le chargement. En prod (image Docker), ce chemin ne devrait jamais être
+            # emprunté — le warning signale une image mal construite plutôt que de
+            # replanter en OOM silencieusement.
+            log.warning(
+                "EMBED_MODEL_BF16_PATH introuvable (%s) — fallback cast bfloat16 à la "
+                "volée. En prod, ceci indique un problème de build de l'image Docker.",
+                EMBED_MODEL_BF16_PATH,
+            )
+            _embed_model = SentenceTransformer(MODEL_NAME, model_kwargs={"torch_dtype": torch.bfloat16})
+            source = MODEL_NAME
         # Sur Apple Silicon MPS, le warm-up encode() est toujours nécessaire pour
         # forcer la compilation Metal et éviter un premier vecteur incorrect.
-        _embed_model = SentenceTransformer(MODEL_NAME, model_kwargs={"torch_dtype": torch.bfloat16})
         _ = _embed_model.encode(["query: warm-up"], normalize_embeddings=True)
         gc.collect()
-        log.info("EMBED_MODEL loaded (bfloat16) + warm-up done, device=%s", _embed_model.device)
-        log_memory("startup - SentenceTransformer bfloat16 chargé + warm-up")
+        log.info("EMBED_MODEL loaded from %s + warm-up done, device=%s", source, _embed_model.device)
+        log_memory("startup - SentenceTransformer chargé + warm-up")
     return _embed_model
 
 
