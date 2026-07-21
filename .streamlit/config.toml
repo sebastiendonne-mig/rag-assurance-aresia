@@ -1,0 +1,10 @@
+# Thème TKoidra — aligné sur la palette réelle de tkoidra.com/use-cases
+# (slate-950 / teal-400 / rose-400), pas sur tokens.css du brand-kit
+# (navy/cyan/blanc), qui n'est pas synchronisé avec le site déployé.
+[theme]
+base = "dark"
+primaryColor = "#2DD4BF"
+backgroundColor = "#020617"
+secondaryBackgroundColor = "#0F172A"
+textColor = "#F1F5F9"
+font = "sans serif"

@@ -64,10 +64,13 @@ _warm_up()
 
 st.markdown("""
 <style>
-.trace-header { font-size: 0.82rem; font-weight: 600; color: #555; }
-.trace-decision-ok   { color: #1a7f37; font-weight: 600; }
-.trace-decision-nok  { color: #cf222e; font-weight: 600; }
-.trace-decision-warn { color: #9a6700; font-weight: 600; }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+.stApp, .stApp [class*="css"] { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+
+.trace-header { font-size: 0.82rem; font-weight: 600; color: #94A3B8; }
+.trace-decision-ok   { color: #4ADE80; font-weight: 600; }
+.trace-decision-nok  { color: #FB7185; font-weight: 600; }
+.trace-decision-warn { color: #FBBF24; font-weight: 600; }
 .etape-badge {
     display: inline-block;
     padding: 1px 7px;
