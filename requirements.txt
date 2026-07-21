@@ -1,13 +1,15 @@
 # RAG agentique assurance — AssurConseil 365
 #
-# Sur Streamlit Community Cloud, ce fichier est IGNORÉ au profit de uv.lock
-# (priorité 1 dans l'ordre de résolution Streamlit Cloud). La source d'index
-# CPU-only pour torch est déclarée dans pyproject.toml via [tool.uv.sources].
+# Déploiement cible : Hugging Face Spaces (SDK Streamlit, CPU Basic 16 Go RAM).
+# HF Spaces installe ce fichier via `pip install -r requirements.txt` — pas de
+# lecture de uv.lock. La ligne --extra-index-url ci-dessous force pip à
+# résoudre torch depuis l'index CPU-only (comme le fait uv via
+# [tool.uv.sources] dans pyproject.toml), pour éviter de télécharger les
+# wheels CUDA (plusieurs Go, inutiles sur Spaces CPU).
 #
-# Ce fichier sert uniquement de référence pour installation manuelle locale :
-#   pip install -r requirements.txt  (installe torch CUDA/standard depuis PyPI)
-#   uv sync                          (respecte pyproject.toml + uv.lock)
+# Installation locale équivalente : uv sync (respecte pyproject.toml + uv.lock)
 
+--extra-index-url https://download.pytorch.org/whl/cpu
 torch==2.12.1
 anthropic>=0.111.0
 langgraph>=1.2.0
