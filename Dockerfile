@@ -21,6 +21,8 @@ COPY app.py .
 COPY src/ ./src/
 COPY data/ ./data/
 COPY chroma_db/ ./chroma_db/
+COPY assets/ ./assets/
+COPY .streamlit/ ./.streamlit/
 COPY *.pdf ./
 
 ENV PORT=8080
