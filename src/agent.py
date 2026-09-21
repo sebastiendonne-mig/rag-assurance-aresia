@@ -8,6 +8,7 @@ import gc
 import json
 import logging
 import os
+import sys
 import threading
 from datetime import date, datetime, timezone
 from pathlib import Path
@@ -23,6 +24,32 @@ from sentence_transformers import SentenceTransformer
 log = logging.getLogger("agent")
 
 load_dotenv()
+
+
+def configure_stdout_logging() -> None:
+    """
+    Ajoute un StreamHandler(sys.stdout) niveau WARNING sur les loggers
+    "streamlit_app" et "agent" — pas sur root. Cloud Logging (et plus
+    généralement tout collecteur de logs conteneur) ne capture que
+    stdout/stderr du process, jamais un fichier écrit sur le disque local ;
+    le RotatingFileHandler existant sur root (app.py) continue de tout
+    recevoir (INFO compris, qui peut contenir du texte de questions/réponses)
+    dans data/streamlit_debug.log — ce handler-ci ne prend que WARNING et
+    au-dessus, et seulement sur ces deux loggers nommés.
+    Idempotent : n'ajoute rien si un handler du même nom est déjà présent sur
+    le logger visé (ce code est réexécuté à chaque rerun Streamlit dans le
+    même process).
+    """
+    handler_name = "stdout_warning_handler"
+    for logger_name in ("streamlit_app", "agent"):
+        logger = logging.getLogger(logger_name)
+        if any(h.name == handler_name for h in logger.handlers):
+            continue
+        handler = logging.StreamHandler(sys.stdout)
+        handler.name = handler_name
+        handler.setLevel(logging.WARNING)
+        handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s"))
+        logger.addHandler(handler)
 
 ROOT = Path(__file__).parent.parent
 CHROMA_PATH = ROOT / "chroma_db"

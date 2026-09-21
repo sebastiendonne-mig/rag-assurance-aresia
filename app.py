@@ -15,6 +15,7 @@ import streamlit as st
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 from agent import (
+    configure_stdout_logging,
     exceeds_max_length,
     format_user_error,
     get_embed_model,
@@ -44,6 +45,10 @@ if not logging.root.handlers:
     logging.root.addHandler(_handler)
     logging.root.setLevel(logging.INFO)
 log = logging.getLogger("streamlit_app")
+
+# WARNING et au-dessus en plus sur stdout (Cloud Logging capture stdout/stderr
+# du conteneur, jamais un fichier local) — voir agent.configure_stdout_logging.
+configure_stdout_logging()
 
 
 # ─────────────────────────────────────────────
@@ -305,10 +310,16 @@ with col_chat:
                     trace_summary = [(e["etape"], e.get("decision", "")[:40]) for e in state["trace_log"]]
                     log.info("RUN_AGENT done trace=%s reponse_start=%r", trace_summary, reponse[:80])
                 except Exception as e:
-                    # Log serveur minimal : type + horodatage uniquement, jamais le message brut.
+                    # Log serveur minimal : type, status_code éventuel (ex. 401/429 d'un
+                    # anthropic.APIStatusError), TYPE de la cause éventuelle (__cause__,
+                    # jamais son message), et horodatage. Jamais le message brut de e.
+                    status_code = getattr(e, "status_code", None)
+                    cause_type = type(e.__cause__).__name__ if e.__cause__ is not None else None
                     log.error(
-                        "RUN_AGENT exception type=%s horodatage=%s",
+                        "RUN_AGENT exception type=%s status_code=%s cause_type=%s horodatage=%s",
                         type(e).__name__,
+                        status_code,
+                        cause_type,
                         datetime.now(timezone.utc).isoformat(),
                     )
                     reponse = format_user_error(e)
