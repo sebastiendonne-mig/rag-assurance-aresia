@@ -33,6 +33,10 @@ MODEL_NAME = "intfloat/multilingual-e5-large"
 EMBED_MODEL_BF16_PATH = ROOT / "models" / "e5-large-bf16"
 CLAUDE_MODEL = "claude-sonnet-4-6"
 RETRIEVAL_K = 10
+# Plafond dur : le prompt planner demande "2-4" mais rien ne garantit que le LLM
+# le respecte. Sans cette borne, le nombre d'appels LLM par question n'est pas
+# structurellement fini (voir boucle evaluate/reformulate, bornée par tentatives<3).
+MAX_SUBQUESTIONS = int(os.environ.get("MAX_SUBQUESTIONS", "4"))
 
 # ─────────────────────────────────────────────
 # État partagé
@@ -73,6 +77,10 @@ _turn_encode_seq: int = 0
 # (pas persistant) ; valable uniquement pour CETTE instance (aucune coordination
 # multi-instance si le service scale au-delà de 1) ; ne remplace PAS une limite de
 # dépense configurée côté Anthropic — seul rempart réel contre un dépassement de budget.
+# Compte des QUESTIONS, pas des appels LLM : une question peut déclencher de 3 à
+# 1 + MAX_SUBQUESTIONS*5 + 1 appels selon le chemin emprunté dans le graphe (voir
+# MAX_SUBQUESTIONS ci-dessous) — ce disjoncteur ne borne donc pas directement le
+# nombre d'appels API, seulement le nombre de questions traitées par jour.
 
 DAILY_QUESTION_LIMIT = int(os.environ.get("DAILY_QUESTION_LIMIT", "100"))
 _daily_lock = threading.Lock()
@@ -413,6 +421,12 @@ def planner(state: AgentState) -> AgentState:
         system=system,
     )
     sous_questions = result.get("sous_questions", [{"texte": question, "doc_cible_probable": None}])
+    if len(sous_questions) > MAX_SUBQUESTIONS:
+        log.error(
+            "PLANNER troncature: %d -> %d sous-questions, horodatage=%s",
+            len(sous_questions), MAX_SUBQUESTIONS, datetime.now(timezone.utc).isoformat(),
+        )
+        sous_questions = sous_questions[:MAX_SUBQUESTIONS]
 
     append_log(state, {
         "etape": "planner",

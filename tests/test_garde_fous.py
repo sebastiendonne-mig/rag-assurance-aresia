@@ -113,6 +113,51 @@ def test_daily_limit_remis_a_zero_au_changement_de_jour(monkeypatch):
 # _check_daily_limit — concurrence
 # ─────────────────────────────────────────────
 
+# ─────────────────────────────────────────────
+# planner — plafond MAX_SUBQUESTIONS
+# ─────────────────────────────────────────────
+
+def _make_state(question="Question test"):
+    return {
+        "question_originale": question,
+        "produit_filtre": None,
+        "sous_questions": [],
+        "resultats": [],
+        "reponse_finale": "",
+        "trace_log": [],
+    }
+
+
+def test_planner_tronque_au_dela_du_plafond(monkeypatch):
+    monkeypatch.setattr(agent, "MAX_SUBQUESTIONS", 4)
+    fake_sous_questions = [
+        {"texte": f"sous-question {i}", "doc_cible_probable": None} for i in range(10)
+    ]
+    monkeypatch.setattr(
+        agent, "llm_json", lambda *a, **k: {"sous_questions": fake_sous_questions}
+    )
+
+    state = agent.planner(_make_state())
+
+    assert len(state["sous_questions"]) == 4
+    assert state["sous_questions"] == fake_sous_questions[:4]
+
+
+def test_planner_ne_touche_pas_sous_le_plafond(monkeypatch):
+    monkeypatch.setattr(agent, "MAX_SUBQUESTIONS", 4)
+    fake_sous_questions = [
+        {"texte": f"sous-question {i}", "doc_cible_probable": None} for i in range(3)
+    ]
+    monkeypatch.setattr(
+        agent, "llm_json", lambda *a, **k: {"sous_questions": fake_sous_questions}
+    )
+
+    state = agent.planner(_make_state())
+
+    assert len(state["sous_questions"]) == 3
+    assert state["sous_questions"] == fake_sous_questions
+
+
 def test_daily_limit_thread_safe(monkeypatch):
     monkeypatch.setattr(agent, "DAILY_QUESTION_LIMIT", 50)
     n_threads = 200
