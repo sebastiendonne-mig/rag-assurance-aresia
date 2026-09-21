@@ -1,8 +1,11 @@
 # Réduit le contexte envoyé au daemon Docker / Cloud Build — vérifié contre
 # les COPY du Dockerfile (requirements.txt, app.py, src/, data/, assets/,
 # .streamlit/, *.pdf) : rien de nécessaire au build n'est exclu ici.
+# .env* exclut aussi .env.example : vérifié qu'aucun COPY ne le vise (il n'est
+# copié dans l'image par aucune des lignes ci-dessus, donc rien ne dépend
+# de sa présence dans le contexte de build).
 
-.env
+.env*
 .git
 .venv
 chroma_db/
@@ -11,3 +14,5 @@ __pycache__/
 .claude/
 .devcontainer/
 .DS_Store
+.streamlit/secrets.toml
+data/*.log

@@ -15,8 +15,9 @@ __pycache__/
 
 .devcontainer/
 .claude/
-.env
+.env*
 .DS_Store
+.streamlit/secrets.toml
 
 # Index Chroma reconstruit au build Docker (voir Dockerfile) — jamais uploadé
 # depuis le disque local, pour ne pas dépendre d'un état non commité
