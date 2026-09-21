@@ -24,11 +24,14 @@ COPY assets/ ./assets/
 COPY .streamlit/ ./.streamlit/
 COPY *.pdf ./
 
-# Construit l'index Chroma au build, depuis data/chunks/chunks.json (committé) —
-# chroma_db/ n'est plus copié depuis le disque local (voir .gitignore/.gcloudignore) :
+# Construit l'index Chroma au build, à partir des embeddings PRÉ-CALCULÉS
+# committés (data/chunks/embeddings.npy + .meta.json, générés en local par
+# src/precompute_embeddings.py — jamais calculés ici : le calcul via
+# model.encode() à cette étape faisait expirer le build Cloud Build à 30 min).
+# chroma_db/ n'est pas copié depuis le disque local (voir .gitignore/.gcloudignore) :
 # l'image est reproductible depuis git seul, sans dépendre d'un état local non commité.
-# Réutilise les poids bf16 déjà convertis ci-dessus (_load_embed_model), pas de
-# nouveau téléchargement du modèle. Échoue le build si la collection reste vide.
+# Échoue le build si les embeddings pré-calculés sont absents/incohérents avec
+# chunks.json, ou si la collection reste vide/incomplète.
 RUN python src/index_chroma.py
 
 ENV PORT=8080
