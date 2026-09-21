@@ -5,14 +5,26 @@ Colonne gauche : chat  |  Colonne droite : trace du graphe LangGraph
 import base64
 import json
 import logging
+import os
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from agent import get_embed_model, get_chroma_col, get_anthropic, get_graph, run_agent
+from agent import (
+    exceeds_max_length,
+    format_user_error,
+    get_embed_model,
+    get_chroma_col,
+    get_anthropic,
+    get_graph,
+    run_agent,
+)
+
+MAX_INPUT_CHARS = int(os.environ.get("MAX_INPUT_CHARS", "500"))
 
 ROOT = Path(__file__).parent
 
@@ -266,10 +278,19 @@ with col_chat:
             st.markdown(msg["content"])
 
     # ── Zone de saisie (chat_input + boutons de démo) ──
-    chat_prompt = st.chat_input("Posez votre question sur les contrats ARESIA…")
+    chat_prompt = st.chat_input(
+        "Posez votre question sur les contrats ARESIA…",
+        max_chars=MAX_INPUT_CHARS,
+    )
     prompt = pending or chat_prompt
 
     if prompt:
+        # Garde-fou de longueur : conservé même si le widget limite déjà la saisie
+        # clavier (chat_prompt), car `pending` (boutons de démo) contourne le widget.
+        if exceeds_max_length(prompt, MAX_INPUT_CHARS):
+            st.error(f"Votre question dépasse la limite de {MAX_INPUT_CHARS} caractères. Merci de la raccourcir.")
+            st.stop()
+
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
@@ -284,8 +305,13 @@ with col_chat:
                     trace_summary = [(e["etape"], e.get("decision", "")[:40]) for e in state["trace_log"]]
                     log.info("RUN_AGENT done trace=%s reponse_start=%r", trace_summary, reponse[:80])
                 except Exception as e:
-                    log.exception("RUN_AGENT exception: %s", e)
-                    reponse = f"❌ Erreur : {e}"
+                    # Log serveur minimal : type + horodatage uniquement, jamais le message brut.
+                    log.error(
+                        "RUN_AGENT exception type=%s horodatage=%s",
+                        type(e).__name__,
+                        datetime.now(timezone.utc).isoformat(),
+                    )
+                    reponse = format_user_error(e)
                     st.session_state.last_trace = []
 
             st.markdown(reponse)

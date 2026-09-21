@@ -8,6 +8,8 @@ import gc
 import json
 import logging
 import os
+import threading
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import TypedDict
 
@@ -62,6 +64,36 @@ _turn_counter: int = 0
 _current_turn: int = 0
 _turn_llm_seq: int = 0
 _turn_encode_seq: int = 0
+
+# ─────────────────────────────────────────────
+# Disjoncteur quotidien (lot 0 — garde-fou de coût)
+# ─────────────────────────────────────────────
+# Limites connues : compteur en mémoire de processus, remis à zéro au redémarrage
+# (pas persistant) ; valable uniquement pour CETTE instance (aucune coordination
+# multi-instance si le service scale au-delà de 1) ; ne remplace PAS une limite de
+# dépense configurée côté Anthropic — seul rempart réel contre un dépassement de budget.
+
+DAILY_QUESTION_LIMIT = int(os.environ.get("DAILY_QUESTION_LIMIT", "100"))
+_daily_lock = threading.Lock()
+_daily_count: int = 0
+_daily_date: date | None = None
+
+
+class DailyLimitExceeded(Exception):
+    """Levée quand DAILY_QUESTION_LIMIT est atteint pour la journée UTC courante."""
+
+
+def _check_daily_limit() -> None:
+    """Incrémente et vérifie le compteur de questions du jour (UTC), thread-safe."""
+    global _daily_count, _daily_date
+    today = datetime.now(timezone.utc).date()
+    with _daily_lock:
+        if _daily_date != today:
+            _daily_date = today
+            _daily_count = 0
+        if _daily_count >= DAILY_QUESTION_LIMIT:
+            raise DailyLimitExceeded(f"limite {DAILY_QUESTION_LIMIT}/jour atteinte")
+        _daily_count += 1
 
 
 def log_memory(label: str) -> None:
@@ -206,6 +238,23 @@ Règles non négociables :
 # ─────────────────────────────────────────────
 # Helpers LLM
 # ─────────────────────────────────────────────
+
+def exceeds_max_length(text: str, max_chars: int) -> bool:
+    """Vrai si `text` dépasse `max_chars` caractères — utilisé côté UI avant tout appel API."""
+    return len(text) > max_chars
+
+
+def format_user_error(exc: Exception) -> str:
+    """
+    Message neutre affiché au visiteur en cas d'échec de la pipeline.
+    Ne doit JAMAIS inclure str(exc) : le message d'exception brut (potentiellement
+    des détails d'implémentation, de statut HTTP, etc.) reste uniquement dans les
+    logs serveur (type d'exception + horodatage, voir app.py).
+    """
+    if isinstance(exc, DailyLimitExceeded):
+        return "Le service a atteint sa limite d'usage pour aujourd'hui. Merci de revenir demain."
+    return "Une erreur technique est survenue. Merci de réessayer dans quelques instants."
+
 
 def llm_call(messages: list[dict], system: str = SYSTEM_PROMPT) -> str:
     global _turn_llm_seq
@@ -668,6 +717,7 @@ def get_graph():
 
 def run_agent(question: str, produit_filtre: str | None = None) -> AgentState:
     global _turn_counter, _current_turn, _turn_llm_seq, _turn_encode_seq
+    _check_daily_limit()
     _turn_counter += 1
     _current_turn = _turn_counter
     _turn_llm_seq = 0
