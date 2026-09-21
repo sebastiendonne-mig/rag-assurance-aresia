@@ -250,10 +250,29 @@ def get_chroma_col() -> chromadb.Collection:
     return _chroma_col
 
 
+# Défauts SDK (anthropic 0.111.0, vérifiés dans anthropic._base_client) :
+# Timeout(connect=5.0, read=600, write=600, pool=600), max_retries=2. Cloud Run
+# coupe la requête/le websocket Streamlit à 300s (timeoutSeconds du service,
+# et confirmé applicable aux WebSockets par la doc Cloud Run) — un read=600s
+# par appel est donc déjà sans effet pratique aujourd'hui. Le SDK retente sur
+# 408/409/429/5xx (sauf en-tête x-should-retry:false) et sur
+# APIConnectionError/APITimeoutError (vérifié dans _should_retry/
+# _should_retry_exception de la source installée) ; walk du __cause__ compris.
+# VALEURS PROVISOIRES — à réajuster après mesure de la latence réelle par
+# appel (non mesurée à ce jour, seule la latence totale du pipeline l'est,
+# via le golden set : médiane 18,65s pour 3-6 appels).
+ANTHROPIC_TIMEOUT = anthropic.Timeout(connect=5.0, read=60.0, write=60.0, pool=60.0)
+ANTHROPIC_MAX_RETRIES = 1
+
+
 def get_anthropic() -> anthropic.Anthropic:
     global _anthropic_client
     if _anthropic_client is None:
-        _anthropic_client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+        _anthropic_client = anthropic.Anthropic(
+            api_key=os.environ["ANTHROPIC_API_KEY"],
+            timeout=ANTHROPIC_TIMEOUT,
+            max_retries=ANTHROPIC_MAX_RETRIES,
+        )
     return _anthropic_client
 
 
