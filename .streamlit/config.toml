@@ -1,3 +1,11 @@
+# "none" : aucun type d'exception, message générique ni trace affichés au
+# visiteur en cas d'exception non interceptée (démarrage, chargement d'assets).
+# Les traces complètes continuent d'aller sur la console/les logs serveur
+# (source : docstring de l'option dans streamlit/config.py, valeurs possibles
+# full/stacktrace/type/none).
+[client]
+showErrorDetails = "none"
+
 # Thème TKoidra — tokens.css du brand-kit (navy/cyan/blanc), confirmé
 # identique à la palette réellement déployée sur dvf.tkoidra.com
 # (valeurs vérifiées via getComputedStyle en production, pas déduites).
