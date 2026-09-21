@@ -77,6 +77,15 @@ def _load_svg_b64(filename: str) -> str:
     return base64.b64encode((ROOT / "assets" / filename).read_bytes()).decode()
 
 
+def _format_usage_caption(usage: dict) -> str:
+    """Formate la ligne de synthèse usage/coût affichée sous une réponse."""
+    return (
+        f"⏱️ {usage['latence_s']:.1f}s · {usage['n_appels']} appel(s) LLM · "
+        f"{usage['tokens_in']}+{usage['tokens_out']} tokens (entrée+sortie) · "
+        f"≈{usage['cout_usd']:.4f}$ *(estimation)*"
+    )
+
+
 @st.cache_resource(show_spinner="Chargement du modèle d'embeddings…")
 def _warm_up():
     """Charge les ressources une seule fois pour toute la durée de vie du serveur."""
@@ -287,6 +296,8 @@ with col_chat:
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
+            if "usage" in msg:
+                st.caption(_format_usage_caption(msg["usage"]))
 
     # ── Zone de saisie (chat_input + boutons de démo) ──
     chat_prompt = st.chat_input(
@@ -334,15 +345,15 @@ with col_chat:
                     st.session_state.last_usage = None  # aucun affichage d'usage sur erreur
 
             st.markdown(reponse)
-            usage = st.session_state.last_usage
-            if usage is not None:
-                st.caption(
-                    f"⏱️ {usage['latence_s']:.1f}s · {usage['n_appels']} appel(s) LLM · "
-                    f"{usage['tokens_in']}+{usage['tokens_out']} tokens (entrée+sortie) · "
-                    f"≈{usage['cout_usd']:.4f}$ *(estimation)*"
-                )
 
-        st.session_state.messages.append({"role": "assistant", "content": reponse})
+        # La clé "usage" est réservée à l'affichage (caption sous la réponse,
+        # via la boucle d'historique) ; ne jamais envoyer
+        # st.session_state.messages tel quel à l'API Anthropic (le SDK
+        # n'écarte pas les clés inconnues, vérifié dans la source installée).
+        assistant_msg = {"role": "assistant", "content": reponse}
+        if st.session_state.last_usage is not None:
+            assistant_msg["usage"] = st.session_state.last_usage
+        st.session_state.messages.append(assistant_msg)
         st.session_state.messages = st.session_state.messages[-40:]
         st.rerun()
 
