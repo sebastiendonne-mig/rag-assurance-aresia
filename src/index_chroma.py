@@ -80,7 +80,13 @@ def build_index(force_reset: bool = False) -> chromadb.Collection:
             documents=documents[i : i + batch_size],
             metadatas=metadatas[i : i + batch_size],
         )
-    print(f"Upsert terminé — {collection.count()} documents dans la collection")
+    indexed_count = collection.count()
+    print(f"Upsert terminé — {indexed_count} documents dans la collection")
+    if indexed_count != len(chunks):
+        raise RuntimeError(
+            f"Indexation incomplète : {indexed_count} documents indexés, "
+            f"{len(chunks)} attendus (collision d'ID ou upsert partiel)."
+        )
     return collection
 
 
