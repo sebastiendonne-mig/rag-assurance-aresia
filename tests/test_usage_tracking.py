@@ -189,15 +189,41 @@ class _PerThreadQueueClient:
     Un SEUL client partagé entre les deux threads (installé une seule fois,
     avant leur démarrage — jamais de réassignation concurrente de
     agent.get_anthropic), mais qui sert une file de réponses différente par
-    thread appelant (dispatch sur threading.get_ident()). Modélise fidèlement
-    le cas réel : un seul get_anthropic() partagé par process, appelé
-    concurremment par plusieurs sessions.
+    thread appelant (dispatch sur threading.get_ident() — validé fiable :
+    un diagnostic séparé, hors dépôt, a confirmé que les nœuds du graphe
+    s'exécutent dans le MÊME thread que celui qui appelle agent.run_agent(),
+    jamais dans un thread du pool interne de LangGraph, pour ce graphe/
+    scénario ; le dispatch par thread appelant reste donc valide).
+
+    SECOND CORRECTIF : une synchronisation au seul PREMIER appel de chaque
+    thread s'est révélée insuffisante (voir rapport de la session
+    précédente) — une fois la barrière franchie, rien ne contraint plus
+    l'ordre d'exécution : le GIL laisse un thread dérouler tout son reste
+    (record + appels suivants + finally/reset) avant que l'autre ne
+    reprenne la main. Avec une fausse ContextVar globale dont set()/reset()
+    empilent/restaurent l'ancienne valeur (sémantique LIFO), cette
+    sérialisation accidentelle imbrique correctement les deux sections
+    critiques par coïncidence — le mélange de totaux n'apparaît alors
+    jamais, même sur une implémentation non isolée par contexte.
+
+    Correctif : on attend désormais sur la MÊME threading.Barrier(2)
+    (cyclique — se réarme automatiquement après que les deux parties l'ont
+    franchie) À CHAQUE appel de _create, pas seulement au premier. Les deux
+    threads doivent donc se rejoindre avant CHACUN des 3 appels LLM,
+    entrelaçant l'enregistrement (_record_usage / tracker.record) des deux
+    threads à chaque étape plutôt qu'une seule fois au démarrage — ce qui
+    empêche l'un des deux de dérouler tout son reste de façon isolée entre
+    deux points de synchronisation. Timeout borné à chaque attente pour ne
+    jamais bloquer la suite indéfiniment (échoue avec une erreur claire à
+    la place).
     """
 
-    def __init__(self):
+    def __init__(self, overlap_barrier: threading.Barrier | None = None, overlap_timeout: float = 10.0):
         self._lock = threading.Lock()
         self._queues: dict[int, list] = {}
         self._counts: dict[int, int] = {}
+        self._overlap_barrier = overlap_barrier
+        self._overlap_timeout = overlap_timeout
         self.messages = SimpleNamespace(create=self._create)
 
     def register(self, responses: list) -> None:
@@ -210,6 +236,13 @@ class _PerThreadQueueClient:
         with self._lock:
             idx = self._counts[tid]
             self._counts[tid] += 1
+        if self._overlap_barrier is not None:
+            # À CHAQUE appel (pas seulement le premier) : peut lever
+            # threading.BrokenBarrierError après timeout si l'autre thread
+            # n'arrive jamais ici (ex. chemin de code différent, nombre
+            # d'appels différent entre threads) — le test échoue alors avec
+            # une erreur claire plutôt que de bloquer.
+            self._overlap_barrier.wait(timeout=self._overlap_timeout)
         return self._queues[tid][idx]
 
 
@@ -219,11 +252,17 @@ def test_deux_run_agent_concurrents_ne_melangent_pas_les_totaux(monkeypatch):
     monkeypatch.setattr(agent, "_daily_count", 0)
     monkeypatch.setattr(agent, "_daily_date", None)
 
-    shared_client = _PerThreadQueueClient()
+    # Barrier de démarrage (les deux threads lancent run_agent() ensemble) +
+    # barrier de chevauchement forcé À CHAQUE appel LLM (les deux threads
+    # doivent se rejoindre avant chacun des 3 appels, pas seulement le
+    # premier) : voir docstring de _PerThreadQueueClient.
+    start_barrier = threading.Barrier(2)
+    overlap_barrier = threading.Barrier(2)
+    shared_client = _PerThreadQueueClient(overlap_barrier=overlap_barrier, overlap_timeout=10.0)
     monkeypatch.setattr(agent, "get_anthropic", lambda: shared_client)
 
     results = {}
-    barrier = threading.Barrier(2)  # force le chevauchement des deux exécutions
+    errors = {}
 
     def worker(name, tokens_value):
         shared_client.register([
@@ -231,15 +270,21 @@ def test_deux_run_agent_concurrents_ne_melangent_pas_les_totaux(monkeypatch):
             _FakeResponse('{"suffisant": true, "raison": "ok"}', input_tokens=tokens_value, output_tokens=1),
             _FakeResponse("reponse", input_tokens=tokens_value, output_tokens=1),
         ])
-        barrier.wait()
-        results[name] = agent.run_agent(f"Question {name}")
+        start_barrier.wait()
+        try:
+            results[name] = agent.run_agent(f"Question {name}")
+        except Exception as exc:  # remonté explicitement au thread principal, pas avalé
+            errors[name] = exc
 
     t1 = threading.Thread(target=worker, args=("A", 1000))
     t2 = threading.Thread(target=worker, args=("B", 2000))
     t1.start()
     t2.start()
-    t1.join()
-    t2.join()
+    t1.join(timeout=30)
+    t2.join(timeout=30)
+
+    assert not errors, f"exception(s) dans les threads workers : {errors}"
+    assert "A" in results and "B" in results, "un thread ne s'est pas terminé (timeout ?) — voir results partiels"
 
     usage_a = results["A"]["usage"]
     usage_b = results["B"]["usage"]
