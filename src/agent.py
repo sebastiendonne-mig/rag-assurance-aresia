@@ -312,6 +312,11 @@ def llm_call(messages: list[dict], system: str = SYSTEM_PROMPT) -> str:
     return response.content[0].text
 
 
+class LLMResponseError(Exception):
+    """Levée quand la réponse JSON du modèle ne peut pas être parsée (option (a),
+    aucune nouvelle tentative — voir llm_json)."""
+
+
 def llm_json(messages: list[dict], system: str) -> dict:
     """Appel LLM avec sortie JSON stricte. temperature=0 pour la reproductibilité."""
     global _turn_llm_seq
@@ -331,7 +336,21 @@ def llm_json(messages: list[dict], system: str) -> dict:
         text = text.split("```")[1]
         if text.startswith("json"):
             text = text[4:]
-    return json.loads(text.strip())
+    text = text.strip()
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError as exc:
+        # Aucune nouvelle tentative (option (a)) : échec propre, 1 seul appel API.
+        # Jamais le contenu de la réponse ni de la question dans le log.
+        log.warning(
+            "LLM_JSON parse_error stop_reason=%s text_len=%d",
+            response.stop_reason,
+            len(text),
+        )
+        # `from exc` : __cause__ = ce JSONDecodeError, dont seul le TYPE est jamais
+        # relu (app.py:RUN_AGENT log cause_type via type(e.__cause__).__name__,
+        # jamais son message) — préserve un diagnostic utile sans fuite de contenu.
+        raise LLMResponseError("Réponse LLM non-JSON après nettoyage markdown") from exc
 
 
 def embed_query(text: str) -> list[float]:
