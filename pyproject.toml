@@ -16,7 +16,7 @@ dependencies = [
     "psutil>=6.0.0",
 ]
 
-# Sur Linux (Streamlit Cloud) : torch résolu depuis l'index CPU-only PyTorch
+# Sur Linux (Cloud Run) : torch résolu depuis l'index CPU-only PyTorch
 # (pas de wheels CUDA inutiles). Sur macOS/Windows : torch vient de PyPI
 # (MPS ou CPU standard selon la plateforme).
 [tool.uv.sources]

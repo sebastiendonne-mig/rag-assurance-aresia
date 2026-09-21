@@ -1,11 +1,11 @@
 # RAG agentique assurance — AssurConseil 365
 #
-# Déploiement cible : Hugging Face Spaces (SDK Streamlit, CPU Basic 16 Go RAM).
-# HF Spaces installe ce fichier via `pip install -r requirements.txt` — pas de
-# lecture de uv.lock. La ligne --extra-index-url ci-dessous force pip à
-# résoudre torch depuis l'index CPU-only (comme le fait uv via
-# [tool.uv.sources] dans pyproject.toml), pour éviter de télécharger les
-# wheels CUDA (plusieurs Go, inutiles sur Spaces CPU).
+# Déploiement cible : Google Cloud Run (build via Dockerfile, cf. `gcloud run
+# deploy --source .`). Le Dockerfile installe ce fichier via
+# `pip install -r requirements.txt` — pas de lecture de uv.lock. La ligne
+# --extra-index-url ci-dessous force pip à résoudre torch depuis l'index
+# CPU-only (comme le fait uv via [tool.uv.sources] dans pyproject.toml), pour
+# éviter de télécharger les wheels CUDA (plusieurs Go, inutiles sur Cloud Run CPU).
 #
 # Installation locale équivalente : uv sync (respecte pyproject.toml + uv.lock)
 
