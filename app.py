@@ -15,6 +15,9 @@ import streamlit as st
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 from agent import (
+    CLAUDE_MODEL,
+    PRIX_INPUT_USD_PAR_MTOK,
+    PRIX_OUTPUT_USD_PAR_MTOK,
     configure_stdout_logging,
     exceeds_max_length,
     format_user_error,
@@ -181,12 +184,15 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 if "last_trace" not in st.session_state:
     st.session_state.last_trace = []
+if "last_usage" not in st.session_state:
+    st.session_state.last_usage = None
 
 with st.sidebar:
     st.header("Conversation")
     if st.button("🗑️ Vider la conversation", use_container_width=True):
         st.session_state.messages = []
         st.session_state.last_trace = []
+        st.session_state.last_usage = None
         st.rerun()
     st.caption(f"Messages : {len(st.session_state.messages)}")
     if LOG_PATH.exists():
@@ -307,6 +313,7 @@ with col_chat:
                     state = run_agent(prompt)
                     reponse = state["reponse_finale"]
                     st.session_state.last_trace = state["trace_log"]
+                    st.session_state.last_usage = state.get("usage")
                     trace_summary = [(e["etape"], e.get("decision", "")[:40]) for e in state["trace_log"]]
                     log.info("RUN_AGENT done trace=%s reponse_start=%r", trace_summary, reponse[:80])
                 except Exception as e:
@@ -324,8 +331,16 @@ with col_chat:
                     )
                     reponse = format_user_error(e)
                     st.session_state.last_trace = []
+                    st.session_state.last_usage = None  # aucun affichage d'usage sur erreur
 
             st.markdown(reponse)
+            usage = st.session_state.last_usage
+            if usage is not None:
+                st.caption(
+                    f"⏱️ {usage['latence_s']:.1f}s · {usage['n_appels']} appel(s) LLM · "
+                    f"{usage['tokens_in']}+{usage['tokens_out']} tokens (entrée+sortie) · "
+                    f"≈{usage['cout_usd']:.4f}$ *(estimation)*"
+                )
 
         st.session_state.messages.append({"role": "assistant", "content": reponse})
         st.session_state.messages = st.session_state.messages[-40:]
@@ -408,6 +423,22 @@ with col_trace:
 
                 if action_suivante:
                     st.markdown(f"**→ Action suivante :** `{action_suivante}`")
+
+        usage = st.session_state.last_usage
+        if usage is not None:
+            with st.expander("💰 Détail de l'estimation"):
+                st.markdown(f"**Modèle :** `{CLAUDE_MODEL}`")
+                st.markdown(
+                    f"**Tarif utilisé :** {PRIX_INPUT_USD_PAR_MTOK:.0f}$/MTok en entrée, "
+                    f"{PRIX_OUTPUT_USD_PAR_MTOK:.0f}$/MTok en sortie "
+                    "(source : [claude.com/pricing](https://claude.com/pricing), relevé le 21/09/2026 — "
+                    "non garanti, susceptible de changer sans préavis)."
+                )
+                st.caption(
+                    "Les tentatives automatiques du SDK en cas d'erreur réseau ne sont pas "
+                    "visibles dans ce comptage : en cas de retry, cette estimation est donc "
+                    "un plancher (le nombre réel d'appels/tokens peut être supérieur)."
+                )
 
         with st.expander("📋 JSON brut du trace_log"):
             st.code(json.dumps(trace, ensure_ascii=False, indent=2), language="json")
