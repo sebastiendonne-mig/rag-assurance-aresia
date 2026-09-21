@@ -10,6 +10,8 @@ import logging
 import os
 import sys
 import threading
+import time
+from contextvars import ContextVar
 from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import TypedDict
@@ -76,6 +78,7 @@ class AgentState(TypedDict):
     resultats: list[dict]             # [{sous_question, chunks, suffisant, tentatives, methode_reformulation}]
     reponse_finale: str
     trace_log: list[dict]             # append-only
+    usage: dict                       # rempli par run_agent() en fin d'exécution (voir UsageTracker)
 
 
 # ─────────────────────────────────────────────
@@ -130,6 +133,54 @@ def _check_daily_limit() -> None:
         if _daily_count >= DAILY_QUESTION_LIMIT:
             raise DailyLimitExceeded(f"limite {DAILY_QUESTION_LIMIT}/jour atteinte")
         _daily_count += 1
+
+
+# ─────────────────────────────────────────────
+# Agrégation d'usage par question (lot 1, sous-lot 1.2)
+# ─────────────────────────────────────────────
+# ContextVar (pas de variable globale de module) : un tracker neuf par appel à
+# run_agent(), positionné/retiré dans son try/finally. Confirmé par lecture de
+# la source LangGraph installée (langgraph/pregel/_executor.py::BackgroundExecutor
+# .submit, langgraph/pregel/_loop.py:1667) que chaque nœud s'exécute dans un
+# thread d'un ContextThreadPoolExecutor (langchain_core.runnables.config), MAIS
+# LangGraph copie explicitement le contexte contextvars courant
+# (contextvars.copy_context()) avant de soumettre et exécute le nœud via
+# ctx.run(fn, ...) — donc _usage_ctx positionné dans run_agent() (thread
+# appelant) est bien visible à l'intérieur de chaque nœud, malgré le thread
+# différent. Vérifié par lecture de code, pas par mesure en conditions réelles.
+
+# Tarifs Sonnet 4.6 lus sur https://claude.com/pricing (redirigé depuis
+# anthropic.com/pricing) le 21/09/2026 — non garantis, susceptibles de changer
+# sans préavis. Le pipeline n'utilise pas le prompt caching (aucun
+# cache_control envoyé, vérifié par grep) : les tokens de cache éventuels
+# (cache_creation_input_tokens/cache_read_input_tokens) ne sont PAS comptés
+# dans cette estimation.
+PRIX_INPUT_USD_PAR_MTOK = 3.0
+PRIX_OUTPUT_USD_PAR_MTOK = 15.0
+
+
+class UsageTracker:
+    """Accumulateur d'usage (appels, tokens) pour UNE question, thread-safe."""
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self.n_appels = 0
+        self.tokens_in = 0
+        self.tokens_out = 0
+
+    def record(self, usage) -> None:
+        with self._lock:
+            self.n_appels += 1
+            self.tokens_in += getattr(usage, "input_tokens", 0) or 0
+            self.tokens_out += getattr(usage, "output_tokens", 0) or 0
+
+
+_usage_ctx: ContextVar["UsageTracker | None"] = ContextVar("usage_ctx", default=None)
+
+
+def estimer_cout_usd(tokens_in: int, tokens_out: int) -> float:
+    """Coût estimé en USD, hors tokens de cache (non utilisés ici)."""
+    return (tokens_in / 1_000_000) * PRIX_INPUT_USD_PAR_MTOK + (tokens_out / 1_000_000) * PRIX_OUTPUT_USD_PAR_MTOK
 
 
 def log_memory(label: str) -> None:
@@ -317,6 +368,24 @@ def format_user_error(exc: Exception) -> str:
     return "Une erreur technique est survenue. Merci de réessayer dans quelques instants."
 
 
+def _record_usage(response) -> None:
+    """
+    Enregistre response.usage dans le tracker de la question en cours, s'il y
+    en a un (_usage_ctx est None hors d'un run_agent(), ex. tests unitaires
+    appelant llm_call/llm_json directement — ne rien faire, sans erreur).
+    Si response n'a pas d'attribut usage, ne plante pas : log WARNING sans
+    contenu (ni texte de réponse, ni question).
+    """
+    tracker = _usage_ctx.get()
+    if tracker is None:
+        return
+    usage = getattr(response, "usage", None)
+    if usage is None:
+        log.warning("LLM_USAGE reponse sans attribut usage — non comptabilisee")
+        return
+    tracker.record(usage)
+
+
 def llm_call(messages: list[dict], system: str = SYSTEM_PROMPT) -> str:
     global _turn_llm_seq
     _turn_llm_seq += 1
@@ -328,6 +397,7 @@ def llm_call(messages: list[dict], system: str = SYSTEM_PROMPT) -> str:
         system=system,
         messages=messages,
     )
+    _record_usage(response)
     return response.content[0].text
 
 
@@ -349,6 +419,7 @@ def llm_json(messages: list[dict], system: str) -> dict:
         system=system + "\n\nRéponds UNIQUEMENT avec un objet JSON valide, sans markdown, sans explication.",
         messages=messages,
     )
+    _record_usage(response)  # avant tout parsing : compté même si le JSON est invalide ensuite
     text = response.content[0].text.strip()
     # Nettoyer les balises markdown si présentes
     if text.startswith("```"):
@@ -817,8 +888,33 @@ def run_agent(question: str, produit_filtre: str | None = None) -> AgentState:
         "resultats": [],
         "reponse_finale": "",
         "trace_log": [],
+        "usage": {},
     }
-    result = graph.invoke(initial_state)
+
+    # Tracker neuf par question, via ContextVar (pas de variable globale) —
+    # voir le commentaire au-dessus de la classe UsageTracker pour la
+    # justification (propagation confirmée dans les nœuds LangGraph malgré le
+    # thread pool interne).
+    tracker = UsageTracker()
+    token = _usage_ctx.set(tracker)
+    try:
+        t0 = time.perf_counter()
+        result = graph.invoke(initial_state)
+        latence_s = time.perf_counter() - t0
+    finally:
+        # Le reset doit TOUJOURS avoir lieu, y compris si graph.invoke() lève
+        # (ex. LLMResponseError, DailyLimitExceeded en amont, erreur SDK).
+        _usage_ctx.reset(token)
+
+    # Atteint uniquement en cas de succès : sur exception, la ligne ci-dessus
+    # a déjà relevé le finally et propagé l'erreur — aucun "usage" partiel.
+    result["usage"] = {
+        "n_appels": tracker.n_appels,
+        "tokens_in": tracker.tokens_in,
+        "tokens_out": tracker.tokens_out,
+        "latence_s": latence_s,
+        "cout_usd": estimer_cout_usd(tracker.tokens_in, tracker.tokens_out),
+    }
     return result
 
 
