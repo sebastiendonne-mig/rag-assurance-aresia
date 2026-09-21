@@ -54,6 +54,7 @@ class AgentState(TypedDict):
 _embed_model: SentenceTransformer | None = None
 _chroma_client: chromadb.PersistentClient | None = None  # référence forte pour éviter le GC
 _chroma_col: chromadb.Collection | None = None
+_chroma_lock = threading.Lock()  # évite une reconstruction concurrente si plusieurs sessions démarrent en même temps
 _anthropic_client: anthropic.Anthropic | None = None
 
 # ── Compteurs d'instrumentation mémoire ──────────────────────────────────────
@@ -184,27 +185,33 @@ def _rebuild_chroma_index(client: chromadb.PersistentClient) -> chromadb.Collect
 def get_chroma_col() -> chromadb.Collection:
     global _chroma_client, _chroma_col
     if _chroma_col is None:
-        _chroma_client = chromadb.PersistentClient(path=str(CHROMA_PATH))
+        # Verrou : évite que deux sessions Streamlit démarrant en même temps dans le
+        # même processus ne déclenchent chacune une reconstruction concurrente.
+        # Double-check locking : les conditions de déclenchement ci-dessous sont
+        # inchangées, seule la synchronisation est ajoutée.
+        with _chroma_lock:
+            if _chroma_col is None:
+                _chroma_client = chromadb.PersistentClient(path=str(CHROMA_PATH))
 
-        needs_rebuild = False
-        try:
-            col = _chroma_client.get_collection(COLLECTION_NAME)
-            if col.metadata.get("model_name") != MODEL_NAME or col.count() == 0:
-                needs_rebuild = True
-            else:
-                _chroma_col = col
-        except Exception:
-            needs_rebuild = True
+                needs_rebuild = False
+                try:
+                    col = _chroma_client.get_collection(COLLECTION_NAME)
+                    if col.metadata.get("model_name") != MODEL_NAME or col.count() == 0:
+                        needs_rebuild = True
+                    else:
+                        _chroma_col = col
+                except Exception:
+                    needs_rebuild = True
 
-        if needs_rebuild:
-            _chroma_col = _rebuild_chroma_index(_chroma_client)
+                if needs_rebuild:
+                    _chroma_col = _rebuild_chroma_index(_chroma_client)
 
-        log.info(
-            "CHROMA loaded: collection=%r count=%d id=%s",
-            _chroma_col.name,
-            _chroma_col.count(),
-            _chroma_col.id,
-        )
+                log.info(
+                    "CHROMA loaded: collection=%r count=%d id=%s",
+                    _chroma_col.name,
+                    _chroma_col.count(),
+                    _chroma_col.id,
+                )
     return _chroma_col
 
 

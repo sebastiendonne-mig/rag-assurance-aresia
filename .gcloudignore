@@ -1,0 +1,30 @@
+# Généré pour gcloud run deploy --source . — évite d'uploader les
+# environnements virtuels locaux et artefacts de dev vers Cloud Build.
+.git/
+.gcloudignore
+.gitignore
+
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+.devcontainer/
+.claude/
+.env
+.DS_Store
+
+# Index Chroma reconstruit au build Docker (voir Dockerfile) — jamais uploadé
+# depuis le disque local, pour ne pas dépendre d'un état non commité
+chroma_db/
+
+tests/
+data/*.log
+
+*.egg-info/
+dist/
+build/

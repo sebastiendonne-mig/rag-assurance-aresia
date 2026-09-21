@@ -15,6 +15,10 @@ CHUNKS_PATH = ROOT / "data" / "chunks" / "chunks.json"
 CHROMA_PATH = ROOT / "chroma_db"
 COLLECTION_NAME = "assur_docs"
 MODEL_NAME = "intfloat/multilingual-e5-large"
+# Même chemin que agent.py:EMBED_MODEL_BF16_PATH — si ce script tourne après
+# l'étape de conversion bf16 du Dockerfile, on réutilise ces poids plutôt que
+# de retélécharger le modèle (le cache HF est supprimé juste après cette étape).
+EMBED_MODEL_BF16_PATH = ROOT / "models" / "e5-large-bf16"
 
 
 def chunk_id(chunk: dict) -> str:
@@ -23,9 +27,16 @@ def chunk_id(chunk: dict) -> str:
     return hashlib.md5(key.encode()).hexdigest()
 
 
+def _load_embed_model() -> SentenceTransformer:
+    if EMBED_MODEL_BF16_PATH.exists():
+        print(f"Chargement modèle (bf16 pré-converti) : {EMBED_MODEL_BF16_PATH}")
+        return SentenceTransformer(str(EMBED_MODEL_BF16_PATH))
+    print(f"Chargement modèle : {MODEL_NAME} (pas de poids bf16 pré-convertis trouvés)")
+    return SentenceTransformer(MODEL_NAME, model_kwargs={"torch_dtype": torch.bfloat16})
+
+
 def build_index(force_reset: bool = False) -> chromadb.Collection:
-    print(f"Chargement modèle : {MODEL_NAME}")
-    model = SentenceTransformer(MODEL_NAME, model_kwargs={"torch_dtype": torch.bfloat16})
+    model = _load_embed_model()
 
     print("Chargement chunks...")
     with open(CHUNKS_PATH, encoding="utf-8") as f:
@@ -74,6 +85,11 @@ def build_index(force_reset: bool = False) -> chromadb.Collection:
 
 
 if __name__ == "__main__":
+    import sys
+
     print("=== Indexation Chroma ===\n")
     col = build_index(force_reset=True)
     print(f"\nCollection '{COLLECTION_NAME}' prête : {col.count()} chunks indexés")
+    if col.count() == 0:
+        print("ERREUR : collection vide après indexation — build en échec.", file=sys.stderr)
+        sys.exit(1)

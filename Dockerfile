@@ -20,10 +20,16 @@ RUN python -c "import torch; from sentence_transformers import SentenceTransform
 COPY app.py .
 COPY src/ ./src/
 COPY data/ ./data/
-COPY chroma_db/ ./chroma_db/
 COPY assets/ ./assets/
 COPY .streamlit/ ./.streamlit/
 COPY *.pdf ./
+
+# Construit l'index Chroma au build, depuis data/chunks/chunks.json (committé) —
+# chroma_db/ n'est plus copié depuis le disque local (voir .gitignore/.gcloudignore) :
+# l'image est reproductible depuis git seul, sans dépendre d'un état local non commité.
+# Réutilise les poids bf16 déjà convertis ci-dessus (_load_embed_model), pas de
+# nouveau téléchargement du modèle. Échoue le build si la collection reste vide.
+RUN python src/index_chroma.py
 
 ENV PORT=8080
 EXPOSE 8080
