@@ -1,5 +1,7 @@
 # Secrets — ne jamais committer
-.env
+.env*
+!.env.example
+.streamlit/secrets.toml
 
 # Index Chroma — reconstruit au build Docker depuis data/chunks/chunks.json
 # (voir Dockerfile), plus une copie locale de dev ne doit partir en prod
