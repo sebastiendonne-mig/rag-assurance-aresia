@@ -285,6 +285,40 @@ with col_chat:
             "toute réponse peut être vérifiée par recoupement avec leur contenu."
         )
 
+    # ── Choix et limites ──
+    with st.expander("ℹ️ Choix et limites de cette démo"):
+        st.markdown(
+            "**Ce que fait cette démo**\n"
+            "Cette démo interroge un corpus de 4 documents fictifs (prévoyance invalidité, "
+            "assurance vie, garanties IARD, conformité réglementaire — explicitement fictifs, "
+            "créés pour cette démonstration) via un pipeline RAG piloté par LangGraph."
+        )
+        st.markdown(
+            "**Modèle utilisé aujourd'hui**\n"
+            f"`{CLAUDE_MODEL}`. Toutes les décisions du pipeline (routage, évaluation, "
+            "génération) passent par deux points d'entrée uniques dans le code — c'est "
+            "cette couture qui rend un changement de modèle possible sans réécrire le pipeline."
+        )
+        st.markdown(
+            "**Portabilité : conçue, pas testée**\n"
+            "Le message central de cette démo est la portabilité — la même architecture "
+            "pourrait fonctionner avec un autre modèle, propriétaire ou open source. C'est "
+            "vérifiable dans le code, mais non testé avec un autre fournisseur à ce jour : "
+            "les prompts et le format JSON attendu pourraient demander des ajustements."
+        )
+        st.markdown(
+            "**Garde-fous actifs**\n"
+            "- Question limitée à 500 caractères\n"
+            "- Plafond quotidien de questions\n"
+            "- Une réponse au format invalide échoue proprement plutôt que de planter"
+        )
+        st.markdown(
+            "**Ce qu'un test de 20 questions mesure — et ne mesure pas**\n"
+            "Il vérifie que l'article de référence attendu est bien cité. Il ne mesure ni "
+            "la qualité rédactionnelle ni l'exactitude complète des réponses — seulement "
+            "la présence de la bonne citation."
+        )
+
     # ── Questions de test cliquables ──
     st.markdown("**🧪 Questions de test suggérées**")
     pending: str | None = None

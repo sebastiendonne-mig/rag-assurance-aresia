@@ -271,6 +271,20 @@ def test_pas_de_panneau_log_debug_visiteur(monkeypatch):
     assert not any("Log debug" in label for label in labels), f"panneau encore présent : {labels}"
 
 
+def test_expander_choix_et_limites_present_avec_contenu_attendu():
+    """Lot 1.3 changement D : page "Choix et limites", sans mock de run_agent (pas de question posée)."""
+    at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    assert not at.exception
+
+    choix_expanders = [e for e in at.expander if "Choix et limites" in e.label]
+    assert len(choix_expanders) == 1
+
+    contenu = " ".join(m.value for m in choix_expanders[0].markdown)
+    assert "claude-sonnet-4-6" in contenu
+    assert "non testé avec un autre fournisseur" in contenu
+    assert "500 caractères" in contenu
+
+
 def test_vider_conversation_reinitialise_messages_et_last_usage(monkeypatch):
     at = _run_two_questions(monkeypatch)
     assert at.session_state["messages"]
