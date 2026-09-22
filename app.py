@@ -7,6 +7,7 @@ import json
 import logging
 import os
 import sys
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -27,8 +28,20 @@ from agent import (
     get_graph,
     run_agent,
 )
+import upload_session
 
 MAX_INPUT_CHARS = int(os.environ.get("MAX_INPUT_CHARS", "500"))
+
+# Texte de consentement (lot 2a.1 sous-lot suivant) — brouillon fourni tel quel,
+# PAS encore validé pour affichage définitif en prod (voir rapport du sous-lot).
+UPLOAD_CONSENT_TEXT = (
+    "Ce document sera envoyé à Claude (API Anthropic) pour générer une réponse. Anthropic "
+    "conserve automatiquement les données envoyées jusqu'à 30 jours (délai de suppression par "
+    "défaut, aucune option de conservation zéro sur ce type de compte). Cette démo ne stocke "
+    "rien de façon permanente de son côté : l'index créé pour analyser votre document est "
+    "supprimé automatiquement à la fin de la session ou après quelques minutes d'inactivité.\n\n"
+    "Merci d'utiliser un document fictif, ou dont vous acceptez le partage dans ces conditions."
+)
 
 ROOT = Path(__file__).parent
 
@@ -196,6 +209,22 @@ if "last_trace" not in st.session_state:
 if "last_usage" not in st.session_state:
     st.session_state.last_usage = None
 
+# ── Session d'upload de document visiteur (lot 2a.1 suite) ──
+if "upload_consent" not in st.session_state:
+    st.session_state.upload_consent = False
+if "upload_active" not in st.session_state:
+    st.session_state.upload_active = False
+if "upload_collection" not in st.session_state:
+    st.session_state.upload_collection = None
+if "upload_doc_name" not in st.session_state:
+    st.session_state.upload_doc_name = None
+if "upload_warnings" not in st.session_state:
+    st.session_state.upload_warnings = []
+if "upload_last_processed_file_id" not in st.session_state:
+    st.session_state.upload_last_processed_file_id = None
+
+_upload_session_id = upload_session.get_or_create_session_id()
+
 with st.sidebar:
     st.header("Conversation")
     if st.button("🗑️ Vider la conversation", use_container_width=True):
@@ -319,30 +348,117 @@ with col_chat:
             "la présence de la bonne citation."
         )
 
-    # ── Questions de test cliquables ──
-    st.markdown("**🧪 Questions de test suggérées**")
+    # ── Session d'upload de document visiteur (lot 2a.1 suite) ──
+    with st.expander("📎 Tester avec votre propre document (PDF)", expanded=st.session_state.upload_active):
+        if st.session_state.upload_active:
+            st.success(f"📄 Mode document uploadé actif : **{st.session_state.upload_doc_name}**")
+            st.caption(
+                "Les questions posées ci-dessous portent uniquement sur ce document — "
+                "le corpus ARESIA habituel n'est pas interrogé tant que ce mode est actif."
+            )
+            for w in st.session_state.upload_warnings:
+                st.caption(
+                    f"⚠️ Article {w['article_num']} tronqué : {w['tokens_original']} → "
+                    f"{w['tokens_conserves']} tokens conservés (limite du modèle d'embeddings)."
+                )
+            if st.button("📄 Nouveau document", use_container_width=True):
+                upload_session.release(_upload_session_id)
+                st.session_state.upload_active = False
+                st.session_state.upload_collection = None
+                st.session_state.upload_doc_name = None
+                st.session_state.upload_warnings = []
+                st.session_state.upload_last_processed_file_id = None
+                st.rerun()
+        elif not st.session_state.upload_consent:
+            st.markdown(UPLOAD_CONSENT_TEXT)
+            if st.button("J'ai compris, je continue", key="upload_consent_btn"):
+                st.session_state.upload_consent = True
+                st.rerun()
+        elif upload_session.is_busy():
+            st.warning(upload_session.UPLOAD_BUSY_MESSAGE)
+        else:
+            uploaded = st.file_uploader(
+                "Document PDF à analyser (contrat structuré par articles)",
+                type=["pdf"],
+                key="upload_pdf_uploader",
+            )
+            if uploaded is not None and uploaded.file_id != st.session_state.upload_last_processed_file_id:
+                st.session_state.upload_last_processed_file_id = uploaded.file_id
+                try:
+                    handle = upload_session.try_acquire(_upload_session_id)
+                except upload_session.UploadSessionBusyError:
+                    # Défense en profondeur : la vérification is_busy() ci-dessus laisse une
+                    # fenêtre de course entre deux sessions ; try_acquire() reste la source
+                    # de vérité (verrou réel), voir sa docstring dans upload_session.py.
+                    st.warning(upload_session.UPLOAD_BUSY_MESSAGE)
+                else:
+                    with st.spinner("Analyse du document…"):
+                        tmp_path = Path(tempfile.gettempdir()) / f"upload_{_upload_session_id}.pdf"
+                        try:
+                            tmp_path.write_bytes(uploaded.getvalue())
+                            upload_session.validate_pdf_constraints(tmp_path)
+                            chunks = upload_session.extract_and_chunk_pdf(
+                                tmp_path, source_doc_id=f"UPLOAD-{_upload_session_id[:8]}"
+                            )
+                            chunks, warnings = upload_session.apply_length_guard(chunks)
+                            upload_session.embed_and_index(handle.collection, chunks)
+                        except (upload_session.FileTooLargeError, upload_session.NoStructureDetectedError) as exc:
+                            upload_session.release(_upload_session_id)
+                            st.error(str(exc))
+                        except Exception as exc:
+                            # Erreur inattendue (ex. PDF corrompu) : message neutre au visiteur,
+                            # même logique que format_user_error() pour le chat principal —
+                            # jamais str(exc) affiché (voir agent.format_user_error).
+                            upload_session.release(_upload_session_id)
+                            log.error(
+                                "UPLOAD_PIPELINE exception type=%s horodatage=%s",
+                                type(exc).__name__,
+                                datetime.now(timezone.utc).isoformat(),
+                            )
+                            st.error("Une erreur technique est survenue pendant l'analyse du document. Merci de réessayer.")
+                        else:
+                            st.session_state.upload_active = True
+                            st.session_state.upload_collection = handle.collection
+                            st.session_state.upload_doc_name = uploaded.name
+                            st.session_state.upload_warnings = warnings
+                            st.rerun()
+                        finally:
+                            tmp_path.unlink(missing_ok=True)
+
+    # ── Questions de test cliquables (masquées en mode document uploadé) ──
     pending: str | None = None
-    for i, (question, legende) in enumerate(_DEMO_QUESTIONS):
-        col_btn, col_leg = st.columns([5, 4])
-        with col_btn:
-            if st.button(question, key=f"demo_q_{i}", use_container_width=True):
-                pending = question
-        with col_leg:
-            st.caption(f"↑ {legende}")
+    if not st.session_state.upload_active:
+        st.markdown("**🧪 Questions de test suggérées**")
+        for i, (question, legende) in enumerate(_DEMO_QUESTIONS):
+            col_btn, col_leg = st.columns([5, 4])
+            with col_btn:
+                if st.button(question, key=f"demo_q_{i}", use_container_width=True):
+                    pending = question
+            with col_leg:
+                st.caption(f"↑ {legende}")
 
     st.divider()
 
     # ── Historique de la conversation ──
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
+            if msg.get("mode") == "upload":
+                st.caption(f"📄 Réponse basée sur le document uploadé : {msg.get('doc_name', '')}")
             st.markdown(msg["content"])
             if "usage" in msg:
                 st.caption(_format_usage_caption(msg["usage"]))
 
     # ── Zone de saisie (chat_input + boutons de démo) ──
     chat_prompt = st.chat_input(
-        "Posez votre question sur les contrats ARESIA…",
+        "Posez votre question sur le document uploadé…"
+        if st.session_state.upload_active
+        else "Posez votre question sur les contrats ARESIA…",
         max_chars=MAX_INPUT_CHARS,
+        # Clé explicite et stable : sans elle, Streamlit dérive la clé du widget de
+        # son placeholder (qui varie avec le mode) — changer de mode entre deux
+        # reruns romprait alors l'identité du widget (valeur perdue en cours de
+        # saisie au moment précis où le mode bascule).
+        key="main_chat_input",
     )
     prompt = pending or chat_prompt
 
@@ -357,16 +473,35 @@ with col_chat:
         with st.chat_message("user"):
             st.markdown(prompt)
 
+        upload_mode = st.session_state.upload_active
         with st.chat_message("assistant"):
             with st.spinner("Recherche en cours…"):
                 try:
-                    log.info("RUN_AGENT question=%r", prompt[:80])
-                    state = run_agent(prompt)
-                    reponse = state["reponse_finale"]
-                    st.session_state.last_trace = state["trace_log"]
-                    st.session_state.last_usage = state.get("usage")
-                    trace_summary = [(e["etape"], e.get("decision", "")[:40]) for e in state["trace_log"]]
-                    log.info("RUN_AGENT done trace=%s reponse_start=%r", trace_summary, reponse[:80])
+                    if upload_mode:
+                        # Chemin dédié (Partie C) : mono-appel LLM sur la collection éphémère
+                        # de la session, SANS passer par run_agent()/le graphe LangGraph (pas
+                        # de planner, pas de HyDE) et SANS jamais interroger get_chroma_col()
+                        # (la collection globale) — voir upload_session.answer_question_on_upload
+                        # et le rapport du sous-lot pour la justification de ce chemin séparé.
+                        upload_session.touch(_upload_session_id)
+                        log.info("RUN_UPLOAD question=%r doc=%r", prompt[:80], st.session_state.upload_doc_name)
+                        reponse = upload_session.answer_question_on_upload(
+                            st.session_state.upload_collection, prompt
+                        )
+                        st.session_state.last_trace = []
+                        # Pas de suivi d'usage/coût dans ce chemin : answer_question_on_upload()
+                        # appelle llm_call() hors du ContextVar positionné par run_agent(), donc
+                        # aucun UsageTracker actif — pas de caption coût affichée pour ces
+                        # réponses (limite connue, voir rapport).
+                        st.session_state.last_usage = None
+                    else:
+                        log.info("RUN_AGENT question=%r", prompt[:80])
+                        state = run_agent(prompt)
+                        reponse = state["reponse_finale"]
+                        st.session_state.last_trace = state["trace_log"]
+                        st.session_state.last_usage = state.get("usage")
+                        trace_summary = [(e["etape"], e.get("decision", "")[:40]) for e in state["trace_log"]]
+                        log.info("RUN_AGENT done trace=%s reponse_start=%r", trace_summary, reponse[:80])
                 except Exception as e:
                     # Log serveur minimal : type, status_code éventuel (ex. 401/429 d'un
                     # anthropic.APIStatusError), TYPE de la cause éventuelle (__cause__,
@@ -374,7 +509,8 @@ with col_chat:
                     status_code = getattr(e, "status_code", None)
                     cause_type = type(e.__cause__).__name__ if e.__cause__ is not None else None
                     log.error(
-                        "RUN_AGENT exception type=%s status_code=%s cause_type=%s horodatage=%s",
+                        "%s exception type=%s status_code=%s cause_type=%s horodatage=%s",
+                        "RUN_UPLOAD" if upload_mode else "RUN_AGENT",
                         type(e).__name__,
                         status_code,
                         cause_type,
@@ -391,6 +527,9 @@ with col_chat:
         # st.session_state.messages tel quel à l'API Anthropic (le SDK
         # n'écarte pas les clés inconnues, vérifié dans la source installée).
         assistant_msg = {"role": "assistant", "content": reponse}
+        if upload_mode:
+            assistant_msg["mode"] = "upload"
+            assistant_msg["doc_name"] = st.session_state.upload_doc_name
         if st.session_state.last_usage is not None:
             assistant_msg["usage"] = st.session_state.last_usage
         st.session_state.messages.append(assistant_msg)
@@ -424,7 +563,14 @@ with col_trace:
 
     trace = st.session_state.last_trace
 
-    if not trace:
+    if st.session_state.upload_active:
+        st.info(
+            "📄 Mode document uploadé : la réponse est générée par un unique appel LLM sur "
+            "la collection éphémère de ce document (pas de planner, pas de reformulation — "
+            "inutile sur un document unique). Ce chemin ne passe pas par le graphe LangGraph "
+            "du corpus principal, donc aucune trace à afficher ici pour ce mode."
+        )
+    elif not trace:
         st.info("La trace du graphe apparaîtra ici après votre première question.")
     else:
         etapes = [e["etape"] for e in trace]

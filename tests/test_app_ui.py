@@ -18,6 +18,7 @@ from streamlit.testing.v1 import AppTest
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 import agent
+import upload_session
 
 APP_PATH = str(Path(__file__).parent.parent / "app.py")
 
@@ -334,3 +335,51 @@ def test_vider_conversation_reinitialise_messages_et_last_usage(monkeypatch):
 
     assert at.session_state["messages"] == []
     assert at.session_state["last_usage"] is None
+
+
+def test_mode_upload_route_vers_answer_question_on_upload_jamais_run_agent(monkeypatch):
+    """
+    Lot 2a.1 suite, Partie C : quand upload_active est vrai, app.py doit appeler
+    upload_session.answer_question_on_upload() sur la collection éphémère de la
+    session — jamais run_agent() (qui interrogerait la collection globale via le
+    graphe LangGraph). Le pipeline d'upload réel (consentement, file_uploader,
+    extraction, embedding) est déjà couvert par tests/test_upload_session.py et
+    a été vérifié manuellement en local (voir rapport) ; ce test-ci isole
+    uniquement le ROUTAGE app.py une fois ce mode actif, via injection directe
+    de session_state plutôt que par un vrai upload de fichier (AppTest ne pilote
+    pas de file_uploader réel).
+    """
+    def _fail_if_called(*a, **k):
+        raise AssertionError("run_agent() a été appelé en mode upload — fuite vers la collection globale")
+
+    monkeypatch.setattr(agent, "run_agent", _fail_if_called)
+
+    fake_collection = object()
+    captured: dict = {}
+
+    def _fake_answer(collection, question):
+        captured["collection"] = collection
+        captured["question"] = question
+        return "**Réponse directe** : test.\n**Source(s)** : [Article 1].\n**Point d'attention** : aucun."
+
+    monkeypatch.setattr(upload_session, "answer_question_on_upload", _fake_answer)
+    monkeypatch.setattr(upload_session, "touch", lambda session_id: None)
+
+    at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    assert not at.exception
+
+    at.session_state["upload_active"] = True
+    at.session_state["upload_collection"] = fake_collection
+    at.session_state["upload_doc_name"] = "mon-contrat.pdf"
+
+    at.chat_input[0].set_value("Une question sur mon document").run()
+    assert not at.exception
+
+    assert captured["collection"] is fake_collection
+    assert captured["question"] == "Une question sur mon document"
+
+    messages = at.session_state["messages"]
+    assert messages[-1]["mode"] == "upload"
+    assert messages[-1]["doc_name"] == "mon-contrat.pdf"
+    assert "usage" not in messages[-1]  # pas de suivi de coût dans ce chemin (voir rapport)
+    assert at.session_state["last_trace"] == []
