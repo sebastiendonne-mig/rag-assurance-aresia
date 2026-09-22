@@ -86,7 +86,7 @@ def _format_usage_caption(usage: dict) -> str:
     )
 
 
-@st.cache_resource(show_spinner="Chargement du modèle d'embeddings…")
+@st.cache_resource(show_spinner="Chargement du modèle d'embeddings… (jusqu'à 90 secondes au premier chargement)")
 def _warm_up():
     """Charge les ressources une seule fois pour toute la durée de vie du serveur."""
     get_embed_model()

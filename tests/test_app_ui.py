@@ -38,6 +38,33 @@ def _extract_demo_questions() -> list[tuple[str, str]]:
     raise AssertionError("_DEMO_QUESTIONS introuvable dans app.py")
 
 
+def _extract_warm_up_show_spinner() -> str:
+    """
+    Extrait la valeur de l'argument show_spinner du décorateur
+    @st.cache_resource sur _warm_up(), par analyse statique (ast) — pas
+    d'import du module, même raison que _extract_demo_questions().
+
+    Préféré à un simple grep/regex sur le texte du fichier : ça évite tout
+    faux positif si la chaîne attendue apparaissait ailleurs (commentaire,
+    autre décorateur show_spinner comme ceux de _load_pdf_bytes/
+    _load_svg_b64) et vérifie qu'on cible bien CE décorateur sur CETTE
+    fonction, pas juste une occurrence de texte quelque part dans le fichier.
+    """
+    tree = ast.parse(Path(APP_PATH).read_text(encoding="utf-8"))
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef) and node.name == "_warm_up":
+            for deco in node.decorator_list:
+                if (
+                    isinstance(deco, ast.Call)
+                    and isinstance(deco.func, ast.Attribute)
+                    and deco.func.attr == "cache_resource"
+                ):
+                    for kw in deco.keywords:
+                        if kw.arg == "show_spinner":
+                            return ast.literal_eval(kw.value)
+    raise AssertionError("show_spinner de @st.cache_resource sur _warm_up() introuvable dans app.py")
+
+
 _USAGE_Q1 = {
     "n_appels": 3,
     "tokens_in": 300,
@@ -283,6 +310,13 @@ def test_expander_choix_et_limites_present_avec_contenu_attendu():
     assert "claude-sonnet-4-6" in contenu
     assert "non testé avec un autre fournisseur" in contenu
     assert "500 caractères" in contenu
+
+
+def test_show_spinner_warm_up_mentionne_90_secondes():
+    """Lot 1.4 : le message d'attente du démarrage à froid prévient le visiteur de la durée possible."""
+    show_spinner = _extract_warm_up_show_spinner()
+    assert "90 secondes" in show_spinner
+    assert show_spinner == "Chargement du modèle d'embeddings… (jusqu'à 90 secondes au premier chargement)"
 
 
 def test_vider_conversation_reinitialise_messages_et_last_usage(monkeypatch):
