@@ -341,3 +341,53 @@ def test_7d_aucun_plafond_de_pages_ne_subsiste_dans_le_module():
     # d'exception et la constante de plafond de pages n'existent plus du tout.
     assert not hasattr(upload_session, "TooManyPagesError")
     assert not hasattr(upload_session, "MAX_PAGES")
+
+
+# ─────────────────────────────────────────────
+# Test 8 — get_or_create_session_id() : identifiant public st.session_state,
+# distinct par session ET stable d'un rerun à l'autre au sein d'une même
+# session (ajout sous-lot 2a.1 suite — point ouvert n°1 du rapport précédent :
+# remplace la piste get_script_run_ctx().session_id, API interne non garantie).
+# Validé via streamlit.testing.v1.AppTest (module de test officiel Streamlit,
+# disponible dans la version installée 1.58.0), pas via un vrai navigateur.
+# ─────────────────────────────────────────────
+
+def _make_session_id_script() -> str:
+    src_path = str(ROOT / "src")
+    return (
+        "import sys\n"
+        f"sys.path.insert(0, {src_path!r})\n"
+        "import streamlit as st\n"
+        "import upload_session\n"
+        "st.session_state.sid = upload_session.get_or_create_session_id()\n"
+    )
+
+
+def test_8_get_or_create_session_id_distinct_par_session_stable_par_rerun():
+    from streamlit.testing.v1 import AppTest
+
+    script = _make_session_id_script()
+
+    # Deux AppTest = deux sessions Streamlit indépendantes dans le même process
+    # (confirmé par la doc officielle AppTest : chaque instance maintient son
+    # propre état isolé).
+    at1 = AppTest.from_string(script).run()
+    at2 = AppTest.from_string(script).run()
+
+    sid1 = at1.session_state.sid
+    sid2 = at2.session_state.sid
+
+    assert isinstance(sid1, str) and sid1
+    assert isinstance(sid2, str) and sid2
+    assert sid1 != sid2, "deux sessions distinctes ont reçu le même identifiant"
+
+    # Stabilité au sein de LA MÊME session à travers plusieurs reruns
+    # (.run() réexécute le script sur la même instance = même session).
+    at1.run()
+    assert at1.session_state.sid == sid1, "l'identifiant a changé entre deux reruns de la même session"
+
+    at1.run()
+    assert at1.session_state.sid == sid1
+
+    # La deuxième session, elle, n'a pas bougé entre-temps.
+    assert at2.session_state.sid == sid2

@@ -19,10 +19,16 @@ le graphe LangGraph du chat principal restent entièrement séparés de l'index
 collection globale sont réutilisées depuis agent.py : get_embed_model(),
 llm_call(), format_chunks_for_prompt(), SYSTEM_PROMPT, MODEL_NAME.
 
-Aucune dépendance à Streamlit ici : testable sans serveur, l'intégration UI
-(file_uploader, session_id via streamlit.runtime.scriptrunner.get_script_run_ctx(),
-affichage de UPLOAD_BUSY_MESSAGE) reste à faire dans app.py — non couverte par
-ce sous-lot, voir le rapport.
+Aucune dépendance à Streamlit au niveau du module : testable sans serveur.
+Seule get_or_create_session_id() importe streamlit (localement, dans son
+corps) — c'est la fonction à utiliser pour obtenir la valeur à passer en
+session_id à try_acquire()/touch()/release(), voir sa docstring et celle de
+try_acquire() pour la justification (API interne écartée après recherche,
+sous-lot 2a.1 suite — get_script_run_ctx().session_id n'est plus recommandé).
+
+L'intégration UI (file_uploader, appel de get_or_create_session_id() depuis
+app.py, affichage de UPLOAD_BUSY_MESSAGE) reste à faire dans app.py — non
+couverte par ce sous-lot, voir le rapport.
 """
 from __future__ import annotations
 
@@ -171,9 +177,54 @@ def _release_locked(reason: str) -> None:
     gc.collect()
 
 
+def get_or_create_session_id() -> str:
+    """
+    Identifiant unique et stable de la session Streamlit courante — À UTILISER
+    comme `session_id` pour try_acquire()/touch()/release() (sous-lot 2a.1
+    suite, recherche dédiée à ce point précis).
+
+    Repose UNIQUEMENT sur st.session_state, API publique documentée
+    (docs.streamlit.io/develop/concepts/architecture/session-state) : "a way
+    to share variables between reruns, for each user session" — isolation et
+    persistance à travers les reruns garanties par cette doc, réinitialisée
+    seulement si la connexion WebSocket se réinitialise (rechargement de
+    l'onglet), ce qui est le comportement voulu ici (un ancien verrou détenu
+    sous l'ancien id redevient orphelin et se libère par timeout, comme pour
+    toute session abandonnée).
+
+    Alternative écartée : streamlit.runtime.scriptrunner.get_script_run_ctx()
+    .session_id — API interne (module `runtime.scriptrunner_utils`, jamais
+    exposée sous `st.*`), sans garantie de stabilité documentée. Des méthodes
+    voisines du même sous-système interne de gestion de session (ex.
+    `_get_session_info`) ont changé de signature/disparu entre les versions
+    1.12 et 1.18, et à nouveau en 1.36 (constaté via recherche web,
+    discuss.streamlit.io et issues GitHub streamlit/streamlit — pas la
+    documentation officielle, qui reste silencieuse sur ce point). Choix
+    présenté pour validation dans le rapport du sous-lot, pas tranché
+    unilatéralement en profondeur (ex. dépréciation formelle par l'éditeur).
+
+    Importe streamlit localement (pas en tête de module) : cette fonction
+    suppose un script Streamlit en cours d'exécution (ou un test via
+    streamlit.testing.v1.AppTest, qui simule cet environnement) — le reste du
+    module reste utilisable sans aucun contexte Streamlit actif.
+    """
+    import uuid
+
+    import streamlit as st
+
+    key = "_upload_session_id"
+    if key not in st.session_state:
+        st.session_state[key] = str(uuid.uuid4())
+    return st.session_state[key]
+
+
 def try_acquire(session_id: str) -> UploadSessionHandle:
     """
     Acquiert le verrou de process pour `session_id`.
+
+    `session_id` : obtenu via get_or_create_session_id() côté appelant Streamlit
+    (ci-dessus) — pas via get_script_run_ctx().session_id, écarté après recherche
+    dédiée (voir la docstring de get_or_create_session_id() pour la justification).
 
     Lève UploadSessionBusyError si une autre session le détient encore (pas
     expirée). Purge SYSTÉMATIQUEMENT toutes les collections éphémères
