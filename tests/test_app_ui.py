@@ -245,6 +245,32 @@ def test_cinq_boutons_de_demo_textes_exacts():
     assert textes_reels == textes_attendus
 
 
+def test_pas_de_panneau_log_debug_visiteur(monkeypatch):
+    """
+    Lot 1.3 changement C : le panneau sidebar "Log debug (dernier appel)"
+    affichait les 30 dernières lignes de data/streamlit_debug.log à tout
+    visiteur — fichier partagé entre sessions sur une même instance de
+    conteneur (confidentialité). Il ne doit plus apparaître, y compris
+    après une question réussie (LOG_PATH continue d'exister et d'être
+    écrit — seul l'affichage visiteur est supprimé).
+    """
+    outcomes = [_make_success_state("Réponse de test numéro 1.", _USAGE_Q1)]
+
+    def _fake_run_agent(question, *args, **kwargs):
+        assert isinstance(question, str)
+        assert not args and not kwargs
+        return outcomes.pop(0)
+
+    monkeypatch.setattr(agent, "run_agent", _fake_run_agent)
+
+    at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    at.chat_input[0].set_value("Question 1").run()
+    assert not at.exception
+
+    labels = [e.label for e in at.expander]
+    assert not any("Log debug" in label for label in labels), f"panneau encore présent : {labels}"
+
+
 def test_vider_conversation_reinitialise_messages_et_last_usage(monkeypatch):
     at = _run_two_questions(monkeypatch)
     assert at.session_state["messages"]

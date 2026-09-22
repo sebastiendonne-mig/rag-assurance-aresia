@@ -204,12 +204,6 @@ with st.sidebar:
         st.session_state.last_usage = None
         st.rerun()
     st.caption(f"Messages : {len(st.session_state.messages)}")
-    if LOG_PATH.exists():
-        with st.expander("📋 Log debug (dernier appel)"):
-            from collections import deque
-            with open(LOG_PATH, encoding="utf-8", errors="replace") as _f:
-                last_lines = deque(_f, maxlen=30)
-            st.code("".join(last_lines), language="text")
 
 # ─────────────────────────────────────────────
 # Layout
