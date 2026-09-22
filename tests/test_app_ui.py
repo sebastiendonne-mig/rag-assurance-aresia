@@ -6,6 +6,7 @@ les dépendances lourdes de _warm_up() sont mockées via monkeypatch sur le
 module agent, appliqué AVANT que app.py (exécuté par AppTest) ne fasse
 `from agent import ...`.
 """
+import re
 import sys
 from pathlib import Path
 
@@ -172,6 +173,37 @@ def test_texte_brut_exception_absent_de_tout_affichage(monkeypatch):
     displayed_captions = " ".join(c.value for c in at.caption)
     assert _EXCEPTION_TEXT not in displayed_markdown
     assert _EXCEPTION_TEXT not in displayed_captions
+
+
+def test_pas_de_dollar_non_echappe_dans_rendu_apres_succes(monkeypatch):
+    """
+    Lot 1.3 changement A : les $ du tarif (caption + expander "Détail de
+    l'estimation") doivent être échappés (\\$), sans quoi Streamlit les
+    interprète comme des délimiteurs LaTeX (KaTeX) et casse l'affichage.
+
+    Le contenu d'un st.expander est émis par le script à chaque run, qu'il
+    soit visuellement déplié ou non côté navigateur (Expander est un simple
+    conteneur dans l'arbre d'éléments d'AppTest) : pas besoin d'interaction
+    pour que son contenu soit inspectable ici.
+    """
+    outcomes = [_make_success_state("Réponse de test numéro 1.", _USAGE_Q1)]
+
+    def _fake_run_agent(question, *args, **kwargs):
+        assert isinstance(question, str)
+        assert not args and not kwargs
+        return outcomes.pop(0)
+
+    monkeypatch.setattr(agent, "run_agent", _fake_run_agent)
+
+    at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    at.chat_input[0].set_value("Question 1").run()
+    assert not at.exception
+
+    unescaped_dollar = re.compile(r"(?<!\\)\$")
+    for m in at.markdown:
+        assert not unescaped_dollar.search(m.value), f"$ non échappé dans un markdown : {m.value!r}"
+    for c in at.caption:
+        assert not unescaped_dollar.search(c.value), f"$ non échappé dans un caption : {c.value!r}"
 
 
 def test_vider_conversation_reinitialise_messages_et_last_usage(monkeypatch):

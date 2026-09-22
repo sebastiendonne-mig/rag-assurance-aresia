@@ -82,7 +82,7 @@ def _format_usage_caption(usage: dict) -> str:
     return (
         f"⏱️ {usage['latence_s']:.1f}s · {usage['n_appels']} appel(s) LLM · "
         f"{usage['tokens_in']}+{usage['tokens_out']} tokens (entrée+sortie) · "
-        f"≈{usage['cout_usd']:.4f}$ *(estimation)*"
+        f"≈{usage['cout_usd']:.4f}\\$ *(estimation)*"
     )
 
 
@@ -440,8 +440,8 @@ with col_trace:
             with st.expander("💰 Détail de l'estimation"):
                 st.markdown(f"**Modèle :** `{CLAUDE_MODEL}`")
                 st.markdown(
-                    f"**Tarif utilisé :** {PRIX_INPUT_USD_PAR_MTOK:.0f}$/MTok en entrée, "
-                    f"{PRIX_OUTPUT_USD_PAR_MTOK:.0f}$/MTok en sortie "
+                    f"**Tarif utilisé :** {PRIX_INPUT_USD_PAR_MTOK:.0f}\\$/MTok en entrée, "
+                    f"{PRIX_OUTPUT_USD_PAR_MTOK:.0f}\\$/MTok en sortie "
                     "(source : [claude.com/pricing](https://claude.com/pricing), relevé le 21/09/2026 — "
                     "non garanti, susceptible de changer sans préavis)."
                 )
