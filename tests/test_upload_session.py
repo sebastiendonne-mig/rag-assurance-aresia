@@ -16,6 +16,7 @@ import threading
 import time
 from pathlib import Path
 
+import pdfplumber
 import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
@@ -181,8 +182,7 @@ def test_4_upload_bout_en_bout_ne_touche_pas_la_collection_globale(monkeypatch):
 
     handle = upload_session.try_acquire("session_e2e_test")
 
-    n_pages = upload_session.validate_pdf_constraints(pdf_path)
-    assert n_pages > 0
+    upload_session.validate_pdf_constraints(pdf_path)  # ne lève pas : fichier sous 15 Mo
 
     chunks = upload_session.extract_and_chunk_pdf(pdf_path, source_doc_id="UPLOAD-TEST")
     assert len(chunks) > 0
@@ -280,3 +280,64 @@ def test_6b_document_avec_structure_nest_pas_rejete():
     chunks = upload_session._chunk_lines_or_reject(lines_avec_structure, "UPLOAD-AVEC-STRUCTURE")
     assert len(chunks) == 1
     assert chunks[0]["metadata"]["article_num"] == "1"
+
+
+# ─────────────────────────────────────────────
+# Test 7 — Plafond de taille (15 Mo), et absence de plafond de pages
+# (ajout sous-lot 2a.1 suite : 10 Mo -> 15 Mo, plafond de pages supprimé)
+# ─────────────────────────────────────────────
+
+def test_7a_fichier_16mo_rejete(tmp_path):
+    # validate_pdf_constraints() ne vérifie plus que la taille (st_size) — le
+    # contenu n'a pas besoin d'être un PDF valide pour ce test.
+    big_file = tmp_path / "faux_contrat_16mo.pdf"
+    big_file.write_bytes(b"0" * (16 * 1024 * 1024))
+
+    with pytest.raises(upload_session.FileTooLargeError) as exc_info:
+        upload_session.validate_pdf_constraints(big_file)
+    assert "16.0 Mo" in str(exc_info.value)
+    assert "15 Mo" in str(exc_info.value)
+
+
+def test_7b_fichier_15mo_accepte(tmp_path):
+    exact_file = tmp_path / "faux_contrat_15mo.pdf"
+    exact_file.write_bytes(b"0" * upload_session.MAX_FILE_SIZE_BYTES)  # exactement à la limite
+
+    upload_session.validate_pdf_constraints(exact_file)  # ne doit pas lever
+
+
+def test_7c_document_beaucoup_de_pages_sous_15mo_non_rejete_pour_ce_motif(tmp_path):
+    # Construit un vrai PDF à grand nombre de pages (300, en dupliquant les
+    # pages d'un document du corpus via pypdf, déjà dans requirements.txt)
+    # mais très léger en octets — pour prouver qu'aucun plafond de pages ne
+    # s'applique plus, seul le poids compte désormais.
+    from pypdf import PdfReader, PdfWriter
+
+    source = ROOT / "CG-prevoyance-invalidite.pdf"
+    reader = PdfReader(source)
+    writer = PdfWriter()
+    n_pages_cible = 300
+    for i in range(n_pages_cible):
+        writer.add_page(reader.pages[i % len(reader.pages)])
+
+    many_pages_pdf = tmp_path / "contrat_300_pages.pdf"
+    with open(many_pages_pdf, "wb") as f:
+        writer.write(f)
+
+    size = many_pages_pdf.stat().st_size
+    assert size < upload_session.MAX_FILE_SIZE_BYTES, (
+        f"le PDF de test fait {size / 1024 / 1024:.2f} Mo — ajuster n_pages_cible pour rester "
+        "sous 15 Mo, sinon le test ne prouve plus ce qu'il doit prouver"
+    )
+
+    with pdfplumber.open(many_pages_pdf) as pdf:
+        assert len(pdf.pages) == n_pages_cible  # confirme que c'est bien un document à 300 pages
+
+    upload_session.validate_pdf_constraints(many_pages_pdf)  # ne doit PAS lever pour le nombre de pages
+
+
+def test_7d_aucun_plafond_de_pages_ne_subsiste_dans_le_module():
+    # Vérification directe (pas seulement comportementale) : la classe
+    # d'exception et la constante de plafond de pages n'existent plus du tout.
+    assert not hasattr(upload_session, "TooManyPagesError")
+    assert not hasattr(upload_session, "MAX_PAGES")

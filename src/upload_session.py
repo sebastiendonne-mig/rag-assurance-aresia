@@ -34,7 +34,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import chromadb
-import pdfplumber
 
 import extract_chunks
 from agent import (
@@ -65,18 +64,19 @@ MAX_CHUNK_TOKENS = 512
 # Corpus fictif actuel (mesuré, sous-lot 2a.0/2a.1) : 5 à 10 pages, 12 à 23 Ko
 # par document. Un vrai contrat "conditions générales" peut être plus long que
 # ces extraits de démo.
-# - MAX_FILE_SIZE_BYTES = 10 Mo : très généreux vs les 12-23 Ko observés
-#   (couvre un PDF scanné/image-lourd), tout en bornant le temps d'extraction
-#   pdfplumber et la mémoire du process (Cloud Run : 1 CPU / 3 GiB).
-# - MAX_PAGES = 40 : ~4x le plus gros document du corpus (10 pages) — au-delà,
-#   probablement plusieurs documents agrégés en un seul PDF, hors du cas
-#   d'usage "un contrat visiteur à la fois".
-# Ni l'une ni l'autre valeur n'a été mesurée en conditions réelles (temps
+# - MAX_FILE_SIZE_BYTES = 15 Mo (ajusté depuis 10 Mo, sous-lot 2a.1 suite) :
+#   très généreux vs les 12-23 Ko observés (couvre un PDF scanné/image-lourd),
+#   tout en bornant le temps d'extraction pdfplumber et la mémoire du process
+#   (Cloud Run : 1 CPU / 3 GiB).
+# - Aucun plafond sur le nombre de pages (retiré, sous-lot 2a.1 suite) : seul
+#   le poids du fichier borne désormais la charge — un document long mais
+#   léger (texte pur, sans images) reste accepté quel que soit son nombre de
+#   pages, tant qu'il respecte MAX_FILE_SIZE_BYTES.
+# Cette valeur n'a pas été mesurée en conditions réelles (temps
 # d'extraction/embedding sur un document de cette taille) — extrapolation
 # linéaire uniquement, à partir de la mesure sous-lot 2a.0 (~1,2s d'embedding
 # CPU pour un document taille corpus réel).
-MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024
-MAX_PAGES = 40
+MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024
 
 # Timeout d'inactivité du verrou (Partie A — À VALIDER, voir rapport) :
 # démarrage à froid ~90s (lot 0/1, mesuré) + latence de réponse observée
@@ -118,10 +118,6 @@ class NoStructureDetectedError(Exception):
 
 class FileTooLargeError(Exception):
     """Levée quand le fichier dépasse MAX_FILE_SIZE_BYTES."""
-
-
-class TooManyPagesError(Exception):
-    """Levée quand le document dépasse MAX_PAGES."""
 
 
 @dataclass
@@ -269,20 +265,19 @@ def is_busy() -> bool:
 # Partie B — Pipeline d'upload
 # ─────────────────────────────────────────────
 
-def validate_pdf_constraints(pdf_path: Path) -> int:
-    """Vérifie taille et nombre de pages. Retourne le nombre de pages si OK,
-    lève FileTooLargeError / TooManyPagesError sinon."""
+def validate_pdf_constraints(pdf_path: Path) -> None:
+    """
+    Vérifie le poids du fichier — seul critère de plafond (le contrôle du
+    nombre de pages a été retiré, sous-lot 2a.1 suite : un document long mais
+    léger reste accepté quel que soit son nombre de pages).
+    Lève FileTooLargeError si le fichier dépasse MAX_FILE_SIZE_BYTES.
+    """
     size = pdf_path.stat().st_size
     if size > MAX_FILE_SIZE_BYTES:
         raise FileTooLargeError(
             f"Fichier trop volumineux : {size / 1024 / 1024:.1f} Mo "
             f"(limite {MAX_FILE_SIZE_BYTES / 1024 / 1024:.0f} Mo)."
         )
-    with pdfplumber.open(pdf_path) as pdf:
-        n_pages = len(pdf.pages)
-    if n_pages > MAX_PAGES:
-        raise TooManyPagesError(f"Trop de pages : {n_pages} (limite {MAX_PAGES}).")
-    return n_pages
 
 
 def _chunk_lines_or_reject(lines: list[str], source_doc_id: str) -> list[dict]:
