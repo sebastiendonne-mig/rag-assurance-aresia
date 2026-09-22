@@ -223,8 +223,20 @@ col_chat, col_trace = st.columns([3, 2], gap="large")
 
 _DEMO_QUESTIONS = [
     (
-        "Quelle est la franchise ITT sur le contrat prévoyance invalidité ?",
+        "Quelles sont les options de franchise disponibles sur le contrat prévoyance invalidité ?",
         "Question simple : recherche directe dans les documents.",
+    ),
+    (
+        "Quel est le montant minimum pour un versement complémentaire sur ARESIA Patrimoine+ ?",
+        "Autre document : contrat d'assurance vie.",
+    ),
+    (
+        "Dans quel délai doit-on déclarer un cambriolage à son assureur ?",
+        "Autre document : garanties IARD (habitation).",
+    ),
+    (
+        "Combien d'heures de formation continue un conseiller doit-il suivre par an au titre de la DDA ?",
+        "Autre document : conformité réglementaire (ACPR).",
     ),
     (
         "Quelle est la garantie obsèques incluse dans le contrat prévoyance ?",

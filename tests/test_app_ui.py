@@ -6,6 +6,7 @@ les dépendances lourdes de _warm_up() sont mockées via monkeypatch sur le
 module agent, appliqué AVANT que app.py (exécuté par AppTest) ne fasse
 `from agent import ...`.
 """
+import ast
 import re
 import sys
 from pathlib import Path
@@ -19,6 +20,23 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 import agent
 
 APP_PATH = str(Path(__file__).parent.parent / "app.py")
+
+
+def _extract_demo_questions() -> list[tuple[str, str]]:
+    """
+    Extrait _DEMO_QUESTIONS depuis app.py par analyse statique (ast), sans
+    importer/exécuter le module — un import direct déclencherait _warm_up()
+    (appelé sans condition au niveau module) avant que les fixtures de mock
+    de ce fichier ne soient en place.
+    """
+    tree = ast.parse(Path(APP_PATH).read_text(encoding="utf-8"))
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign) and any(
+            getattr(t, "id", None) == "_DEMO_QUESTIONS" for t in node.targets
+        ):
+            return ast.literal_eval(node.value)
+    raise AssertionError("_DEMO_QUESTIONS introuvable dans app.py")
+
 
 _USAGE_Q1 = {
     "n_appels": 3,
@@ -204,6 +222,27 @@ def test_pas_de_dollar_non_echappe_dans_rendu_apres_succes(monkeypatch):
         assert not unescaped_dollar.search(m.value), f"$ non échappé dans un markdown : {m.value!r}"
     for c in at.caption:
         assert not unescaped_dollar.search(c.value), f"$ non échappé dans un caption : {c.value!r}"
+
+
+def test_cinq_boutons_de_demo_textes_exacts():
+    """
+    Lot 1.3 changement B : un bouton de démo par document source (4) plus le
+    garde-fou anti-hallucination déjà en place (5e), dans cet ordre exact.
+    Les textes de question ont été vérifiés caractère pour caractère contre
+    src/test_retrieval.py (Q01, Q08, Q15, Q19) avant application du diff.
+    """
+    demo_questions = _extract_demo_questions()
+    assert len(demo_questions) == 5
+
+    textes_attendus = [
+        "Quelles sont les options de franchise disponibles sur le contrat prévoyance invalidité ?",
+        "Quel est le montant minimum pour un versement complémentaire sur ARESIA Patrimoine+ ?",
+        "Dans quel délai doit-on déclarer un cambriolage à son assureur ?",
+        "Combien d'heures de formation continue un conseiller doit-il suivre par an au titre de la DDA ?",
+        "Quelle est la garantie obsèques incluse dans le contrat prévoyance ?",
+    ]
+    textes_reels = [q for q, _legende in demo_questions]
+    assert textes_reels == textes_attendus
 
 
 def test_vider_conversation_reinitialise_messages_et_last_usage(monkeypatch):
