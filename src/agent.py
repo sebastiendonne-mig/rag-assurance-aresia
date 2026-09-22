@@ -303,10 +303,18 @@ def get_chroma_col() -> chromadb.Collection:
 
 # Défauts SDK (anthropic 0.111.0, vérifiés dans anthropic._base_client) :
 # Timeout(connect=5.0, read=600, write=600, pool=600), max_retries=2. Cloud Run
-# coupe la requête/le websocket Streamlit à 300s (timeoutSeconds du service,
-# et confirmé applicable aux WebSockets par la doc Cloud Run) — un read=600s
-# par appel est donc déjà sans effet pratique aujourd'hui. Le SDK retente sur
-# 408/409/429/5xx (sauf en-tête x-should-retry:false) et sur
+# coupe toute requête — y compris le WebSocket long-lived de Streamlit
+# (`/_stcore/stream`) — à timeoutSeconds du service : relevé à 1800s (30 min)
+# depuis le 22/09/2026, relevé de 300s posé au lot 0. Incident daté du
+# 22/09/2026 (test réel lot 2a) : à 300s, toute session visiteur dépassant
+# ~5 min (upload ou non — pas spécifique au lot 2a) se faisait couper son
+# WebSocket par Cloud Run, provoquant une tentative de reconnexion qui
+# retombait dans le même piège et déclenchait une rafale de 429 (confirmé par
+# corrélation temporelle exacte : 3 fermetures de WebSocket à ~301,00xs après
+# ouverture, alignées sur --timeout 300, dans les logs Cloud Run bruts).
+# Avec 1800s, un read=600s par appel Anthropic reste toujours sans effet
+# pratique (Cloud Run coupe après, mais bien plus tard qu'avant). Le SDK
+# retente sur 408/409/429/5xx (sauf en-tête x-should-retry:false) et sur
 # APIConnectionError/APITimeoutError (vérifié dans _should_retry/
 # _should_retry_exception de la source installée) ; walk du __cause__ compris.
 # VALEURS PROVISOIRES — à réajuster après mesure de la latence réelle par

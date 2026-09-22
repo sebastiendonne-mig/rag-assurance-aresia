@@ -6,6 +6,22 @@
 [client]
 showErrorDetails = "none"
 
+# fileWatcherType = "none" : désactive le surveillant de fichiers de Streamlit
+# (rechargement à chaud), inutile dans un conteneur figé (l'image ne change
+# jamais après le build). Sans ce réglage (valeur par défaut "auto"), le
+# watcher scanne périodiquement le chemin de chaque module importé — contre
+# `transformers`, cela produit des ModuleNotFoundError: torchvision en rafale
+# (bruit connu depuis le lot 0, jusqu'à ~90 tracebacks par rafale observés en
+# prod). Confirmé sans lien avec l'incident WebSocket/429 du 22/09/2026
+# (rafales mesurées à 0,2-4s, bien trop courtes pour l'indisponibilité de
+# plusieurs minutes observée — voir le commentaire ANTHROPIC_TIMEOUT dans
+# agent.py pour la cause réelle) : nettoyage cosmétique regroupé ici par
+# simplicité, pas un correctif de cet incident.
+# Source : docs.streamlit.io, page "Configuration options" (config.toml),
+# section [server] > fileWatcherType — consultée via context7 le 22/09/2026.
+[server]
+fileWatcherType = "none"
+
 # Thème TKoidra — tokens.css du brand-kit (navy/cyan/blanc), confirmé
 # identique à la palette réellement déployée sur dvf.tkoidra.com
 # (valeurs vérifiées via getComputedStyle en production, pas déduites).
