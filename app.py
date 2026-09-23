@@ -392,7 +392,11 @@ with col_chat:
                     # de vérité (verrou réel), voir sa docstring dans upload_session.py.
                     st.warning(upload_session.UPLOAD_BUSY_MESSAGE)
                 else:
-                    with st.spinner("Analyse du document…"):
+                    with st.spinner(
+                        "Analyse du document en cours… jusqu'à 3 minutes pour l'indexation "
+                        "(calcul intensif sur ce document précis). Merci de patienter sans "
+                        "recharger la page."
+                    ):
                         tmp_path = Path(tempfile.gettempdir()) / f"upload_{_upload_session_id}.pdf"
                         try:
                             tmp_path.write_bytes(uploaded.getvalue())
