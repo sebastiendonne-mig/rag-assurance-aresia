@@ -102,21 +102,6 @@ def _format_usage_caption(usage: dict) -> str:
 @st.cache_resource(show_spinner="Chargement du modèle d'embeddings… (jusqu'à 90 secondes au premier chargement)")
 def _warm_up():
     """Charge les ressources une seule fois pour toute la durée de vie du serveur."""
-    # TEMP DIAGNOSTIC — à retirer après investigation (threading torch vs 2 vCPU)
-    import torch
-
-    try:
-        cpuinfo = Path("/proc/cpuinfo").read_text()
-        n_processors = cpuinfo.count("processor\t:")
-        print(f"[DIAG] /proc/cpuinfo — nombre de 'processor' vus par le conteneur : {n_processors}", flush=True)
-    except Exception as exc:
-        print(f"[DIAG] lecture /proc/cpuinfo impossible : {type(exc).__name__}", flush=True)
-    print(f"[DIAG] torch.get_num_threads() AVANT set_num_threads() : {torch.get_num_threads()}", flush=True)
-    config_lines = [l for l in torch.__config__.show().splitlines() if "MKLDNN" in l or "MKL_INFO" in l or "BLAS_INFO" in l]
-    print(f"[DIAG] torch.__config__.show() — lignes MKLDNN/BLAS : {config_lines}", flush=True)
-    torch.set_num_threads(2)
-    print(f"[DIAG] torch.set_num_threads(2) appliqué — torch.get_num_threads() APRÈS : {torch.get_num_threads()}", flush=True)
-
     get_embed_model()
     get_chroma_col()
     get_anthropic()
