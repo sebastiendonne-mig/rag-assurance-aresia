@@ -10,11 +10,16 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 ENV HF_HOME=/app/.cache/huggingface
 
-# Télécharge le modèle, le convertit en bfloat16 et le sauvegarde dans l'image
-# (/app/models/e5-large-bf16), puis supprime le cache HF fp32 (~2.24 Go) pour ne
-# garder que la version finale bf16 (~1.07 Go) dans l'image. Évite aussi le pic
-# mémoire au runtime causé par le chargement fp32 + cast a posteriori.
-RUN python -c "import torch; from sentence_transformers import SentenceTransformer; m = SentenceTransformer('intfloat/multilingual-e5-large', model_kwargs={'torch_dtype': torch.bfloat16}); m.save('/app/models/e5-large-bf16')" \
+# Télécharge le modèle et le sauvegarde dans l'image (/app/models/e5-large-fp32,
+# précision native, pas de cast), puis supprime le cache HF (~2.24 Go, doublon
+# de la copie sauvegardée) pour n'en garder qu'une seule dans l'image.
+# fp32 depuis le 23/09/2026 — un essai en bfloat16 (21-22/09, pour réduire la
+# RAM à ~1.07 Go au lieu de ~2.24 Go) s'est révélé ~25x plus lent au calcul sur
+# le vCPU Cloud Run (pas de support matériel bf16 natif) : un upload de
+# document prenait ~8 min au lieu de quelques secondes (mesuré : 287s bf16 vs
+# 11s fp32 pour 21 chunks, CPU forcé/1 thread). Voir agent.py:EMBED_MODEL_LOCAL_PATH
+# et MAINTENANCE-APPS-TKOIDRA.md section 8 pour l'investigation complète.
+RUN python -c "from sentence_transformers import SentenceTransformer; m = SentenceTransformer('intfloat/multilingual-e5-large'); m.save('/app/models/e5-large-fp32')" \
     && rm -rf /app/.cache/huggingface
 
 COPY app.py .

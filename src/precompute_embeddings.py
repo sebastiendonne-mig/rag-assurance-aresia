@@ -11,7 +11,7 @@ Cloud Build à 30 min).
 
 Usage : python src/precompute_embeddings.py
 Prérequis : le modèle intfloat/multilingual-e5-large doit être présent en
-cache HF local (ou pré-converti dans models/e5-large-bf16). Lancer avec
+cache HF local (ou pré-téléchargé dans models/e5-large-fp32). Lancer avec
 HF_HUB_OFFLINE=1 pour garantir qu'aucun téléchargement n'est tenté.
 """
 import hashlib
@@ -25,10 +25,12 @@ CHUNKS_PATH = ROOT / "data" / "chunks" / "chunks.json"
 EMBEDDINGS_PATH = ROOT / "data" / "chunks" / "embeddings.npy"
 META_PATH = ROOT / "data" / "chunks" / "embeddings.meta.json"
 MODEL_NAME = "intfloat/multilingual-e5-large"
-# Même chemin que agent.py:EMBED_MODEL_BF16_PATH — si ce script tourne après
-# l'étape de conversion bf16 du Dockerfile (ou une conversion locale
-# équivalente), on réutilise ces poids plutôt que de retélécharger le modèle.
-EMBED_MODEL_BF16_PATH = ROOT / "models" / "e5-large-bf16"
+# Même chemin que agent.py:EMBED_MODEL_LOCAL_PATH — si ce script tourne après
+# l'étape de pré-téléchargement du Dockerfile (ou un téléchargement local
+# équivalent), on réutilise ces poids plutôt que de retélécharger le modèle.
+# fp32 (précision native) depuis le 23/09/2026 — voir agent.py pour le
+# contexte du passage bf16 -> fp32 (lenteur ~25x en bf16 sur CPU Cloud Run).
+EMBED_MODEL_LOCAL_PATH = ROOT / "models" / "e5-large-fp32"
 
 
 def chunk_id(chunk: dict) -> str:
@@ -40,14 +42,13 @@ def chunk_id(chunk: dict) -> str:
 
 
 def _load_embed_model():
-    import torch
     from sentence_transformers import SentenceTransformer
 
-    if EMBED_MODEL_BF16_PATH.exists():
-        print(f"Chargement modèle (bf16 pré-converti) : {EMBED_MODEL_BF16_PATH}")
-        return SentenceTransformer(str(EMBED_MODEL_BF16_PATH))
-    print(f"Chargement modèle : {MODEL_NAME} (pas de poids bf16 pré-convertis trouvés)")
-    return SentenceTransformer(MODEL_NAME, model_kwargs={"torch_dtype": torch.bfloat16})
+    if EMBED_MODEL_LOCAL_PATH.exists():
+        print(f"Chargement modèle (fp32 pré-téléchargé) : {EMBED_MODEL_LOCAL_PATH}")
+        return SentenceTransformer(str(EMBED_MODEL_LOCAL_PATH))
+    print(f"Chargement modèle : {MODEL_NAME} (pas de poids pré-téléchargés trouvés)")
+    return SentenceTransformer(MODEL_NAME)
 
 
 def main() -> None:

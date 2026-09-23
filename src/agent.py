@@ -18,7 +18,6 @@ from typing import TypedDict
 
 import anthropic
 import chromadb
-import torch
 from dotenv import load_dotenv
 from langgraph.graph import END, StateGraph
 from sentence_transformers import SentenceTransformer
@@ -57,9 +56,15 @@ ROOT = Path(__file__).parent.parent
 CHROMA_PATH = ROOT / "chroma_db"
 COLLECTION_NAME = "assur_docs"
 MODEL_NAME = "intfloat/multilingual-e5-large"
-# Poids bf16 pré-convertis au build Docker (voir Dockerfile) : évite le pic mémoire
-# du chargement fp32 + cast a posteriori. Absent en dev local -> fallback ci-dessous.
-EMBED_MODEL_BF16_PATH = ROOT / "models" / "e5-large-bf16"
+# Poids pré-téléchargés au build Docker (voir Dockerfile), fp32 (précision native
+# du modèle). Absent en dev local -> fallback ci-dessous.
+# Historique : bf16 utilisé du 21/09 au 23/09/2026 pour réduire l'empreinte
+# mémoire (~1.07 Go au lieu de ~2.24 Go), abandonné après investigation en
+# production (lot 2a) : le calcul en bf16 sur le vCPU Cloud Run (pas de support
+# matériel bf16 natif) s'est mesuré ~25x plus lent qu'en fp32 sur le même CPU
+# (287s vs 11s pour 21 chunks) — expliquait un temps d'analyse d'upload de ~8 min
+# au lieu de quelques secondes. Voir MAINTENANCE-APPS-TKOIDRA.md section 8.
+EMBED_MODEL_LOCAL_PATH = ROOT / "models" / "e5-large-fp32"
 CLAUDE_MODEL = "claude-sonnet-4-6"
 RETRIEVAL_K = 10
 # Plafond dur : le prompt planner demande "2-4" mais rien ne garantit que le LLM
@@ -198,23 +203,21 @@ def log_memory(label: str) -> None:
 def get_embed_model() -> SentenceTransformer:
     global _embed_model
     if _embed_model is None:
-        if EMBED_MODEL_BF16_PATH.exists():
-            # Poids déjà bf16 sur disque (bakés au build) : pas de cast à charge,
-            # donc pas de coexistence transitoire fp32+bf16 en mémoire.
-            _embed_model = SentenceTransformer(str(EMBED_MODEL_BF16_PATH))
-            source = str(EMBED_MODEL_BF16_PATH)
+        if EMBED_MODEL_LOCAL_PATH.exists():
+            # Poids fp32 pré-téléchargés sur disque (bakés au build).
+            _embed_model = SentenceTransformer(str(EMBED_MODEL_LOCAL_PATH))
+            source = str(EMBED_MODEL_LOCAL_PATH)
         else:
-            # Fallback dev local (pas de pré-conversion bakée) : cast bfloat16 à la
-            # volée, ~2.24 Go (float32) -> ~1.12 Go, avec un pic transitoire pendant
-            # le chargement. En prod (image Docker), ce chemin ne devrait jamais être
-            # emprunté — le warning signale une image mal construite plutôt que de
-            # replanter en OOM silencieusement.
+            # Fallback dev local (pas de pré-téléchargement baké) : télécharge et
+            # charge en fp32 (défaut). En prod (image Docker), ce chemin ne
+            # devrait jamais être emprunté — le warning signale une image mal
+            # construite plutôt que de replanter en OOM silencieusement.
             log.warning(
-                "EMBED_MODEL_BF16_PATH introuvable (%s) — fallback cast bfloat16 à la "
-                "volée. En prod, ceci indique un problème de build de l'image Docker.",
-                EMBED_MODEL_BF16_PATH,
+                "EMBED_MODEL_LOCAL_PATH introuvable (%s) — fallback téléchargement "
+                "à la volée. En prod, ceci indique un problème de build de l'image Docker.",
+                EMBED_MODEL_LOCAL_PATH,
             )
-            _embed_model = SentenceTransformer(MODEL_NAME, model_kwargs={"torch_dtype": torch.bfloat16})
+            _embed_model = SentenceTransformer(MODEL_NAME)
             source = MODEL_NAME
         # Sur Apple Silicon MPS, le warm-up encode() est toujours nécessaire pour
         # forcer la compilation Metal et éviter un premier vecteur incorrect.
