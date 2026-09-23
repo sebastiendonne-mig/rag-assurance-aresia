@@ -102,6 +102,16 @@ def _format_usage_caption(usage: dict) -> str:
 @st.cache_resource(show_spinner="Chargement du modèle d'embeddings… (jusqu'à 90 secondes au premier chargement)")
 def _warm_up():
     """Charge les ressources une seule fois pour toute la durée de vie du serveur."""
+    # TEMP DIAGNOSTIC — à retirer après investigation (lenteur upload bf16 vs fp32)
+    try:
+        cpuinfo = Path("/proc/cpuinfo").read_text()
+        flags_line = next((l for l in cpuinfo.splitlines() if l.startswith("flags")), "")
+        bf16_flags = [f for f in flags_line.split() if "bf16" in f or "avx512" in f]
+        print(f"[DIAG] /proc/cpuinfo flags bf16/avx512 pertinents : {bf16_flags or '(aucun)'}", flush=True)
+        model_name_line = next((l for l in cpuinfo.splitlines() if l.startswith("model name")), "")
+        print(f"[DIAG] /proc/cpuinfo {model_name_line}", flush=True)
+    except Exception as exc:
+        print(f"[DIAG] lecture /proc/cpuinfo impossible : {type(exc).__name__}", flush=True)
     get_embed_model()
     get_chroma_col()
     get_anthropic()
