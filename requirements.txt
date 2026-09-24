@@ -12,6 +12,11 @@
 --extra-index-url https://download.pytorch.org/whl/cpu
 torch==2.12.1
 anthropic==0.111.0
+# Moteur alternatif proposé au visiteur sur le chemin upload uniquement
+# (lot 3.1). Résolution vérifiée le 24/09/2026 : n'ajoute que mistralai,
+# eval-type-backport et jsonpath-python, et ne modifie ni httpx (0.28.1),
+# ni anthropic (0.111.0), ni pydantic (2.13.4).
+mistralai==2.10.1
 langgraph==1.2.6
 langchain-core>=1.4.0
 chromadb==1.5.9
