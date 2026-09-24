@@ -36,13 +36,17 @@ import gc
 import logging
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from pathlib import Path
 
 import chromadb
 
 import extract_chunks
+import agent
 from agent import (
+    ENGINE_ANTHROPIC,
+    ENGINE_MISTRAL,
     MODEL_NAME,
     SYSTEM_PROMPT,
     format_chunks_for_prompt,
@@ -473,10 +477,108 @@ def answer_question_on_upload(collection: chromadb.Collection, question: str) ->
     format_chunks_for_prompt d'agent.py tels quels, sans les modifier.
     """
     chunks = retrieve_from_upload(collection, question)
-    prompt = (
+    return llm_call(
+        [{"role": "user", "content": _build_upload_prompt(question, chunks)}],
+        system=SYSTEM_PROMPT,
+    )
+
+
+def _build_upload_prompt(question: str, chunks: list[dict]) -> str:
+    """Prompt du chemin upload — identique pour les deux moteurs comparés."""
+    return (
         f"Question de l'utilisateur : {question}\n\n"
         f"Documents pertinents trouvés :\n{format_chunks_for_prompt(chunks)}\n\n"
         "Réponds en respectant strictement le format 3 blocs : "
         "**Réponse directe** / **Source(s)** / **Point d'attention**"
     )
-    return llm_call([{"role": "user", "content": prompt}], system=SYSTEM_PROMPT)
+
+
+@dataclass
+class EngineResult:
+    """Résultat d'UN moteur pour UNE comparaison. Jamais de str(exc) exposé."""
+
+    engine: str
+    succes: bool
+    reponse: str | None
+    erreur: str | None          # message neutre déjà formaté, ou None
+    tokens_in: int
+    tokens_out: int
+    cout_usd: float | None      # None = tarif non configuré -> "non disponible"
+    latence_s: float
+
+
+def _run_one_engine(engine: str, prompt: str) -> EngineResult:
+    """
+    Exécute un moteur, isolé du reste. Tourne dans son propre thread lors
+    d'une comparaison : ne doit donc JAMAIS appeler st.* (Streamlit lève
+    NoSessionContext hors du thread de script), seulement calculer et
+    renvoyer des données.
+    Chaque moteur pose son propre UsageTracker dans le ContextVar : un thread
+    neuf démarre avec un contexte vierge, donc les deux trackers ne peuvent
+    pas se mélanger — c'est l'isolement par défaut de contextvars, aucun
+    copy_context() n'est souhaitable ici.
+    """
+    tracker = agent.UsageTracker()
+    token = agent._usage_ctx.set(tracker)
+    debut = time.monotonic()
+    try:
+        reponse = llm_call(
+            [{"role": "user", "content": prompt}], system=SYSTEM_PROMPT, engine=engine
+        )
+        succes, erreur = True, None
+    except Exception as exc:  # noqa: BLE001 — un moteur en échec ne doit pas emporter l'autre
+        reponse, succes = None, False
+        erreur = agent.format_user_error(exc)
+        log.warning(
+            "COMPARE_ENGINE_ERROR moteur=%s type=%s status_code=%s",
+            engine,
+            type(exc).__name__,
+            getattr(exc, "status_code", None),
+        )
+    finally:
+        agent._usage_ctx.reset(token)
+        latence_s = time.monotonic() - debut
+
+    return EngineResult(
+        engine=engine,
+        succes=succes,
+        reponse=reponse,
+        erreur=erreur,
+        tokens_in=tracker.tokens_in,
+        tokens_out=tracker.tokens_out,
+        cout_usd=agent.estimer_cout_usd(tracker.tokens_in, tracker.tokens_out, engine),
+        latence_s=latence_s,
+    )
+
+
+def compare_engines_on_upload(
+    collection: chromadb.Collection, question: str
+) -> list[EngineResult]:
+    """
+    Même question, même document, deux moteurs : renvoie un EngineResult par
+    moteur, dans l'ordre [anthropic, mistral].
+
+    Les deux appels sont lancés en parallèle : la latence perçue est celle du
+    moteur le plus lent, pas la somme des deux. Aucun st.* n'est appelé ici ni
+    dans les threads — le rendu reste au thread principal (sous-lot 3.3).
+
+    Si un moteur échoue, l'autre résultat est quand même renvoyé (son
+    EngineResult porte alors succes=False et un message neutre).
+
+    Le disjoncteur des comparaisons est incrémenté une fois, avant les appels :
+    une comparaison compte pour une unité, quels que soient les réessais.
+    """
+    agent._check_comparison_daily_limit()
+    if not agent.mistral_disponible():
+        raise agent.MistralUnavailableError("moteur Mistral non configuré")
+
+    prompt = _build_upload_prompt(question, retrieve_from_upload(collection, question))
+    moteurs = [ENGINE_ANTHROPIC, ENGINE_MISTRAL]
+
+    with ThreadPoolExecutor(max_workers=len(moteurs)) as executor:
+        futures = {
+            executor.submit(_run_one_engine, moteur, prompt): moteur for moteur in moteurs
+        }
+        resultats = {futures[f]: f.result() for f in as_completed(futures)}
+
+    return [resultats[moteur] for moteur in moteurs]
