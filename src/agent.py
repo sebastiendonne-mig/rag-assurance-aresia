@@ -70,7 +70,13 @@ MODEL_NAME = "intfloat/multilingual-e5-large"
 # (287s vs 11s pour 21 chunks) — expliquait un temps d'analyse d'upload de ~8 min
 # au lieu de quelques secondes. Voir MAINTENANCE-APPS-TKOIDRA.md section 8.
 EMBED_MODEL_LOCAL_PATH = ROOT / "models" / "e5-large-fp32"
-CLAUDE_MODEL = "claude-sonnet-4-6"
+# Configurable côté serveur, jamais par le visiteur. Le défaut reproduit
+# exactement la valeur en dur précédente : sans CLAUDE_MODEL dans
+# l'environnement, le comportement est identique à celui du lot 2a.
+# Attention : les tarifs PRIX_INPUT/OUTPUT_USD_PAR_MTOK plus bas ne valent que
+# pour Sonnet 4.6 — changer ce modèle sans changer ces tarifs rendrait
+# l'estimation de coût fausse.
+CLAUDE_MODEL = os.environ.get("CLAUDE_MODEL", "claude-sonnet-4-6")
 RETRIEVAL_K = 10
 # Plafond dur : le prompt planner demande "2-4" mais rien ne garantit que le LLM
 # le respecte. Sans cette borne, le nombre d'appels LLM par question n'est pas
@@ -165,6 +171,10 @@ def _check_daily_limit() -> None:
 # cache_control envoyé, vérifié par grep) : les tokens de cache éventuels
 # (cache_creation_input_tokens/cache_read_input_tokens) ne sont PAS comptés
 # dans cette estimation.
+# VALABLES UNIQUEMENT POUR SONNET 4.6 : ces deux constantes ne sont pas
+# indexées sur CLAUDE_MODEL (configurable depuis le 24/09/2026). Pointer
+# CLAUDE_MODEL vers un autre modèle sans mettre ces tarifs à jour produirait
+# une estimation de coût silencieusement fausse.
 PRIX_INPUT_USD_PAR_MTOK = 3.0
 PRIX_OUTPUT_USD_PAR_MTOK = 15.0
 
