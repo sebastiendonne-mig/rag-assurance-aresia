@@ -152,6 +152,45 @@ def _check_daily_limit() -> None:
 
 
 # ─────────────────────────────────────────────
+# Disjoncteur des comparaisons (lot 3.1)
+# ─────────────────────────────────────────────
+# Strictement indépendant de DAILY_QUESTION_LIMIT ci-dessus : compteur, verrou,
+# date et exception séparés. Une comparaison n'emprunte pas run_agent() et ne
+# touche donc jamais le compteur du mode corpus, et réciproquement.
+# Compte des COMPARAISONS, pas des appels LLM : une comparaison = 2 appels
+# (un par moteur), soit 100 appels LLM par jour au plafond par défaut. Un
+# réessai Mistral ne compte pas ici : le disjoncteur est incrémenté une fois
+# par comparaison, avant les appels.
+# Mêmes limites connues que le disjoncteur du lot 0 : mémoire de processus,
+# remis à zéro au redémarrage, aucune coordination multi-instance, et ne
+# remplace pas un plafond de dépense configuré chez le fournisseur.
+
+COMPARISON_DAILY_LIMIT = int(os.environ.get("COMPARISON_DAILY_LIMIT", "50"))
+_comparison_lock = threading.Lock()
+_comparison_count: int = 0
+_comparison_date: date | None = None
+
+
+class ComparisonDailyLimitExceeded(Exception):
+    """Levée quand COMPARISON_DAILY_LIMIT est atteint pour la journée UTC courante."""
+
+
+def _check_comparison_daily_limit() -> None:
+    """Incrémente et vérifie le compteur de comparaisons du jour (UTC), thread-safe."""
+    global _comparison_count, _comparison_date
+    today = datetime.now(timezone.utc).date()
+    with _comparison_lock:
+        if _comparison_date != today:
+            _comparison_date = today
+            _comparison_count = 0
+        if _comparison_count >= COMPARISON_DAILY_LIMIT:
+            raise ComparisonDailyLimitExceeded(
+                f"limite {COMPARISON_DAILY_LIMIT} comparaisons/jour atteinte"
+            )
+        _comparison_count += 1
+
+
+# ─────────────────────────────────────────────
 # Agrégation d'usage par question (lot 1, sous-lot 1.2)
 # ─────────────────────────────────────────────
 # ContextVar (pas de variable globale de module) : un tracker neuf par appel à
@@ -178,6 +217,27 @@ def _check_daily_limit() -> None:
 PRIX_INPUT_USD_PAR_MTOK = 3.0
 PRIX_OUTPUT_USD_PAR_MTOK = 15.0
 
+# Tarifs Mistral : AUCUNE valeur par défaut volontairement. Le modèle Mistral
+# n'est pas arrêté à ce jour, donc son tarif non plus ; inventer un chiffre
+# afficherait un coût faux. Absents de l'environnement -> estimer_cout_usd()
+# renvoie None pour ce moteur, et l'interface affiche "non disponible".
+def _prix_env(nom: str) -> float | None:
+    brut = os.environ.get(nom)
+    if brut is None or brut.strip() == "":
+        return None
+    try:
+        return float(brut)
+    except ValueError:
+        log.warning("PRIX_ENV valeur non numerique ignoree nom=%s", nom)
+        return None
+
+
+PRIX_MISTRAL_INPUT_USD_PAR_MTOK = _prix_env("PRIX_MISTRAL_INPUT_USD_PAR_MTOK")
+PRIX_MISTRAL_OUTPUT_USD_PAR_MTOK = _prix_env("PRIX_MISTRAL_OUTPUT_USD_PAR_MTOK")
+
+ENGINE_ANTHROPIC = "anthropic"
+ENGINE_MISTRAL = "mistral"
+
 
 class UsageTracker:
     """Accumulateur d'usage (appels, tokens) pour UNE question, thread-safe."""
@@ -189,18 +249,46 @@ class UsageTracker:
         self.tokens_out = 0
 
     def record(self, usage) -> None:
+        """Enregistre un objet usage de forme Anthropic (input_tokens/output_tokens)."""
+        self.record_tokens(
+            getattr(usage, "input_tokens", 0) or 0,
+            getattr(usage, "output_tokens", 0) or 0,
+        )
+
+    def record_tokens(self, tokens_in: int, tokens_out: int) -> None:
+        """
+        Primitive bas niveau, indépendante du fournisseur : les objets usage
+        d'Anthropic (input_tokens/output_tokens) et de Mistral
+        (prompt_tokens/completion_tokens) n'ont pas les mêmes noms de champs,
+        l'extraction se fait donc chez l'appelant.
+        """
         with self._lock:
             self.n_appels += 1
-            self.tokens_in += getattr(usage, "input_tokens", 0) or 0
-            self.tokens_out += getattr(usage, "output_tokens", 0) or 0
+            self.tokens_in += tokens_in
+            self.tokens_out += tokens_out
 
 
 _usage_ctx: ContextVar["UsageTracker | None"] = ContextVar("usage_ctx", default=None)
 
 
-def estimer_cout_usd(tokens_in: int, tokens_out: int) -> float:
-    """Coût estimé en USD, hors tokens de cache (non utilisés ici)."""
-    return (tokens_in / 1_000_000) * PRIX_INPUT_USD_PAR_MTOK + (tokens_out / 1_000_000) * PRIX_OUTPUT_USD_PAR_MTOK
+def estimer_cout_usd(
+    tokens_in: int, tokens_out: int, engine: str = ENGINE_ANTHROPIC
+) -> float | None:
+    """
+    Coût estimé en USD, hors tokens de cache (non utilisés ici).
+    Renvoie None quand le tarif du moteur n'est pas configuré (cas Mistral
+    tant qu'aucun tarif n'est fourni par l'environnement) : l'appelant affiche
+    alors "non disponible" plutôt qu'un chiffre inventé.
+    """
+    if engine == ENGINE_ANTHROPIC:
+        prix_in, prix_out = PRIX_INPUT_USD_PAR_MTOK, PRIX_OUTPUT_USD_PAR_MTOK
+    elif engine == ENGINE_MISTRAL:
+        prix_in, prix_out = PRIX_MISTRAL_INPUT_USD_PAR_MTOK, PRIX_MISTRAL_OUTPUT_USD_PAR_MTOK
+    else:
+        raise ValueError(f"moteur inconnu: {engine!r}")
+    if prix_in is None or prix_out is None:
+        return None
+    return (tokens_in / 1_000_000) * prix_in + (tokens_out / 1_000_000) * prix_out
 
 
 def log_memory(label: str) -> None:
@@ -354,6 +442,132 @@ def get_anthropic() -> anthropic.Anthropic:
 
 
 # ─────────────────────────────────────────────
+# Moteur Mistral (chemin upload uniquement — voir llm_call)
+# ─────────────────────────────────────────────
+
+# Le modèle n'est pas arrêté à ce jour : aucune valeur par défaut, aucune
+# valeur devinée. Sans MISTRAL_MODEL dans l'environnement, la comparaison est
+# indisponible (voir mistral_disponible()).
+MISTRAL_MODEL = os.environ.get("MISTRAL_MODEL")
+
+# Mêmes timeouts que côté Anthropic. Le SDK Mistral 2.10.1 n'expose pas d'objet
+# Timeout propre : il accepte un httpx.Client personnalisé (constructeur
+# `Mistral(client=...)`), ce qui revient au même réglage.
+MISTRAL_TIMEOUT_CONNECT_S = 5.0
+MISTRAL_TIMEOUT_RW_S = 60.0
+
+# Politique de réessai — écrite ici plutôt que déléguée au SDK Mistral, parce
+# que celui-ci ne sait pas exprimer "exactement 1 réessai" : son modèle est un
+# budget de temps (BackoffStrategy(initial_interval, max_interval, exponent,
+# max_elapsed_time) en ms) et sa boucle `while True` ne s'arrête que sur
+# `now - start > max_elapsed_time` (mistralai/client/utils/retries.py:305-314),
+# sans aucun compteur de tentatives. Le client Mistral est donc construit sans
+# RetryConfig (défaut du SDK = aucun réessai, sdkconfiguration.py:48) et le
+# réessai unique est fait ici.
+#
+# Les catégories réessayées reproduisent celles du SDK anthropic 0.111.0, pour
+# que la comparaison entre moteurs ne soit pas biaisée par des politiques
+# différentes :
+#   - codes HTTP 408, 409, 429 et >= 500 (_base_client.py:855-872)
+#   - erreurs de connexion et de timeout : APIConnectionError, dont
+#     APITimeoutError hérite (_exceptions.py:86,91), traitées comme
+#     réessayables (_base_client.py:897-898)
+# L'en-tête propriétaire `x-should-retry` d'Anthropic (_base_client.py:844-852)
+# n'a pas d'équivalent Mistral : non repris.
+MISTRAL_RETRY_STATUS_CODES = (408, 409, 429)
+
+# Délai avant réessai. Retry-After est respecté s'il est présent et plafonné,
+# comme le fait le SDK anthropic (0 < retry_after <= 60, _base_client.py:828).
+# Sinon délai fixe calé sur INITIAL_RETRY_DELAY = 0.5 du SDK anthropic
+# (_constants.py:13 ; son premier réessai attend 0.5 * 2**0 = 0.5s avant
+# jitter). VALEURS PROVISOIRES, comme ANTHROPIC_TIMEOUT.
+MISTRAL_RETRY_DELAY_S = 0.5
+MISTRAL_RETRY_AFTER_CAP_S = 60.0
+
+# Jamais plus de 2 tentatives au total (1 appel + 1 réessai).
+MISTRAL_MAX_ATTEMPTS = 2
+
+_mistral_client = None
+
+
+class MistralUnavailableError(Exception):
+    """
+    Levée quand le moteur Mistral n'est pas configuré (clé ou modèle absent).
+    Ne doit jamais interrompre le reste de l'application : seule la
+    comparaison devient indisponible.
+    """
+
+
+def mistral_disponible() -> bool:
+    """Vrai si le moteur Mistral est configuré côté serveur (clé ET modèle)."""
+    return bool(os.environ.get("MISTRAL_API_KEY")) and bool(MISTRAL_MODEL)
+
+
+def get_mistral():
+    global _mistral_client
+    if _mistral_client is None:
+        if not mistral_disponible():
+            raise MistralUnavailableError("MISTRAL_API_KEY ou MISTRAL_MODEL absent")
+        import httpx
+        from mistralai.client import Mistral
+
+        _mistral_client = Mistral(
+            api_key=os.environ["MISTRAL_API_KEY"],
+            client=httpx.Client(
+                timeout=httpx.Timeout(
+                    connect=MISTRAL_TIMEOUT_CONNECT_S,
+                    read=MISTRAL_TIMEOUT_RW_S,
+                    write=MISTRAL_TIMEOUT_RW_S,
+                    pool=MISTRAL_TIMEOUT_RW_S,
+                )
+            ),
+        )
+    return _mistral_client
+
+
+def _mistral_status_code(exc: Exception) -> int | None:
+    """Code HTTP porté par une exception Mistral, s'il y en a un.
+
+    MistralError expose .status_code (message/status_code/headers/body/
+    raw_response) — une seule classe de base, contrairement aux exceptions
+    typées par statut du SDK anthropic.
+    """
+    code = getattr(exc, "status_code", None)
+    return code if isinstance(code, int) else None
+
+
+def _mistral_should_retry(exc: Exception) -> bool:
+    """Reproduit les catégories réessayées par le SDK anthropic (voir plus haut)."""
+    import httpx
+
+    if isinstance(exc, (httpx.NetworkError, httpx.TimeoutException)):
+        return True
+    code = _mistral_status_code(exc)
+    if code is None:
+        return False
+    return code in MISTRAL_RETRY_STATUS_CODES or code >= 500
+
+
+def _mistral_retry_delay_s(exc: Exception) -> float:
+    """Délai avant réessai : Retry-After plafonné si présent, sinon délai fixe."""
+    headers = getattr(exc, "headers", None)
+    brut = None
+    if headers is not None:
+        try:
+            brut = headers.get("retry-after")
+        except Exception:
+            brut = None
+    if brut is not None:
+        try:
+            propose = float(brut)
+        except (TypeError, ValueError):
+            propose = None
+        if propose is not None and propose > 0:
+            return min(propose, MISTRAL_RETRY_AFTER_CAP_S)
+    return MISTRAL_RETRY_DELAY_S
+
+
+# ─────────────────────────────────────────────
 # Prompt système
 # ─────────────────────────────────────────────
 
@@ -391,6 +605,13 @@ def format_user_error(exc: Exception) -> str:
     """
     if isinstance(exc, DailyLimitExceeded):
         return "Le service a atteint sa limite d'usage pour aujourd'hui. Merci de revenir demain."
+    if isinstance(exc, ComparisonDailyLimitExceeded):
+        return (
+            "La comparaison entre moteurs a atteint sa limite d'usage pour aujourd'hui. "
+            "Les questions normales restent disponibles."
+        )
+    if isinstance(exc, MistralUnavailableError):
+        return "La comparaison entre moteurs n'est pas disponible pour le moment."
     return "Une erreur technique est survenue. Merci de réessayer dans quelques instants."
 
 
@@ -412,10 +633,82 @@ def _record_usage(response) -> None:
     tracker.record(usage)
 
 
-def llm_call(messages: list[dict], system: str = SYSTEM_PROMPT) -> str:
+def _record_usage_mistral(response) -> None:
+    """
+    Équivalent de _record_usage() pour la forme Mistral : l'objet usage y
+    expose prompt_tokens/completion_tokens là où Anthropic expose
+    input_tokens/output_tokens.
+    """
+    tracker = _usage_ctx.get()
+    if tracker is None:
+        return
+    usage = getattr(response, "usage", None)
+    if usage is None:
+        log.warning("LLM_USAGE reponse sans attribut usage — non comptabilisee")
+        return
+    tracker.record_tokens(
+        getattr(usage, "prompt_tokens", 0) or 0,
+        getattr(usage, "completion_tokens", 0) or 0,
+    )
+
+
+def _llm_call_mistral(messages: list[dict], system: str) -> str:
+    """
+    Appel Mistral avec un réessai unique (voir la politique de réessai plus
+    haut : catégories reprises du SDK anthropic, 2 tentatives maximum).
+    L'usage n'est comptabilisé que pour la tentative qui réussit — un réessai
+    ne double pas les tokens comptés, et ne touche pas le disjoncteur des
+    comparaisons (compté une fois par comparaison, pas par appel).
+    Le système est passé comme premier message de rôle "system" : le SDK
+    Mistral n'a pas de paramètre `system=` séparé, mais accepte un dict brut
+    {"role": "system", "content": ...} (SystemMessageTypedDict, membre de
+    l'union ChatCompletionRequestMessageTypedDict).
+    """
+    client = get_mistral()
+    messages_mistral = [{"role": "system", "content": system}] + messages
+    derniere_exc: Exception | None = None
+    for tentative in range(1, MISTRAL_MAX_ATTEMPTS + 1):
+        try:
+            response = client.chat.complete(
+                model=MISTRAL_MODEL,
+                max_tokens=1500,
+                messages=messages_mistral,
+            )
+        except Exception as exc:
+            derniere_exc = exc
+            if tentative >= MISTRAL_MAX_ATTEMPTS or not _mistral_should_retry(exc):
+                raise
+            # Jamais le contenu de la question ni de la réponse dans le log.
+            log.warning(
+                "LLM_RETRY moteur=mistral status_code=%s tentative=%d/%d",
+                _mistral_status_code(exc),
+                tentative,
+                MISTRAL_MAX_ATTEMPTS,
+            )
+            time.sleep(_mistral_retry_delay_s(exc))
+            continue
+        _record_usage_mistral(response)
+        return response.choices[0].message.content
+    # Inatteignable : la boucle sort par return ou par raise.
+    raise derniere_exc  # type: ignore[misc]
+
+
+def llm_call(
+    messages: list[dict], system: str = SYSTEM_PROMPT, engine: str = ENGINE_ANTHROPIC
+) -> str:
+    """
+    Appel LLM texte libre. `engine` vaut "anthropic" par défaut : tous les
+    appelants existants (mode corpus, chemin upload simple) empruntent donc
+    exactement le même chemin de code qu'avant l'introduction de Mistral.
+    Seul le mode comparaison du chemin upload passe engine="mistral".
+    """
     global _turn_llm_seq
     _turn_llm_seq += 1
     seq = _turn_llm_seq
+    if engine == ENGINE_MISTRAL:
+        return _llm_call_mistral(messages, system)
+    if engine != ENGINE_ANTHROPIC:
+        raise ValueError(f"moteur inconnu: {engine!r}")
     client = get_anthropic()
     response = client.messages.create(
         model=CLAUDE_MODEL,
