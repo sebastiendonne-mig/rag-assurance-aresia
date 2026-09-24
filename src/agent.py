@@ -30,19 +30,24 @@ load_dotenv()
 def configure_stdout_logging() -> None:
     """
     Ajoute un StreamHandler(sys.stdout) niveau WARNING sur les loggers
-    "streamlit_app" et "agent" — pas sur root. Cloud Logging (et plus
-    généralement tout collecteur de logs conteneur) ne capture que
+    "streamlit_app", "agent" et "upload_session" — pas sur root. Cloud Logging
+    (et plus généralement tout collecteur de logs conteneur) ne capture que
     stdout/stderr du process, jamais un fichier écrit sur le disque local ;
     le RotatingFileHandler existant sur root (app.py) continue de tout
     recevoir (INFO compris, qui peut contenir du texte de questions/réponses)
     dans data/streamlit_debug.log — ce handler-ci ne prend que WARNING et
-    au-dessus, et seulement sur ces deux loggers nommés.
+    au-dessus, et seulement sur ces loggers nommés.
+    "upload_session" ajouté le 24/09/2026 : sans lui, les WARNING/ERROR du
+    verrou upload (acquisition, purge, timeout) n'atteignaient jamais Cloud
+    Logging et restaient dans un fichier local perdu à chaque redémarrage
+    d'instance (min-instances=0) — le comportement du verrou était donc
+    inauditable en production.
     Idempotent : n'ajoute rien si un handler du même nom est déjà présent sur
     le logger visé (ce code est réexécuté à chaque rerun Streamlit dans le
     même process).
     """
     handler_name = "stdout_warning_handler"
-    for logger_name in ("streamlit_app", "agent"):
+    for logger_name in ("streamlit_app", "agent", "upload_session"):
         logger = logging.getLogger(logger_name)
         if any(h.name == handler_name for h in logger.handlers):
             continue
