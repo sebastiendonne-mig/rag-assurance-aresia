@@ -30,6 +30,14 @@ load_dotenv()
 # configure_stdout_logging, qui est ré-exécutée à chaque rerun Streamlit).
 _tarif_warning_emis = False
 
+# Journal d'audit des appels LLM (auditabilité de l'endpoint régional : la doc
+# Mistral demande de journaliser hôte, serveur, modèle et identifiant de requête
+# pour chaque appel — https://docs.mistral.ai/inference/regional-inference).
+# AUCUN contenu de question, de réponse ni de document n'y figure jamais.
+AUDIT_LOGGER_NAME = "audit_llm"
+AUDIT_HANDLER_NAME = "audit_stdout_handler"
+audit_log = logging.getLogger(AUDIT_LOGGER_NAME)
+
 
 def configure_stdout_logging() -> None:
     """
@@ -66,6 +74,28 @@ def configure_stdout_logging() -> None:
         handler.setLevel(logging.WARNING)
         handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s"))
         logger.addHandler(handler)
+
+    # Logger d'audit (un enregistrement par appel Mistral, voir _log_appel_mistral).
+    # Contrairement aux trois loggers ci-dessus, il porte des événements NOMINAUX
+    # (INFO), pas des avertissements — d'où un handler et un niveau propres :
+    #   - setLevel(INFO) explicite : sans lui le niveau effectif serait hérité de
+    #     la racine (WARNING par défaut) et les INFO seraient éliminés avant même
+    #     d'atteindre le handler ;
+    #   - propagate = False : pas de doublon via le logger racine. Ces lignes ne
+    #     vont donc PAS non plus dans data/streamlit_debug.log (fichier local
+    #     perdu à chaque redémarrage d'instance) : stdout uniquement.
+    # Setters idempotents ; handler protégé par la même garde de nom que ci-dessus.
+    audit = logging.getLogger(AUDIT_LOGGER_NAME)
+    audit.setLevel(logging.INFO)
+    audit.propagate = False
+    if not any(h.name == AUDIT_HANDLER_NAME for h in audit.handlers):
+        audit_handler = logging.StreamHandler(sys.stdout)
+        audit_handler.name = AUDIT_HANDLER_NAME
+        audit_handler.setLevel(logging.INFO)
+        audit_handler.setFormatter(
+            logging.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s")
+        )
+        audit.addHandler(audit_handler)
 
     # Modèle absent : Mistral est déjà indisponible, rien à signaler.
     if MISTRAL_MODEL and MISTRAL_MODEL != MISTRAL_PRICED_MODEL and not _tarif_warning_emis:
@@ -735,6 +765,29 @@ def _record_usage_mistral(response) -> None:
     )
 
 
+def _log_appel_mistral(response, tentative: int) -> None:
+    """
+    Un enregistrement d'audit par appel Mistral RÉUSSI : hôte de l'endpoint,
+    nom du serveur, modèle demandé et servi, identifiant de requête.
+    L'identifiant est response.id (mistralai/client/models/
+    chatcompletionresponse.py:22) : seul disponible en cas de succès, le SDK
+    abandonnant l'objet httpx.Response (chat.py:289). Lu par getattr : un champ
+    absent s'affiche "absent" et ne peut jamais faire échouer un appel nominal.
+    Aucun contenu de question, de réponse ni de document.
+    """
+    audit_log.info(
+        "LLM_CALL moteur=mistral endpoint=%s server=%s modele_demande=%s "
+        "modele_servi=%s request_id=%s tentative=%d/%d",
+        mistral_endpoint_host(),
+        MISTRAL_SERVER,
+        MISTRAL_MODEL,
+        getattr(response, "model", None) or "absent",
+        getattr(response, "id", None) or "absent",
+        tentative,
+        MISTRAL_MAX_ATTEMPTS,
+    )
+
+
 def _llm_call_mistral(messages: list[dict], system: str) -> str:
     """
     Appel Mistral avec un réessai unique (voir la politique de réessai plus
@@ -763,7 +816,9 @@ def _llm_call_mistral(messages: list[dict], system: str) -> str:
                 raise
             # Jamais le contenu de la question ni de la réponse dans le log.
             log.warning(
-                "LLM_RETRY moteur=mistral status_code=%s tentative=%d/%d",
+                "LLM_RETRY moteur=mistral endpoint=%s server=%s status_code=%s tentative=%d/%d",
+                mistral_endpoint_host(),
+                MISTRAL_SERVER,
                 _mistral_status_code(exc),
                 tentative,
                 MISTRAL_MAX_ATTEMPTS,
@@ -771,6 +826,7 @@ def _llm_call_mistral(messages: list[dict], system: str) -> str:
             time.sleep(_mistral_retry_delay_s(exc))
             continue
         _record_usage_mistral(response)
+        _log_appel_mistral(response, tentative)
         return response.choices[0].message.content
     # Inatteignable : la boucle sort par return ou par raise.
     raise derniere_exc  # type: ignore[misc]

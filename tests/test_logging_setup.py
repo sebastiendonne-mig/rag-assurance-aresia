@@ -14,8 +14,13 @@ import agent
 
 
 def _clear_handlers():
-    for name in ("streamlit_app", "agent", "upload_session"):
+    for name in ("streamlit_app", "agent", "upload_session", "audit_llm"):
         logging.getLogger(name).handlers.clear()
+    # configure_stdout_logging() fixe ces deux attributs sur "audit_llm" : les
+    # remettre à leur valeur d'origine pour ne rien faire fuiter entre tests.
+    audit = logging.getLogger("audit_llm")
+    audit.propagate = True
+    audit.setLevel(logging.NOTSET)
 
 
 @pytest.fixture(autouse=True)
@@ -143,3 +148,73 @@ def test_pas_de_warning_si_le_modele_est_vide(monkeypatch, capsys):
     agent.configure_stdout_logging()
 
     assert _lignes_tarif(capsys.readouterr().out) == []
+
+
+# ─────────────────────────────────────────────
+# Logger d'audit "audit_llm" (sous-lot 3.1b)
+# ─────────────────────────────────────────────
+
+def _handlers_audit():
+    return [h for h in logging.getLogger("audit_llm").handlers if h.name == "audit_stdout_handler"]
+
+
+def test_audit_handler_pose_une_seule_fois_malgre_les_reruns():
+    """configure_stdout_logging() est ré-exécutée à chaque rerun Streamlit."""
+    agent.configure_stdout_logging()
+    agent.configure_stdout_logging()
+    agent.configure_stdout_logging()
+
+    assert len(logging.getLogger("audit_llm").handlers) == 1
+    assert len(_handlers_audit()) == 1
+
+
+def test_audit_logger_configuration():
+    agent.configure_stdout_logging()
+    audit = logging.getLogger("audit_llm")
+
+    assert audit.propagate is False
+    assert audit.level == logging.INFO
+    assert _handlers_audit()[0].level == logging.INFO
+
+
+def test_audit_les_autres_loggers_gardent_leur_seuil_warning():
+    agent.configure_stdout_logging()
+    agent.configure_stdout_logging()
+
+    for nom in ("streamlit_app", "agent", "upload_session"):
+        handlers = [
+            h for h in logging.getLogger(nom).handlers if h.name == "stdout_warning_handler"
+        ]
+        assert len(handlers) == 1, nom
+        assert handlers[0].level == logging.WARNING, nom
+        # Le handler d'audit n'est posé que sur audit_llm.
+        assert not any(h.name == "audit_stdout_handler" for h in logging.getLogger(nom).handlers)
+
+
+def test_audit_info_atteint_stdout(capsys):
+    """Le point structurant : un INFO nominal, contrairement aux autres loggers."""
+    agent.configure_stdout_logging()
+
+    logging.getLogger("audit_llm").info("AUDIT_INFO_TEST")
+
+    assert "AUDIT_INFO_TEST" in capsys.readouterr().out
+
+
+def test_audit_pas_de_doublon_via_le_logger_racine(capsys):
+    """propagate=False : un handler posé sur la racine ne reçoit jamais l'audit."""
+    recus: list[logging.LogRecord] = []
+
+    class _Collecteur(logging.Handler):
+        def emit(self, record):
+            recus.append(record)
+
+    collecteur = _Collecteur(level=logging.DEBUG)
+    logging.root.addHandler(collecteur)
+    try:
+        agent.configure_stdout_logging()
+        logging.getLogger("audit_llm").info("AUDIT_SANS_DOUBLON")
+    finally:
+        logging.root.removeHandler(collecteur)
+
+    assert [r for r in recus if r.name == "audit_llm"] == []
+    assert capsys.readouterr().out.count("AUDIT_SANS_DOUBLON") == 1

@@ -4,6 +4,7 @@ Aucun réseau, aucune clé, aucun appel API réel : le client Mistral est
 toujours remplacé par un double, et time.sleep est mocké pour qu'aucun test
 n'attende réellement le délai de réessai.
 """
+import logging
 import sys
 import threading
 from pathlib import Path
@@ -25,9 +26,18 @@ class _FakeMistralUsage:
 
 
 class _FakeMistralResponse:
-    def __init__(self, text: str, prompt_tokens: int = 0, completion_tokens: int = 0):
+    def __init__(
+        self,
+        text: str,
+        prompt_tokens: int = 0,
+        completion_tokens: int = 0,
+        id: str = "req-fake-0001",
+        model: str = "fake-model-served",
+    ):
         self.choices = [SimpleNamespace(message=SimpleNamespace(content=text))]
         self.usage = _FakeMistralUsage(prompt_tokens, completion_tokens)
+        self.id = id
+        self.model = model
 
 
 class _FakeMistralError(Exception):
@@ -510,3 +520,165 @@ def test_mistral_endpoint_host_derive_du_sdk(monkeypatch):
     assert agent.mistral_endpoint_host() == "api.eu.mistral.ai"
     monkeypatch.setattr(agent, "MISTRAL_SERVER", "global")
     assert agent.mistral_endpoint_host() == "api.mistral.ai"
+
+
+# ─────────────────────────────────────────────
+# Journal d'audit par appel (logger "audit_llm", stdout, INFO)
+# ─────────────────────────────────────────────
+
+@pytest.fixture
+def _audit_propre():
+    """
+    Isole l'état de logging global : handlers, propagate, niveau et garde du
+    warning de tarif, avant et après. Les tests de contenu passent par capsys
+    (bout en bout, la ligne atteint réellement stdout) : caplog s'accroche à la
+    racine et ne verrait pas un logger à propagate=False.
+    Elle ne configure PAS le logging : capsys ne prend la main sur sys.stdout
+    qu'à partir de la phase d'appel du test, donc un handler créé pendant le
+    setup se lierait à l'ancien flux. Chaque test appelle donc
+    agent.configure_stdout_logging() lui-même, comme test_logging_setup.py.
+    """
+    def _nettoyer():
+        for nom in ("streamlit_app", "agent", "upload_session", "audit_llm"):
+            logging.getLogger(nom).handlers.clear()
+        audit = logging.getLogger("audit_llm")
+        audit.propagate = True
+        audit.setLevel(logging.NOTSET)
+        agent._tarif_warning_emis = False
+
+    _nettoyer()
+    yield
+    _nettoyer()
+
+
+def _lignes_audit(sortie: str) -> list[str]:
+    return [ligne for ligne in sortie.splitlines() if "LLM_CALL" in ligne]
+
+
+def test_audit_une_ligne_par_appel_reussi_avec_tous_les_champs(monkeypatch, capsys, _audit_propre):
+    agent.configure_stdout_logging()
+    fake = _QueueMistralClient([_FakeMistralResponse("ok", id="req-abc-123", model="modele-servi-x")])
+    monkeypatch.setattr(agent, "get_mistral", lambda: fake)
+
+    agent.llm_call([{"role": "user", "content": "q"}], engine=agent.ENGINE_MISTRAL)
+
+    lignes = _lignes_audit(capsys.readouterr().out)
+    assert len(lignes) == 1
+    ligne = lignes[0]
+    assert " INFO audit_llm " in ligne
+    assert "moteur=mistral" in ligne
+    assert "endpoint=api.eu.mistral.ai" in ligne
+    assert "server=eu" in ligne
+    assert "modele_demande=fake-model-for-tests" in ligne
+    assert "modele_servi=modele-servi-x" in ligne
+    assert "request_id=req-abc-123" in ligne
+    assert "tentative=1/2" in ligne
+
+
+def test_audit_suit_l_endpoint_choisi(monkeypatch, capsys, _audit_propre):
+    agent.configure_stdout_logging()
+    monkeypatch.setattr(agent, "MISTRAL_SERVER", "us")
+    fake = _QueueMistralClient([_FakeMistralResponse("ok")])
+    monkeypatch.setattr(agent, "get_mistral", lambda: fake)
+
+    agent.llm_call([{"role": "user", "content": "q"}], engine=agent.ENGINE_MISTRAL)
+
+    ligne = _lignes_audit(capsys.readouterr().out)[0]
+    assert "endpoint=api.us.mistral.ai" in ligne
+    assert "server=us" in ligne
+
+
+def test_audit_ne_contient_aucun_contenu(monkeypatch, capsys, _audit_propre):
+    agent.configure_stdout_logging()
+    """Ni question, ni réponse, ni consigne système, ni document : nulle part sur stdout."""
+    fake = _QueueMistralClient([_FakeMistralResponse("REPONSE_SENTINELLE_9F3")])
+    monkeypatch.setattr(agent, "get_mistral", lambda: fake)
+
+    agent.llm_call(
+        [{"role": "user", "content": "QUESTION_SENTINELLE_9F3 avec un extrait DOCUMENT_SENTINELLE_9F3"}],
+        system="SYSTEME_SENTINELLE_9F3",
+        engine=agent.ENGINE_MISTRAL,
+    )
+
+    sortie = capsys.readouterr().out
+    assert _lignes_audit(sortie)  # la ligne existe bien
+    assert "SENTINELLE_9F3" not in sortie
+
+
+def test_audit_sans_identifiant_de_requete_ne_fait_pas_echouer_l_appel(monkeypatch, capsys, _audit_propre):
+    agent.configure_stdout_logging()
+    reponse = _FakeMistralResponse("ok")
+    del reponse.id  # champ absent
+    fake = _QueueMistralClient([reponse])
+    monkeypatch.setattr(agent, "get_mistral", lambda: fake)
+
+    texte = agent.llm_call([{"role": "user", "content": "q"}], engine=agent.ENGINE_MISTRAL)
+
+    assert texte == "ok"
+    assert "request_id=absent" in _lignes_audit(capsys.readouterr().out)[0]
+
+
+def test_audit_modele_servi_absent_ne_fait_pas_echouer_l_appel(monkeypatch, capsys, _audit_propre):
+    agent.configure_stdout_logging()
+    reponse = _FakeMistralResponse("ok")
+    del reponse.model
+    fake = _QueueMistralClient([reponse])
+    monkeypatch.setattr(agent, "get_mistral", lambda: fake)
+
+    assert agent.llm_call([{"role": "user", "content": "q"}], engine=agent.ENGINE_MISTRAL) == "ok"
+    assert "modele_servi=absent" in _lignes_audit(capsys.readouterr().out)[0]
+
+
+def test_audit_un_seul_log_meme_apres_un_reessai(monkeypatch, capsys, _audit_propre):
+    agent.configure_stdout_logging()
+    """Un réessai précède le succès : une seule ligne d'audit, sur la tentative réussie."""
+    fake = _QueueMistralClient([
+        _FakeMistralError(status_code=503),
+        _FakeMistralResponse("ok", id="req-apres-retry"),
+    ])
+    monkeypatch.setattr(agent, "get_mistral", lambda: fake)
+
+    agent.llm_call([{"role": "user", "content": "q"}], engine=agent.ENGINE_MISTRAL)
+
+    sortie = capsys.readouterr().out
+    lignes = _lignes_audit(sortie)
+    assert len(lignes) == 1
+    assert "tentative=2/2" in lignes[0]
+    assert "request_id=req-apres-retry" in lignes[0]
+    # Le réessai a son propre log, distinct, sur "agent" en WARNING.
+    retries = [l for l in sortie.splitlines() if "LLM_RETRY" in l]
+    assert len(retries) == 1
+    assert " WARNING agent " in retries[0]
+    assert "endpoint=api.eu.mistral.ai" in retries[0]
+    assert "server=eu" in retries[0]
+    assert "status_code=503" in retries[0]
+
+
+def test_audit_aucune_ligne_si_l_appel_echoue(monkeypatch, capsys, _audit_propre):
+    agent.configure_stdout_logging()
+    fake = _QueueMistralClient([_FakeMistralError(status_code=400)])
+    monkeypatch.setattr(agent, "get_mistral", lambda: fake)
+
+    with pytest.raises(_FakeMistralError):
+        agent.llm_call([{"role": "user", "content": "q"}], engine=agent.ENGINE_MISTRAL)
+
+    assert _lignes_audit(capsys.readouterr().out) == []
+
+
+def test_audit_aucune_ligne_pour_le_moteur_anthropic(monkeypatch, capsys, _audit_propre):
+    agent.configure_stdout_logging()
+    """Le mode corpus et le moteur par défaut n'émettent aucun log d'audit Mistral."""
+    fake_anthropic = SimpleNamespace(
+        messages=SimpleNamespace(
+            create=lambda **kw: SimpleNamespace(
+                content=[SimpleNamespace(text="réponse claude")],
+                usage=SimpleNamespace(input_tokens=1, output_tokens=2),
+                stop_reason="end_turn",
+            )
+        )
+    )
+    monkeypatch.setattr(agent, "get_anthropic", lambda: fake_anthropic)
+
+    agent.llm_call([{"role": "user", "content": "q"}])
+
+    assert _lignes_audit(capsys.readouterr().out) == []
