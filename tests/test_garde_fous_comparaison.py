@@ -162,8 +162,14 @@ def test_thread_safe(monkeypatch):
 
 def test_message_neutre_dedie():
     message = agent.format_user_error(agent.ComparisonDailyLimitExceeded("peu importe"))
-    assert "comparaison" in message.lower()
-    assert "questions normales restent disponibles" in message
+    assert message == (
+        f"Limite quotidienne atteinte : cette démo traite au maximum "
+        f"{agent.COMPARISON_DAILY_LIMIT} questions par jour sur les documents uploadés, tous "
+        "visiteurs confondus, pour maîtriser son coût. Votre question n'a pas été envoyée. "
+        "Réessayez demain, ou quittez le mode document (« Nouveau document ») pour interroger "
+        "le corpus ARESIA, qui a sa propre limite quotidienne."
+    )
+    assert "tous visiteurs confondus" in message
 
 
 def test_message_corpus_inchange():

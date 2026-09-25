@@ -425,52 +425,342 @@ def test_vider_conversation_reinitialise_messages_et_last_usage(monkeypatch):
     assert at.session_state["last_usage"] is None
 
 
-def test_mode_upload_route_vers_answer_question_on_upload_jamais_run_agent(monkeypatch):
+@pytest.fixture(autouse=True)
+def _aucun_moteur_reel_sur_le_chemin_upload(monkeypatch):
     """
-    Lot 2a.1 suite, Partie C : quand upload_active est vrai, app.py doit appeler
-    upload_session.answer_question_on_upload() sur la collection éphémère de la
-    session — jamais run_agent() (qui interrogerait la collection globale via le
-    graphe LangGraph). Le pipeline d'upload réel (consentement, file_uploader,
-    extraction, embedding) est déjà couvert par tests/test_upload_session.py et
-    a été vérifié manuellement en local (voir rapport) ; ce test-ci isole
-    uniquement le ROUTAGE app.py une fois ce mode actif, via injection directe
-    de session_state plutôt que par un vrai upload de fichier (AppTest ne pilote
-    pas de file_uploader réel).
+    Filet de sécurité : un test qui atteindrait le retrieval ou un appel LLM réel du
+    chemin upload (embeddings locaux, Claude, Mistral) échoue net au lieu de charger un
+    modèle ou d'appeler un réseau. Les tests d'upload patchent compare_engines_on_upload.
     """
-    def _fail_if_called(*a, **k):
-        raise AssertionError("run_agent() a été appelé en mode upload — fuite vers la collection globale")
 
-    monkeypatch.setattr(agent, "run_agent", _fail_if_called)
+    def _interdit(*a, **k):
+        raise AssertionError("retrieval/appel LLM réel atteint depuis un test UI")
 
-    fake_collection = object()
-    captured: dict = {}
+    monkeypatch.setattr(upload_session, "retrieve_from_upload", _interdit)
+    monkeypatch.setattr(upload_session, "llm_call", _interdit)
 
-    def _fake_answer(collection, question):
-        captured["collection"] = collection
-        captured["question"] = question
-        return "**Réponse directe** : test.\n**Source(s)** : [Article 1].\n**Point d'attention** : aucun."
 
-    monkeypatch.setattr(upload_session, "answer_question_on_upload", _fake_answer)
+def _resultat(engine, *, succes=True, reponse="réponse", erreur=None, tokens=(100, 20), cout=0.0012, latence=1.5):
+    return upload_session.EngineResult(
+        engine=engine,
+        succes=succes,
+        reponse=reponse if succes else None,
+        erreur=erreur,
+        tokens_in=tokens[0],
+        tokens_out=tokens[1],
+        cout_usd=cout,
+        latence_s=latence,
+    )
+
+
+def _app_mode_upload(monkeypatch, *, mistral: bool = True, doc: str = "mon-contrat.pdf"):
+    """Lance l'app avec un document déjà « uploadé » (session_state injecté) et touch neutralisé."""
+    _configure_mistral(monkeypatch, actif=mistral)
     monkeypatch.setattr(upload_session, "touch", lambda session_id: None)
-
     at = AppTest.from_file(APP_PATH, default_timeout=15).run()
     assert not at.exception
-
     at.session_state["upload_active"] = True
-    at.session_state["upload_collection"] = fake_collection
-    at.session_state["upload_doc_name"] = "mon-contrat.pdf"
+    at.session_state["upload_collection"] = object()
+    at.session_state["upload_doc_name"] = doc
+    at.run()
+    assert not at.exception
+    return at
 
+
+def _colonnes_moteurs(at: AppTest) -> list:
+    """Colonnes de comparaison : celles dont le premier markdown est un titre de moteur."""
+    return [
+        c
+        for c in at.columns
+        if c.markdown and (c.markdown[0].value.startswith("**Claude**") or c.markdown[0].value.startswith("**Mistral"))
+    ]
+
+
+def test_mode_upload_route_vers_compare_engines_jamais_run_agent(monkeypatch):
+    """
+    Quand upload_active est vrai, app.py appelle upload_session.compare_engines_on_upload()
+    sur la collection éphémère de la session — jamais run_agent() (qui interrogerait la
+    collection globale via le graphe LangGraph) ni l'ancien chemin mono-moteur. Le pipeline
+    d'upload réel est couvert par tests/test_upload_session.py ; ce test isole le ROUTAGE
+    (AppTest ne pilote pas de file_uploader réel, d'où l'injection de session_state).
+    """
+
+    def _fail_if_called(*a, **k):
+        raise AssertionError("chemin interdit en mode upload")
+
+    monkeypatch.setattr(agent, "run_agent", _fail_if_called)
+    monkeypatch.setattr(upload_session, "answer_question_on_upload", _fail_if_called)
+
+    captured: dict = {}
+
+    def _fake_compare(collection, question):
+        captured["collection"] = collection
+        captured["question"] = question
+        return [
+            _resultat(agent.ENGINE_ANTHROPIC, reponse="**Réponse directe** : claude."),
+            _resultat(agent.ENGINE_MISTRAL, reponse="**Réponse directe** : mistral."),
+        ]
+
+    monkeypatch.setattr(upload_session, "compare_engines_on_upload", _fake_compare)
+
+    at = _app_mode_upload(monkeypatch)
+    collection = at.session_state["upload_collection"]
     at.chat_input[0].set_value("Une question sur mon document").run()
     assert not at.exception
 
-    assert captured["collection"] is fake_collection
+    assert captured["collection"] is collection
     assert captured["question"] == "Une question sur mon document"
 
-    messages = at.session_state["messages"]
-    assert messages[-1]["mode"] == "upload"
-    assert messages[-1]["doc_name"] == "mon-contrat.pdf"
-    assert "usage" not in messages[-1]  # pas de suivi de coût dans ce chemin (voir rapport)
+    dernier = at.session_state["messages"][-1]
+    assert dernier["mode"] == "upload_compare"
+    assert dernier["doc_name"] == "mon-contrat.pdf"
+    assert [r["engine"] for r in dernier["results"]] == [agent.ENGINE_ANTHROPIC, agent.ENGINE_MISTRAL]
+    assert "usage" not in dernier
     assert at.session_state["last_trace"] == []
+
+
+def test_deux_colonnes_reponse_latence_tokens_cout_par_moteur(monkeypatch):
+    monkeypatch.setattr(
+        upload_session,
+        "compare_engines_on_upload",
+        lambda collection, question: [
+            _resultat(agent.ENGINE_ANTHROPIC, reponse="REPONSE-CLAUDE", tokens=(2593, 377), cout=0.0134, latence=11.04),
+            _resultat(agent.ENGINE_MISTRAL, reponse="REPONSE-MISTRAL", tokens=(2461, 636), cout=None, latence=4.56),
+        ],
+    )
+    at = _app_mode_upload(monkeypatch)
+    at.chat_input[0].set_value("Q").run()
+    assert not at.exception
+
+    colonnes = _colonnes_moteurs(at)
+    assert len(colonnes) == 2
+
+    claude, mistral = colonnes
+    assert claude.markdown[0].value.startswith("**Claude**")
+    assert "REPONSE-CLAUDE" in [m.value for m in claude.markdown]
+    assert [c.value for c in claude.caption] == [
+        "⏱️ 11.0s · 2593+377 tokens (entrée+sortie) · ≈0.0134\\$ *(estimation)*"
+    ]
+    assert mistral.markdown[0].value.startswith("**Mistral Large 3**")
+    assert "REPONSE-MISTRAL" in [m.value for m in mistral.markdown]
+    assert [c.value for c in mistral.caption] == [
+        "⏱️ 4.6s · 2461+636 tokens (entrée+sortie) · coût non disponible"
+    ]
+    assert not at.error
+
+
+def test_un_moteur_en_echec_affiche_erreur_neutre_dans_sa_colonne_seulement(monkeypatch):
+    erreur_neutre = "Une erreur technique est survenue. Merci de réessayer dans quelques instants."
+    monkeypatch.setattr(
+        upload_session,
+        "compare_engines_on_upload",
+        lambda collection, question: [
+            _resultat(agent.ENGINE_ANTHROPIC, reponse="REPONSE-CLAUDE"),
+            _resultat(agent.ENGINE_MISTRAL, succes=False, erreur=erreur_neutre, tokens=(0, 0), cout=0.0, latence=3.2),
+        ],
+    )
+    at = _app_mode_upload(monkeypatch)
+    at.chat_input[0].set_value("Q").run()
+    assert not at.exception
+
+    claude, mistral = _colonnes_moteurs(at)
+    assert "REPONSE-CLAUDE" in [m.value for m in claude.markdown]
+    assert [e.value for e in claude.error] == []
+    assert [e.value for e in mistral.error] == [erreur_neutre]
+    assert [c.value for c in mistral.caption] == ["⏱️ 3.2s"]
+
+
+def test_echec_de_claude_laisse_la_reponse_mistral(monkeypatch):
+    erreur_neutre = "Une erreur technique est survenue. Merci de réessayer dans quelques instants."
+    monkeypatch.setattr(
+        upload_session,
+        "compare_engines_on_upload",
+        lambda collection, question: [
+            _resultat(agent.ENGINE_ANTHROPIC, succes=False, erreur=erreur_neutre, tokens=(0, 0), cout=0.0),
+            _resultat(agent.ENGINE_MISTRAL, reponse="REPONSE-MISTRAL"),
+        ],
+    )
+    at = _app_mode_upload(monkeypatch)
+    at.chat_input[0].set_value("Q").run()
+    assert not at.exception
+
+    claude, mistral = _colonnes_moteurs(at)
+    assert [e.value for e in claude.error] == [erreur_neutre]
+    assert "REPONSE-MISTRAL" in [m.value for m in mistral.markdown]
+
+
+def test_repli_claude_seul_une_seule_reponse_sans_colonnes(monkeypatch):
+    monkeypatch.setattr(
+        upload_session,
+        "compare_engines_on_upload",
+        lambda collection, question: [_resultat(agent.ENGINE_ANTHROPIC, reponse="REPONSE-CLAUDE-SEUL")],
+    )
+    at = _app_mode_upload(monkeypatch, mistral=False)
+    at.chat_input[0].set_value("Q").run()
+    assert not at.exception
+
+    dernier = at.session_state["messages"][-1]
+    assert dernier["mode"] == "upload_compare"
+    assert len(dernier["results"]) == 1
+    assert _colonnes_moteurs(at) == []
+    valeurs = [m.value for m in at.markdown]
+    assert "REPONSE-CLAUDE-SEUL" in valeurs
+    assert any(v.startswith("**Claude**") for v in valeurs)
+    assert not any(v.startswith("**Mistral") for v in valeurs)
+
+
+def test_quota_atteint_bloque_la_question_sans_repli_sur_claude(monkeypatch):
+    appels_llm: list = []
+
+    def _compare_quota(collection, question):
+        raise agent.ComparisonDailyLimitExceeded("quota")
+
+    monkeypatch.setattr(upload_session, "compare_engines_on_upload", _compare_quota)
+    monkeypatch.setattr(upload_session, "llm_call", lambda *a, **k: appels_llm.append(a) or "x")
+    monkeypatch.setattr(upload_session, "answer_question_on_upload", lambda *a, **k: appels_llm.append(a) or "x")
+
+    at = _app_mode_upload(monkeypatch)
+    at.chat_input[0].set_value("Q").run()
+    assert not at.exception
+
+    attendu = (
+        f"Limite quotidienne atteinte : cette démo traite au maximum {agent.COMPARISON_DAILY_LIMIT} "
+        "questions par jour sur les documents uploadés, tous visiteurs confondus, pour maîtriser "
+        "son coût. Votre question n'a pas été envoyée. Réessayez demain, ou quittez le mode "
+        "document (« Nouveau document ») pour interroger le corpus ARESIA, qui a sa propre limite "
+        "quotidienne."
+    )
+    dernier = at.session_state["messages"][-1]
+    assert dernier["mode"] == "upload_blocked"
+    assert dernier["content"] == attendu
+    assert "results" not in dernier
+    assert attendu in [w.value for w in at.warning]
+    assert _colonnes_moteurs(at) == []
+    assert appels_llm == []  # aucune bascule sur Claude seul
+
+
+def test_erreur_technique_du_chemin_upload_reste_un_message_neutre(monkeypatch):
+    def _boom(collection, question):
+        raise RuntimeError(_EXCEPTION_TEXT)
+
+    monkeypatch.setattr(upload_session, "compare_engines_on_upload", _boom)
+    at = _app_mode_upload(monkeypatch)
+    at.chat_input[0].set_value("Q").run()
+    assert not at.exception
+
+    dernier = at.session_state["messages"][-1]
+    assert dernier["mode"] == "upload"
+    assert dernier["content"] == "Une erreur technique est survenue. Merci de réessayer dans quelques instants."
+    assert _EXCEPTION_TEXT not in " ".join(m.value for m in at.markdown)
+
+
+def test_message_d_attente_du_spinner_selon_les_moteurs(monkeypatch):
+    import contextlib
+
+    vus: list[tuple[str, bool]] = []
+
+    @contextlib.contextmanager
+    def _spinner(text="", *args, show_time=False, **kwargs):
+        vus.append((text, show_time))
+        yield
+
+    monkeypatch.setattr(st, "spinner", _spinner)
+    monkeypatch.setattr(
+        upload_session,
+        "compare_engines_on_upload",
+        lambda collection, question: [_resultat(agent.ENGINE_ANTHROPIC)],
+    )
+
+    for mistral, attendu in (
+        (
+            True,
+            "Les deux moteurs analysent votre question en parallèle — généralement 5 à 20 secondes, "
+            "jusqu'à 3 minutes en cas de nouvelle tentative. Merci de patienter sans recharger la page.",
+        ),
+        (
+            False,
+            "Claude analyse votre question — généralement 5 à 20 secondes. Merci de patienter sans "
+            "recharger la page.",
+        ),
+    ):
+        vus.clear()
+        at = _app_mode_upload(monkeypatch, mistral=mistral)
+        vus.clear()  # ignore les spinners du chargement (warm-up, etc.)
+        at.chat_input[0].set_value("Q").run()
+        assert not at.exception
+        assert (attendu, True) in vus
+
+
+def test_log_run_upload_ne_contient_que_la_longueur_de_la_question(monkeypatch, caplog):
+    import logging
+
+    monkeypatch.setattr(
+        upload_session,
+        "compare_engines_on_upload",
+        lambda collection, question: [_resultat(agent.ENGINE_ANTHROPIC)],
+    )
+    at = _app_mode_upload(monkeypatch)
+    question = "Question confidentielle sur ma franchise"
+    with caplog.at_level(logging.INFO):
+        at.chat_input[0].set_value(question).run()
+    assert not at.exception
+
+    lignes = [r.getMessage() for r in caplog.records if r.getMessage().startswith("RUN_UPLOAD")]
+    assert lignes, "aucun log RUN_UPLOAD"
+    assert all("confidentielle" not in ligne for ligne in lignes)
+    assert any(f"question_len={len(question)}" in ligne for ligne in lignes)
+
+
+def test_historique_tronque_a_40_messages_avec_comparaison(monkeypatch):
+    monkeypatch.setattr(
+        upload_session,
+        "compare_engines_on_upload",
+        lambda collection, question: [
+            _resultat(agent.ENGINE_ANTHROPIC),
+            _resultat(agent.ENGINE_MISTRAL),
+        ],
+    )
+    at = _app_mode_upload(monkeypatch)
+    at.session_state["messages"] = [
+        {"role": "user" if i % 2 == 0 else "assistant", "content": f"m{i}"} for i in range(40)
+    ]
+    at.chat_input[0].set_value("Q").run()
+    assert not at.exception
+
+    messages = at.session_state["messages"]
+    assert len(messages) == 40
+    assert messages[-1]["mode"] == "upload_compare"
+    assert messages[-2] == {"role": "user", "content": "Q"}
+
+
+def test_ancien_message_mode_upload_reste_affichable(monkeypatch):
+    at = _app_mode_upload(monkeypatch)
+    at.session_state["messages"] = [
+        {"role": "assistant", "content": "ANCIENNE-REPONSE", "mode": "upload", "doc_name": "ancien.pdf"}
+    ]
+    at.run()
+    assert not at.exception
+    assert "ANCIENNE-REPONSE" in [m.value for m in at.markdown]
+    assert "📄 Réponse basée sur le document uploadé : ancien.pdf" in [c.value for c in at.caption]
+
+
+def test_pas_de_dollar_non_echappe_dans_les_colonnes_de_comparaison(monkeypatch):
+    monkeypatch.setattr(
+        upload_session,
+        "compare_engines_on_upload",
+        lambda collection, question: [
+            _resultat(agent.ENGINE_ANTHROPIC, cout=0.0134),
+            _resultat(agent.ENGINE_MISTRAL, cout=0.0021),
+        ],
+    )
+    at = _app_mode_upload(monkeypatch)
+    at.chat_input[0].set_value("Q").run()
+    assert not at.exception
+
+    unescaped_dollar = re.compile(r"(?<!\\)\$")
+    for colonne in _colonnes_moteurs(at):
+        for c in colonne.caption:
+            assert not unescaped_dollar.search(c.value), c.value
 
 
 def _fake_active_lock(inactif_depuis_s: float) -> dict:

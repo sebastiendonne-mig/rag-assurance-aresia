@@ -3,6 +3,7 @@ Interface Streamlit — RAG agentique assurance ARESIA
 Colonne gauche : chat  |  Colonne droite : trace du graphe LangGraph
 """
 import base64
+import dataclasses
 import json
 import logging
 import os
@@ -18,6 +19,8 @@ sys.path.insert(0, str(Path(__file__).parent / "src"))
 from agent import (
     CLAUDE_MODEL,
     COMPARISON_DAILY_LIMIT,
+    ENGINE_MISTRAL,
+    ComparisonDailyLimitExceeded,
     MISTRAL_MODEL,
     MISTRAL_MULTIPLICATEUR_REGIONAL,
     MISTRAL_SERVER,
@@ -138,13 +141,45 @@ def _load_svg_b64(filename: str) -> str:
     return base64.b64encode((ROOT / "assets" / filename).read_bytes()).decode()
 
 
+def _format_cout(cout: float | None) -> str:
+    return "coût non disponible" if cout is None else f"≈{cout:.4f}\\$ *(estimation)*"
+
+
 def _format_usage_caption(usage: dict) -> str:
     """Formate la ligne de synthèse usage/coût affichée sous une réponse."""
-    cout = usage["cout_usd"]
-    cout_txt = "coût non disponible" if cout is None else f"≈{cout:.4f}\\$ *(estimation)*"
     return (
         f"⏱️ {usage['latence_s']:.1f}s · {usage['n_appels']} appel(s) LLM · "
-        f"{usage['tokens_in']}+{usage['tokens_out']} tokens (entrée+sortie) · {cout_txt}"
+        f"{usage['tokens_in']}+{usage['tokens_out']} tokens (entrée+sortie) · "
+        f"{_format_cout(usage['cout_usd'])}"
+    )
+
+
+def _format_engine_caption(res: dict) -> str:
+    """Ligne latence/tokens/coût sous la réponse d'UN moteur (colonne de comparaison)."""
+    if not res["succes"]:
+        return f"⏱️ {res['latence_s']:.1f}s"
+    return (
+        f"⏱️ {res['latence_s']:.1f}s · {res['tokens_in']}+{res['tokens_out']} tokens "
+        f"(entrée+sortie) · {_format_cout(res['cout_usd'])}"
+    )
+
+
+def _engine_label(engine: str) -> str:
+    if engine == ENGINE_MISTRAL:
+        return f"**Mistral Large 3** · `{MISTRAL_MODEL}`"
+    return f"**Claude** · `{CLAUDE_MODEL}`"
+
+
+def _upload_waiting_message(mistral_actif: bool) -> str:
+    if mistral_actif:
+        return (
+            "Les deux moteurs analysent votre question en parallèle — généralement 5 à 20 "
+            "secondes, jusqu'à 3 minutes en cas de nouvelle tentative. Merci de patienter sans "
+            "recharger la page."
+        )
+    return (
+        "Claude analyse votre question — généralement 5 à 20 secondes. Merci de patienter sans "
+        "recharger la page."
     )
 
 
@@ -561,7 +596,22 @@ with col_chat:
         with st.chat_message(msg["role"]):
             if msg.get("mode") == "upload":
                 st.caption(f"📄 Réponse basée sur le document uploadé : {msg.get('doc_name', '')}")
-            st.markdown(msg["content"])
+            if msg.get("mode") == "upload_compare":
+                st.caption(f"📄 Réponses basées sur le document uploadé : {msg.get('doc_name', '')}")
+                resultats = msg["results"]
+                colonnes = st.columns(len(resultats)) if len(resultats) > 1 else [st.container()]
+                for colonne, res in zip(colonnes, resultats):
+                    with colonne:
+                        st.markdown(res["label"])
+                        if res["succes"]:
+                            st.markdown(res["reponse"])
+                        else:
+                            st.error(res["erreur"])
+                        st.caption(_format_engine_caption(res))
+            elif msg.get("mode") == "upload_blocked":
+                st.warning(msg["content"])
+            else:
+                st.markdown(msg["content"])
             if "usage" in msg:
                 st.caption(_format_usage_caption(msg["usage"]))
 
@@ -591,25 +641,33 @@ with col_chat:
             st.markdown(prompt)
 
         upload_mode = st.session_state.upload_active
+        comparaison = None  # liste de résultats par moteur (mode upload), sinon None
+        quota_atteint = False
         with st.chat_message("assistant"):
-            with st.spinner("Recherche en cours…"):
+            with st.spinner(
+                _upload_waiting_message(mistral_disponible()) if upload_mode else "Recherche en cours…",
+                show_time=upload_mode,
+            ):
                 try:
                     if upload_mode:
-                        # Chemin dédié (Partie C) : mono-appel LLM sur la collection éphémère
-                        # de la session, SANS passer par run_agent()/le graphe LangGraph (pas
-                        # de planner, pas de HyDE) et SANS jamais interroger get_chroma_col()
-                        # (la collection globale) — voir upload_session.answer_question_on_upload
-                        # et le rapport du sous-lot pour la justification de ce chemin séparé.
+                        # Chemin dédié : recherche sur la collection éphémère de la session, puis
+                        # un appel LLM par moteur disponible (Claude, et Mistral s'il est configuré)
+                        # en parallèle, SANS passer par run_agent()/le graphe LangGraph et SANS
+                        # jamais interroger get_chroma_col() (la collection globale). Le rendu se
+                        # fait dans la boucle d'historique : le st.rerun() final efface tout ce
+                        # qui serait dessiné ici.
                         upload_session.touch(_upload_session_id)
-                        log.info("RUN_UPLOAD question=%r doc=%r", prompt[:80], st.session_state.upload_doc_name)
-                        reponse = upload_session.answer_question_on_upload(
+                        log.info(
+                            "RUN_UPLOAD question_len=%d doc=%r", len(prompt), st.session_state.upload_doc_name
+                        )
+                        resultats = upload_session.compare_engines_on_upload(
                             st.session_state.upload_collection, prompt
                         )
+                        comparaison = [
+                            {**dataclasses.asdict(r), "label": _engine_label(r.engine)} for r in resultats
+                        ]
+                        reponse = ""
                         st.session_state.last_trace = []
-                        # Pas de suivi d'usage/coût dans ce chemin : answer_question_on_upload()
-                        # appelle llm_call() hors du ContextVar positionné par run_agent(), donc
-                        # aucun UsageTracker actif — pas de caption coût affichée pour ces
-                        # réponses (limite connue, voir rapport).
                         st.session_state.last_usage = None
                     else:
                         log.info("RUN_AGENT question=%r", prompt[:80])
@@ -619,6 +677,14 @@ with col_chat:
                         st.session_state.last_usage = state.get("usage")
                         trace_summary = [(e["etape"], e.get("decision", "")[:40]) for e in state["trace_log"]]
                         log.info("RUN_AGENT done trace=%s reponse_start=%r", trace_summary, reponse[:80])
+                except ComparisonDailyLimitExceeded as e:
+                    # Quota du mode upload atteint : la question est bloquée, jamais de bascule
+                    # silencieuse sur un seul moteur.
+                    log.warning("RUN_UPLOAD quota quotidien atteint")
+                    quota_atteint = True
+                    reponse = format_user_error(e)
+                    st.session_state.last_trace = []
+                    st.session_state.last_usage = None
                 except Exception as e:
                     # Log serveur minimal : type, status_code éventuel (ex. 401/429 d'un
                     # anthropic.APIStatusError), TYPE de la cause éventuelle (__cause__,
@@ -645,7 +711,13 @@ with col_chat:
         # n'écarte pas les clés inconnues, vérifié dans la source installée).
         assistant_msg = {"role": "assistant", "content": reponse}
         if upload_mode:
-            assistant_msg["mode"] = "upload"
+            if comparaison is not None:
+                assistant_msg["mode"] = "upload_compare"
+                assistant_msg["results"] = comparaison
+            elif quota_atteint:
+                assistant_msg["mode"] = "upload_blocked"
+            else:
+                assistant_msg["mode"] = "upload"
             assistant_msg["doc_name"] = st.session_state.upload_doc_name
         if st.session_state.last_usage is not None:
             assistant_msg["usage"] = st.session_state.last_usage

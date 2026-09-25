@@ -720,8 +720,11 @@ def format_user_error(exc: Exception) -> str:
         return "Le service a atteint sa limite d'usage pour aujourd'hui. Merci de revenir demain."
     if isinstance(exc, ComparisonDailyLimitExceeded):
         return (
-            "La comparaison entre moteurs a atteint sa limite d'usage pour aujourd'hui. "
-            "Les questions normales restent disponibles."
+            f"Limite quotidienne atteinte : cette démo traite au maximum {COMPARISON_DAILY_LIMIT} "
+            "questions par jour sur les documents uploadés, tous visiteurs confondus, pour "
+            "maîtriser son coût. Votre question n'a pas été envoyée. Réessayez demain, ou "
+            "quittez le mode document (« Nouveau document ») pour interroger le corpus ARESIA, "
+            "qui a sa propre limite quotidienne."
         )
     if isinstance(exc, MistralUnavailableError):
         return "La comparaison entre moteurs n'est pas disponible pour le moment."
