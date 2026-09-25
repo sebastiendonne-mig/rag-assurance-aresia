@@ -374,7 +374,11 @@ with col_chat:
             if st.button("J'ai compris, je continue", key="upload_consent_btn"):
                 st.session_state.upload_consent = True
                 st.rerun()
-        elif upload_session.is_busy():
+        # is_busy() ne regarde pas l'âge du verrou : sans cette libération préalable d'un
+        # verrou inactif > UPLOAD_LOCK_TIMEOUT_S, un onglet abandonné bloquerait le dépôt
+        # pour tous les visiteurs (try_acquire(), seul autre point de libération, n'est
+        # atteint qu'une fois is_busy() faux).
+        elif not upload_session.check_and_release_if_stale() and upload_session.is_busy():
             st.warning(upload_session.UPLOAD_BUSY_MESSAGE)
         else:
             uploaded = st.file_uploader(

@@ -383,3 +383,52 @@ def test_mode_upload_route_vers_answer_question_on_upload_jamais_run_agent(monke
     assert messages[-1]["doc_name"] == "mon-contrat.pdf"
     assert "usage" not in messages[-1]  # pas de suivi de coût dans ce chemin (voir rapport)
     assert at.session_state["last_trace"] == []
+
+
+def _fake_active_lock(inactif_depuis_s: float) -> dict:
+    """Verrou d'upload factice (client/collection sans effet) inactif depuis N secondes."""
+    import time
+    from types import SimpleNamespace
+
+    now = time.monotonic()
+    return {
+        "session_id": "autre-visiteur",
+        "client": SimpleNamespace(delete_collection=lambda name: None),
+        "collection": SimpleNamespace(name="upload_autre-visiteur"),
+        "acquired_at": now - inactif_depuis_s - 10,
+        "last_activity": now - inactif_depuis_s,
+    }
+
+
+def _busy_warnings(at: AppTest) -> list[str]:
+    return [w.value for w in at.warning if w.value == upload_session.UPLOAD_BUSY_MESSAGE]
+
+
+def test_verrou_upload_perime_libere_avant_affichage_occupe(monkeypatch):
+    """
+    Un verrou inactif depuis plus de UPLOAD_LOCK_TIMEOUT_S (onglet abandonné)
+    ne doit plus bloquer le dépôt : app.py le libère avant de tester is_busy().
+    """
+    monkeypatch.setattr(
+        upload_session, "_active", _fake_active_lock(upload_session.UPLOAD_LOCK_TIMEOUT_S + 1)
+    )
+
+    at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    at.session_state["upload_consent"] = True
+    at.run()
+    assert not at.exception
+
+    assert _busy_warnings(at) == []
+    assert upload_session.is_busy() is False
+
+
+def test_verrou_upload_actif_recent_affiche_toujours_occupe(monkeypatch):
+    monkeypatch.setattr(upload_session, "_active", _fake_active_lock(5.0))
+
+    at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    at.session_state["upload_consent"] = True
+    at.run()
+    assert not at.exception
+
+    assert len(_busy_warnings(at)) == 1
+    assert upload_session.is_busy() is True
