@@ -555,25 +555,33 @@ def compare_engines_on_upload(
     collection: chromadb.Collection, question: str
 ) -> list[EngineResult]:
     """
-    Même question, même document, deux moteurs : renvoie un EngineResult par
-    moteur, dans l'ordre [anthropic, mistral].
+    Même question, même document, un EngineResult par moteur actif, dans
+    l'ordre [anthropic, mistral].
 
-    Les deux appels sont lancés en parallèle : la latence perçue est celle du
-    moteur le plus lent, pas la somme des deux. Aucun st.* n'est appelé ici ni
-    dans les threads — le rendu reste au thread principal (sous-lot 3.3).
+    Si Mistral n'est pas configuré (clé ou modèle absent), la liste ne contient
+    que Anthropic : repli « Claude seul » sur le même chemin, sans le dupliquer.
+    L'appelant ne doit donc pas supposer deux résultats.
+
+    Les appels sont lancés en parallèle : la latence perçue est celle du
+    moteur le plus lent, pas la somme. Aucun st.* n'est appelé ici ni dans les
+    threads — le rendu reste au thread principal.
 
     Si un moteur échoue, l'autre résultat est quand même renvoyé (son
     EngineResult porte alors succes=False et un message neutre).
 
-    Le disjoncteur des comparaisons est incrémenté une fois, avant les appels :
-    une comparaison compte pour une unité, quels que soient les réessais.
+    Ordre : moteurs disponibles, puis disjoncteur, puis retrieval. Le
+    disjoncteur (COMPARISON_DAILY_LIMIT) est incrémenté une fois, avant le
+    retrieval et les appels, pour tout le mode upload, avec ou sans Mistral :
+    une question compte pour une unité, quels que soient les réessais, et une
+    erreur de retrieval ne la restitue pas.
     """
+    moteurs = [ENGINE_ANTHROPIC]
+    if agent.mistral_disponible():
+        moteurs.append(ENGINE_MISTRAL)
+
     agent._check_comparison_daily_limit()
-    if not agent.mistral_disponible():
-        raise agent.MistralUnavailableError("moteur Mistral non configuré")
 
     prompt = _build_upload_prompt(question, retrieve_from_upload(collection, question))
-    moteurs = [ENGINE_ANTHROPIC, ENGINE_MISTRAL]
 
     with ThreadPoolExecutor(max_workers=len(moteurs)) as executor:
         futures = {

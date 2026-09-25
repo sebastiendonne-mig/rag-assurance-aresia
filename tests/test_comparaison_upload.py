@@ -301,7 +301,7 @@ def test_disjoncteur_bloque_au_seuil(monkeypatch):
     assert len(appels) == 2  # aucun appel LLM pour la comparaison refusée
 
 
-def test_cle_mistral_absente_desactive_la_comparaison(monkeypatch):
+def test_cle_mistral_absente_replie_sur_claude_seul(monkeypatch):
     monkeypatch.delenv("MISTRAL_API_KEY", raising=False)
     appels: list[str] = []
     monkeypatch.setattr(
@@ -310,10 +310,95 @@ def test_cle_mistral_absente_desactive_la_comparaison(monkeypatch):
         _fake_llm({agent.ENGINE_ANTHROPIC: "a", agent.ENGINE_MISTRAL: "m"}, appels=appels),
     )
 
-    with pytest.raises(agent.MistralUnavailableError):
+    resultats = upload_session.compare_engines_on_upload(_FakeCollection(), "q")
+
+    assert [r.engine for r in resultats] == [agent.ENGINE_ANTHROPIC]
+    assert resultats[0].reponse == "a"
+    assert appels == [agent.ENGINE_ANTHROPIC]  # aucun appel Mistral tenté
+    assert agent._comparison_count == 1  # le repli compte dans le même quota
+
+
+def test_modele_mistral_absent_replie_sur_claude_seul(monkeypatch):
+    monkeypatch.setattr(agent, "MISTRAL_MODEL", "")
+    appels: list[str] = []
+    monkeypatch.setattr(
+        upload_session,
+        "llm_call",
+        _fake_llm({agent.ENGINE_ANTHROPIC: "a", agent.ENGINE_MISTRAL: "m"}, appels=appels),
+    )
+
+    resultats = upload_session.compare_engines_on_upload(_FakeCollection(), "q")
+
+    assert [r.engine for r in resultats] == [agent.ENGINE_ANTHROPIC]
+    assert appels == [agent.ENGINE_ANTHROPIC]
+
+
+def test_repli_claude_seul_bloque_au_meme_seuil(monkeypatch):
+    monkeypatch.delenv("MISTRAL_API_KEY", raising=False)
+    monkeypatch.setattr(agent, "COMPARISON_DAILY_LIMIT", 1)
+    appels: list[str] = []
+    monkeypatch.setattr(
+        upload_session,
+        "llm_call",
+        _fake_llm({agent.ENGINE_ANTHROPIC: "a", agent.ENGINE_MISTRAL: "m"}, appels=appels),
+    )
+
+    upload_session.compare_engines_on_upload(_FakeCollection(), "q")
+    with pytest.raises(agent.ComparisonDailyLimitExceeded):
         upload_session.compare_engines_on_upload(_FakeCollection(), "q")
 
-    assert appels == []  # aucun appel tenté, sur aucun des deux moteurs
+    assert appels == [agent.ENGINE_ANTHROPIC]  # jamais de bascule silencieuse au-delà du quota
+
+
+def test_ordre_disponibilite_puis_disjoncteur_puis_retrieval(monkeypatch):
+    journal: list[str] = []
+    dispo = agent.mistral_disponible
+    limite = agent._check_comparison_daily_limit
+
+    def _dispo():
+        journal.append("disponibilite")
+        return dispo()
+
+    def _limite():
+        journal.append("disjoncteur")
+        return limite()
+
+    def _retrieve(collection, question, **kw):
+        journal.append("retrieval")
+        return []
+
+    monkeypatch.setattr(agent, "mistral_disponible", _dispo)
+    monkeypatch.setattr(agent, "_check_comparison_daily_limit", _limite)
+    monkeypatch.setattr(upload_session, "retrieve_from_upload", _retrieve)
+    monkeypatch.setattr(
+        upload_session,
+        "llm_call",
+        _fake_llm({agent.ENGINE_ANTHROPIC: "a", agent.ENGINE_MISTRAL: "m"}),
+    )
+
+    upload_session.compare_engines_on_upload(_FakeCollection(), "q")
+
+    assert journal == ["disponibilite", "disjoncteur", "retrieval"]
+
+
+def test_quota_atteint_leve_avant_retrieval_et_appels(monkeypatch):
+    monkeypatch.setattr(agent, "COMPARISON_DAILY_LIMIT", 0)
+    journal: list[str] = []
+    monkeypatch.setattr(
+        upload_session,
+        "retrieve_from_upload",
+        lambda collection, question, **kw: journal.append("retrieval") or [],
+    )
+    monkeypatch.setattr(
+        upload_session,
+        "llm_call",
+        _fake_llm({agent.ENGINE_ANTHROPIC: "a", agent.ENGINE_MISTRAL: "m"}, appels=journal),
+    )
+
+    with pytest.raises(agent.ComparisonDailyLimitExceeded):
+        upload_session.compare_engines_on_upload(_FakeCollection(), "q")
+
+    assert journal == []
 
 
 def test_le_chemin_upload_simple_reste_inchange(monkeypatch):
