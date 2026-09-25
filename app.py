@@ -37,16 +37,59 @@ import upload_session
 
 MAX_INPUT_CHARS = int(os.environ.get("MAX_INPUT_CHARS", "500"))
 
-# Texte de consentement (lot 2a.1 sous-lot suivant) — brouillon fourni tel quel,
-# PAS encore validé pour affichage définitif en prod (voir rapport du sous-lot).
-UPLOAD_CONSENT_TEXT = (
-    "Ce document sera envoyé à Claude (API Anthropic) pour générer une réponse. Anthropic "
-    "conserve automatiquement les données envoyées jusqu'à 30 jours (délai de suppression par "
-    "défaut, aucune option de conservation zéro sur ce type de compte). Cette démo ne stocke "
-    "rien de façon permanente de son côté : l'index créé pour analyser votre document est "
-    "supprimé automatiquement à la fin de la session ou après quelques minutes d'inactivité.\n\n"
-    "Merci d'utiliser un document fictif, ou dont vous acceptez le partage dans ces conditions."
-)
+
+def _build_upload_consent_text(mistral_actif: bool, mistral_server: str) -> str:
+    """
+    Texte de consentement avant dépôt d'un document. La phrase sur l'Union
+    européenne n'apparaît que si l'endpoint configuré est l'endpoint UE : elle
+    est dérivée de la configuration, jamais affirmée en dur.
+    """
+    if mistral_actif:
+        destinataires = (
+            "Des extraits de votre document et votre question seront envoyés à **deux services "
+            "d'IA** pour générer deux réponses comparables : **Claude** (Anthropic) et "
+            "**Mistral Large 3** (Mistral AI)."
+        )
+        conservation = (
+            "Chacun conserve les données envoyées pendant 30 jours : Anthropic par défaut, "
+            "Mistral pour la surveillance des abus. Aucune option de conservation zéro n'est "
+            "activée."
+        )
+        transmis_a = "aux deux services"
+    else:
+        destinataires = (
+            "Des extraits de votre document et votre question seront envoyés à **Claude** "
+            "(Anthropic) pour générer une réponse."
+        )
+        conservation = (
+            "Anthropic conserve les données envoyées pendant 30 jours par défaut. Aucune option "
+            "de conservation zéro n'est activée."
+        )
+        transmis_a = "à Anthropic"
+    phrase_ue = (
+        "L'inférence Mistral est exécutée dans l'Union européenne. "
+        if mistral_actif and mistral_server == "eu"
+        else ""
+    )
+    hebergement = (
+        f"{phrase_ue}Cette application est hébergée aux États-Unis : votre document y est traité "
+        f"pour l'indexation, puis seuls les extraits utiles à votre question sont transmis "
+        f"{transmis_a}."
+    )
+    minutes = upload_session.UPLOAD_LOCK_TIMEOUT_S // 60
+    index = (
+        "Le fichier temporaire créé pour l'analyse est supprimé dès qu'elle est terminée. "
+        "L'index de votre document n'existe qu'en mémoire du serveur : il est supprimé quand "
+        "vous cliquez sur « Nouveau document », ou lorsqu'un autre visiteur ouvre la zone de "
+        f"dépôt après au moins {minutes} minutes d'inactivité de votre part. Tant qu'aucun autre "
+        "visiteur n'intervient, il reste en mémoire jusqu'au redémarrage du serveur."
+    )
+    merci = (
+        "Merci d'utiliser un document fictif, ou dont vous acceptez le partage dans ces "
+        "conditions."
+    )
+    return "\n\n".join([destinataires, conservation, hebergement, index, merci])
+
 
 ROOT = Path(__file__).parent
 
@@ -412,6 +455,12 @@ with col_chat:
     with st.expander("📎 Tester avec votre propre document (PDF)", expanded=st.session_state.upload_active):
         if st.session_state.upload_active:
             st.success(f"📄 Mode document uploadé actif : **{st.session_state.upload_doc_name}**")
+            if not mistral_disponible():
+                st.info(
+                    "La comparaison entre moteurs n'est pas disponible sur cette instance : le "
+                    "moteur Mistral n'est pas configuré. Vos questions sur ce document sont "
+                    "traitées par Claude seul, sans seconde réponse à comparer."
+                )
             st.caption(
                 "Les questions posées ci-dessous portent uniquement sur ce document — "
                 "le corpus ARESIA habituel n'est pas interrogé tant que ce mode est actif."
@@ -430,7 +479,7 @@ with col_chat:
                 st.session_state.upload_last_processed_file_id = None
                 st.rerun()
         elif not st.session_state.upload_consent:
-            st.markdown(UPLOAD_CONSENT_TEXT)
+            st.markdown(_build_upload_consent_text(mistral_disponible(), MISTRAL_SERVER))
             if st.button("J'ai compris, je continue", key="upload_consent_btn"):
                 st.session_state.upload_consent = True
                 st.rerun()

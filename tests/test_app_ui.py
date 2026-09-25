@@ -541,3 +541,96 @@ def test_cout_none_affiche_non_disponible_sans_exception():
     assert "coût non disponible" in captions[0]
     assert "None" not in captions[0]
     assert "estimation" not in captions[0]
+
+
+def _texte_consentement(at: AppTest) -> str:
+    """Le bloc de consentement est le markdown contenant « Merci d'utiliser un document fictif »."""
+    blocs = [m.value for m in at.markdown if "Merci d'utiliser un document fictif" in m.value]
+    assert len(blocs) == 1, f"bloc de consentement introuvable ou ambigu : {len(blocs)}"
+    return blocs[0]
+
+
+def test_consentement_deux_moteurs_nomme_les_deux_services_et_l_hebergement(monkeypatch):
+    _configure_mistral(monkeypatch, actif=True, server="eu")
+    at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    assert not at.exception
+
+    texte = _texte_consentement(at)
+    assert "Claude** (Anthropic)" in texte
+    assert "Mistral Large 3** (Mistral AI)" in texte
+    assert "pendant 30 jours" in texte
+    assert "Aucune option de conservation zéro n'est activée." in texte
+    assert "L'inférence Mistral est exécutée dans l'Union européenne." in texte
+    assert "hébergée aux États-Unis" in texte
+    assert "aux deux services" in texte
+    assert f"après au moins {upload_session.UPLOAD_LOCK_TIMEOUT_S // 60} minutes" in texte
+
+
+def test_consentement_phrase_ue_absente_si_serveur_non_eu(monkeypatch):
+    _configure_mistral(monkeypatch, actif=True, server="global")
+    at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    assert not at.exception
+
+    texte = _texte_consentement(at)
+    assert "Union européenne" not in texte
+    assert "Mistral Large 3" in texte
+
+
+def test_consentement_sans_mistral_ne_nomme_pas_mistral(monkeypatch):
+    _configure_mistral(monkeypatch, actif=False, server="eu")
+    at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    assert not at.exception
+
+    texte = _texte_consentement(at)
+    assert "Mistral" not in texte
+    assert "Union européenne" not in texte
+    assert "**Claude** (Anthropic)" in texte
+    assert "hébergée aux États-Unis" in texte
+    assert "transmis à Anthropic" in texte
+
+
+@pytest.mark.parametrize("actif", [True, False])
+def test_consentement_sans_formules_proscrites(monkeypatch, actif):
+    _configure_mistral(monkeypatch, actif=actif, server="eu")
+    at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    assert not at.exception
+
+    texte = _texte_consentement(at).lower()
+    for interdit in (
+        "zéro stockage",
+        "vos données restent en ue",
+        "vos données restent dans l'union",
+        "quelques minutes d'inactivité",
+        "entraîn",
+    ):
+        assert interdit not in texte, interdit
+    assert not re.search(r"(?<!\\)\$", texte)
+
+
+def test_bandeau_mistral_non_configure_affiche_en_mode_upload(monkeypatch):
+    _configure_mistral(monkeypatch, actif=False)
+    at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    at.session_state["upload_active"] = True
+    at.session_state["upload_collection"] = object()
+    at.session_state["upload_doc_name"] = "mon-contrat.pdf"
+    at.run()
+    assert not at.exception
+
+    bandeaux = [i.value for i in at.info if "Mistral n'est pas configuré" in i.value]
+    assert bandeaux == [
+        "La comparaison entre moteurs n'est pas disponible sur cette instance : le moteur "
+        "Mistral n'est pas configuré. Vos questions sur ce document sont traitées par Claude "
+        "seul, sans seconde réponse à comparer."
+    ]
+
+
+def test_pas_de_bandeau_quand_mistral_est_configure(monkeypatch):
+    _configure_mistral(monkeypatch, actif=True)
+    at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    at.session_state["upload_active"] = True
+    at.session_state["upload_collection"] = object()
+    at.session_state["upload_doc_name"] = "mon-contrat.pdf"
+    at.run()
+    assert not at.exception
+
+    assert not [i for i in at.info if "Mistral n'est pas configuré" in i.value]
