@@ -19,10 +19,12 @@ sys.path.insert(0, str(Path(__file__).parent / "src"))
 from agent import (
     CLAUDE_MODEL,
     COMPARISON_DAILY_LIMIT,
+    DAILY_QUESTION_LIMIT,
     ENGINE_MISTRAL,
     ComparisonDailyLimitExceeded,
     MISTRAL_MODEL,
     MISTRAL_MULTIPLICATEUR_REGIONAL,
+    MISTRAL_PRICED_MODEL,
     MISTRAL_SERVER,
     PRIX_INPUT_USD_PAR_MTOK,
     PRIX_OUTPUT_USD_PAR_MTOK,
@@ -41,7 +43,15 @@ import upload_session
 MAX_INPUT_CHARS = int(os.environ.get("MAX_INPUT_CHARS", "500"))
 
 
-def _build_upload_consent_text(mistral_actif: bool, mistral_server: str) -> str:
+def _mistral_nom() -> str:
+    """
+    Nom affiché du moteur Mistral. « Mistral Large 3 » seulement si le modèle configuré est
+    celui qui a été évalué et tarifé ; sinon « Mistral », l'identifiant exact étant affiché à côté.
+    """
+    return "Mistral Large 3" if MISTRAL_MODEL == MISTRAL_PRICED_MODEL else "Mistral"
+
+
+def _build_upload_consent_text(mistral_actif: bool, mistral_server: str, mistral_nom: str) -> str:
     """
     Texte de consentement avant dépôt d'un document. La phrase sur l'Union
     européenne n'apparaît que si l'endpoint configuré est l'endpoint UE : elle
@@ -51,7 +61,7 @@ def _build_upload_consent_text(mistral_actif: bool, mistral_server: str) -> str:
         destinataires = (
             "Des extraits de votre document et votre question seront envoyés à **deux services "
             "d'IA** pour générer deux réponses comparables : **Claude** (Anthropic) et "
-            "**Mistral Large 3** (Mistral AI)."
+            f"**{mistral_nom}** (Mistral AI)."
         )
         conservation = (
             "Chacun conserve les données envoyées pendant 30 jours : Anthropic par défaut, "
@@ -166,7 +176,7 @@ def _format_engine_caption(res: dict) -> str:
 
 def _engine_label(engine: str) -> str:
     if engine == ENGINE_MISTRAL:
-        return f"**Mistral Large 3** · `{MISTRAL_MODEL}`"
+        return f"**{_mistral_nom()}** · `{MISTRAL_MODEL}`"
     return f"**Claude** · `{CLAUDE_MODEL}`"
 
 
@@ -409,7 +419,7 @@ with col_chat:
         _mistral_actif = mistral_disponible()
         if _mistral_actif:
             _modele_upload = (
-                f"Mode document uploadé : `{CLAUDE_MODEL}` et Mistral Large 3 "
+                f"Mode document uploadé : `{CLAUDE_MODEL}` et {_mistral_nom()} "
                 f"(`{MISTRAL_MODEL}`), en comparaison."
             )
         else:
@@ -422,14 +432,20 @@ with col_chat:
             f"pipeline. {_modele_upload}"
         )
         if _mistral_actif:
-            _puces_comparaison = [
-                "- **Pourquoi Mistral Large 3.** Modèle généraliste phare de Mistral, à poids "
-                "ouverts. Choisi plutôt que Mistral Medium 3.5, pourtant recommandé par Mistral "
-                "pour la plupart des tâches, pour son coût (0,5 \\$ / 1,5 \\$ par million de "
-                "tokens contre 1,5 \\$ / 7,5 \\$, tarifs catalogue relevés le 25/09/2026) et "
-                "parce qu'il ne fait pas de raisonnement préalable, ce qui garde un format de "
-                "réponse directement comparable à celui de Claude."
-            ]
+            if MISTRAL_MODEL == MISTRAL_PRICED_MODEL:
+                _puces_comparaison = [
+                    "- **Pourquoi Mistral Large 3.** Modèle généraliste phare de Mistral, à poids "
+                    "ouverts. Choisi plutôt que Mistral Medium 3.5, pourtant recommandé par "
+                    "Mistral pour la plupart des tâches, pour son coût (0,5 \\$ / 1,5 \\$ par "
+                    "million de tokens contre 1,5 \\$ / 7,5 \\$, tarifs catalogue relevés le "
+                    "25/09/2026) et parce qu'il ne fait pas de raisonnement préalable, ce qui "
+                    "garde un format de réponse directement comparable à celui de Claude."
+                ]
+            else:
+                _puces_comparaison = [
+                    f"- **Modèle Mistral.** `{MISTRAL_MODEL}` — tarif non configuré : le coût de "
+                    "Mistral s'affiche « non disponible »."
+                ]
             if MISTRAL_SERVER == "eu":
                 _surcout_pct = round((MISTRAL_MULTIPLICATEUR_REGIONAL - 1) * 100)
                 _puces_comparaison.append(
@@ -440,7 +456,8 @@ with col_chat:
                     "affiché en tient compte."
                 )
             _puces_comparaison += [
-                "- **Ce que montre la comparaison.** Évaluation du 25/09/2026 : 20 questions "
+                "- **Ce que montre la comparaison.** Évaluation du 25/09/2026, avec Mistral Large 3 "
+                f"(`{MISTRAL_PRICED_MODEL}`) : 20 questions "
                 "réparties sur les 4 documents du corpus fictif, chargés un par un en mode "
                 "document. Le plancher fixé est respecté par les deux moteurs : aucune panne "
                 "technique (20 réponses sur 20 pour chacun), garde-fou respecté (refus sur une "
@@ -449,7 +466,12 @@ with col_chat:
                 "classement : 20 questions ne suffisent pas à en établir un. Nuance : le contrat "
                 "de prévoyance renvoie à un article 6.3 qui n'existe pas dans le document ; "
                 "Mistral a relayé ce renvoi à deux reprises. C'est un défaut du document source, "
-                "pas une citation inventée par le modèle.",
+                "pas une citation inventée par le modèle."
+                + (
+                    ""
+                    if MISTRAL_MODEL == MISTRAL_PRICED_MODEL
+                    else f" Le modèle Mistral configuré ici (`{MISTRAL_MODEL}`) n'a pas été évalué."
+                ),
                 "- **Limite.** Le prompt système a été écrit et ajusté pour Claude. Mistral est "
                 "évalué avec le même prompt, sans adaptation : un prompt travaillé pour Mistral "
                 "pourrait donner des résultats différents.",
@@ -458,7 +480,7 @@ with col_chat:
                 "**Comparaison de deux moteurs (mode document uploadé)**\n"
                 f"Quand vous interrogez un document déposé, la même question, avec les mêmes "
                 f"extraits et le même prompt, est envoyée en parallèle à Claude (`{CLAUDE_MODEL}`) "
-                f"et à Mistral Large 3 (`{MISTRAL_MODEL}`). Les deux réponses s'affichent côte à "
+                f"et à {_mistral_nom()} (`{MISTRAL_MODEL}`). Les deux réponses s'affichent côte à "
                 "côte, avec leur latence, leur nombre de tokens et leur coût estimé (« non "
                 "disponible » quand il ne peut pas être calculé).\n\n"
                 + "\n".join(_puces_comparaison)
@@ -474,7 +496,7 @@ with col_chat:
         st.markdown(
             "**Garde-fous actifs**\n"
             f"- Question limitée à {MAX_INPUT_CHARS} caractères\n"
-            "- Plafond quotidien de questions\n"
+            f"- Plafond quotidien de {DAILY_QUESTION_LIMIT} questions sur le corpus ARESIA\n"
             f"- Plafond quotidien de {COMPARISON_DAILY_LIMIT} questions sur les documents "
             "uploadés, tous visiteurs confondus\n"
             "- Une réponse au format invalide échoue proprement plutôt que de planter"
@@ -514,7 +536,7 @@ with col_chat:
                 st.session_state.upload_last_processed_file_id = None
                 st.rerun()
         elif not st.session_state.upload_consent:
-            st.markdown(_build_upload_consent_text(mistral_disponible(), MISTRAL_SERVER))
+            st.markdown(_build_upload_consent_text(mistral_disponible(), MISTRAL_SERVER, _mistral_nom()))
             if st.button("J'ai compris, je continue", key="upload_consent_btn"):
                 st.session_state.upload_consent = True
                 st.rerun()

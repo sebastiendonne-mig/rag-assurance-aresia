@@ -299,11 +299,17 @@ def test_pas_de_panneau_log_debug_visiteur(monkeypatch):
     assert not any("Log debug" in label for label in labels), f"panneau encore présent : {labels}"
 
 
-def _configure_mistral(monkeypatch, actif: bool, server: str = "eu") -> None:
-    """Fixe l'état Mistral de façon déterministe, indépendamment de l'environnement local."""
+_MODELE_NON_TARIFE = "modele-mistral-non-tarife"
+
+
+def _configure_mistral(monkeypatch, actif: bool, server: str = "eu", modele: str | None = None) -> None:
+    """
+    Fixe l'état Mistral de façon déterministe, indépendamment de l'environnement local.
+    Par défaut le modèle est le modèle tarifé (celui qui a été évalué).
+    """
     if actif:
         monkeypatch.setenv("MISTRAL_API_KEY", "dummy-not-a-real-key")
-        monkeypatch.setattr(agent, "MISTRAL_MODEL", "modele-mistral-de-test")
+        monkeypatch.setattr(agent, "MISTRAL_MODEL", modele or agent.MISTRAL_PRICED_MODEL)
     else:
         monkeypatch.delenv("MISTRAL_API_KEY", raising=False)
         monkeypatch.setattr(agent, "MISTRAL_MODEL", None)
@@ -326,7 +332,7 @@ def test_expander_choix_et_limites_present_avec_contenu_attendu(monkeypatch):
     assert "claude-sonnet-4-6" in contenu
     assert "Comparaison de deux moteurs" in contenu
     assert "Mistral Large 3" in contenu
-    assert "modele-mistral-de-test" in contenu
+    assert agent.MISTRAL_PRICED_MODEL in contenu
     assert "Mistral Medium 3.5" in contenu
     assert "endpoint européen, facturé 10 % plus cher" in contenu
     assert "https://docs.mistral.ai/inference/regional-inference" in contenu
@@ -924,3 +930,77 @@ def test_pas_de_bandeau_quand_mistral_est_configure(monkeypatch):
     assert not at.exception
 
     assert not [i for i in at.info if "Mistral n'est pas configuré" in i.value]
+
+
+def test_garde_fous_affichent_la_valeur_reelle_du_plafond_corpus(monkeypatch):
+    monkeypatch.setattr(agent, "DAILY_QUESTION_LIMIT", 37)
+    monkeypatch.setattr(agent, "COMPARISON_DAILY_LIMIT", 12)
+    _configure_mistral(monkeypatch, actif=True)
+    at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    assert not at.exception
+
+    contenu = _contenu_choix_et_limites(at)
+    assert "Plafond quotidien de 37 questions sur le corpus ARESIA" in contenu
+    assert "Plafond quotidien de 12 questions sur les documents uploadés, tous visiteurs confondus" in contenu
+    assert "Plafond quotidien de questions\n" not in contenu
+
+
+def test_libelle_mistral_large_3_si_modele_tarife(monkeypatch):
+    monkeypatch.setattr(
+        upload_session,
+        "compare_engines_on_upload",
+        lambda collection, question: [
+            _resultat(agent.ENGINE_ANTHROPIC),
+            _resultat(agent.ENGINE_MISTRAL),
+        ],
+    )
+    at = _app_mode_upload(monkeypatch, mistral=True)
+    at.chat_input[0].set_value("Q").run()
+    assert not at.exception
+
+    _claude, mistral = _colonnes_moteurs(at)
+    assert mistral.markdown[0].value == f"**Mistral Large 3** · `{agent.MISTRAL_PRICED_MODEL}`"
+    contenu = _contenu_choix_et_limites(at)
+    assert "Pourquoi Mistral Large 3" in contenu
+    assert "n'a pas été évalué" not in contenu
+
+    at2 = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    assert "**Mistral Large 3** (Mistral AI)" in _texte_consentement(at2)
+
+
+def test_libelle_mistral_sans_large_3_si_modele_non_tarife(monkeypatch):
+    monkeypatch.setattr(
+        upload_session,
+        "compare_engines_on_upload",
+        lambda collection, question: [
+            _resultat(agent.ENGINE_ANTHROPIC),
+            _resultat(agent.ENGINE_MISTRAL, cout=None),
+        ],
+    )
+    _configure_mistral(monkeypatch, actif=True, modele=_MODELE_NON_TARIFE)
+    monkeypatch.setattr(upload_session, "touch", lambda session_id: None)
+    at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    at.session_state["upload_active"] = True
+    at.session_state["upload_collection"] = object()
+    at.session_state["upload_doc_name"] = "mon-contrat.pdf"
+    at.chat_input[0].set_value("Q").run()
+    assert not at.exception
+
+    # En-tête de colonne : « Mistral » + identifiant, jamais « Large 3 ».
+    _claude, mistral = _colonnes_moteurs(at)
+    assert mistral.markdown[0].value == f"**Mistral** · `{_MODELE_NON_TARIFE}`"
+
+    # « Choix et limites » : pas de justification Large 3 ; évaluation datée et attribuée à Large 3.
+    contenu = _contenu_choix_et_limites(at)
+    assert "Pourquoi Mistral Large 3" not in contenu
+    assert f"`{_MODELE_NON_TARIFE}` — tarif non configuré" in contenu
+    assert f"Évaluation du 25/09/2026, avec Mistral Large 3 (`{agent.MISTRAL_PRICED_MODEL}`)" in contenu
+    assert f"Le modèle Mistral configuré ici (`{_MODELE_NON_TARIFE}`) n'a pas été évalué." in contenu
+    assert f"et à Mistral (`{_MODELE_NON_TARIFE}`)" in contenu
+    assert f"et Mistral (`{_MODELE_NON_TARIFE}`), en comparaison" in contenu
+
+    # Consentement (session sans document) : « Mistral (Mistral AI) », pas « Large 3 ».
+    at2 = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    consentement = _texte_consentement(at2)
+    assert "**Mistral** (Mistral AI)" in consentement
+    assert "Large 3" not in consentement
