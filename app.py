@@ -17,6 +17,10 @@ sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 from agent import (
     CLAUDE_MODEL,
+    COMPARISON_DAILY_LIMIT,
+    MISTRAL_MODEL,
+    MISTRAL_MULTIPLICATEUR_REGIONAL,
+    MISTRAL_SERVER,
     PRIX_INPUT_USD_PAR_MTOK,
     PRIX_OUTPUT_USD_PAR_MTOK,
     configure_stdout_logging,
@@ -26,6 +30,7 @@ from agent import (
     get_chroma_col,
     get_anthropic,
     get_graph,
+    mistral_disponible,
     run_agent,
 )
 import upload_session
@@ -72,7 +77,7 @@ configure_stdout_logging()
 # ─────────────────────────────────────────────
 
 st.set_page_config(
-    page_title="AssurConseil 365 · TKoidra",
+    page_title="AssurConseil RAG · TKoidra",
     page_icon="🛡️",
     layout="wide",
 )
@@ -277,7 +282,7 @@ _PDF_SOURCES = [
 ]
 
 with col_chat:
-    st.title("🛡️ AssurConseil 365")
+    st.title("🛡️ AssurConseil RAG")
     st.caption("Agent RAG — Contrats ARESIA Assurances | Plan-and-Execute + ReAct")
 
     st.markdown(
@@ -323,23 +328,77 @@ with col_chat:
             "assurance vie, garanties IARD, conformité réglementaire — explicitement fictifs, "
             "créés pour cette démonstration) via un pipeline RAG piloté par LangGraph."
         )
+        _mistral_actif = mistral_disponible()
+        if _mistral_actif:
+            _modele_upload = (
+                f"Mode document uploadé : `{CLAUDE_MODEL}` et Mistral Large 3 "
+                f"(`{MISTRAL_MODEL}`), en comparaison."
+            )
+        else:
+            _modele_upload = f"Mode document uploadé : `{CLAUDE_MODEL}` seul."
         st.markdown(
             "**Modèle utilisé aujourd'hui**\n"
-            f"`{CLAUDE_MODEL}`. Toutes les décisions du pipeline (routage, évaluation, "
-            "génération) passent par deux points d'entrée uniques dans le code — c'est "
-            "cette couture qui rend un changement de modèle possible sans réécrire le pipeline."
+            f"Mode corpus ARESIA : `{CLAUDE_MODEL}`. Toutes les décisions du pipeline (routage, "
+            "évaluation, génération) passent par deux points d'entrée uniques dans le code — "
+            "c'est cette couture qui rend un changement de modèle possible sans réécrire le "
+            f"pipeline. {_modele_upload}"
         )
+        if _mistral_actif:
+            _puces_comparaison = [
+                "- **Pourquoi Mistral Large 3.** Modèle généraliste phare de Mistral, à poids "
+                "ouverts. Choisi plutôt que Mistral Medium 3.5, pourtant recommandé par Mistral "
+                "pour la plupart des tâches, pour son coût (0,5 \\$ / 1,5 \\$ par million de "
+                "tokens contre 1,5 \\$ / 7,5 \\$, tarifs catalogue relevés le 25/09/2026) et "
+                "parce qu'il ne fait pas de raisonnement préalable, ce qui garde un format de "
+                "réponse directement comparable à celui de Claude."
+            ]
+            if MISTRAL_SERVER == "eu":
+                _surcout_pct = round((MISTRAL_MULTIPLICATEUR_REGIONAL - 1) * 100)
+                _puces_comparaison.append(
+                    "- **Pourquoi l'endpoint européen.** Les appels à Mistral passent par son "
+                    f"endpoint européen, facturé {_surcout_pct} % plus cher : l'endpoint global "
+                    "de Mistral ne s'engage sur aucun lieu d'inférence "
+                    "([source](https://docs.mistral.ai/inference/regional-inference)). Le coût "
+                    "affiché en tient compte."
+                )
+            _puces_comparaison += [
+                "- **Ce que montre la comparaison.** Évaluation du 25/09/2026 : 20 questions "
+                "réparties sur les 4 documents du corpus fictif, chargés un par un en mode "
+                "document. Le plancher fixé est respecté par les deux moteurs : aucune panne "
+                "technique (20 réponses sur 20 pour chacun), garde-fou respecté (refus sur une "
+                "question hors document), aucune citation inventée. Les écarts observés portent "
+                "sur le contenu (articles cités, nuances de formulation). Ce n'est pas un "
+                "classement : 20 questions ne suffisent pas à en établir un. Nuance : le contrat "
+                "de prévoyance renvoie à un article 6.3 qui n'existe pas dans le document ; "
+                "Mistral a relayé ce renvoi à deux reprises. C'est un défaut du document source, "
+                "pas une citation inventée par le modèle.",
+                "- **Limite.** Le prompt système a été écrit et ajusté pour Claude. Mistral est "
+                "évalué avec le même prompt, sans adaptation : un prompt travaillé pour Mistral "
+                "pourrait donner des résultats différents.",
+            ]
+            st.markdown(
+                "**Comparaison de deux moteurs (mode document uploadé)**\n"
+                f"Quand vous interrogez un document déposé, la même question, avec les mêmes "
+                f"extraits et le même prompt, est envoyée en parallèle à Claude (`{CLAUDE_MODEL}`) "
+                f"et à Mistral Large 3 (`{MISTRAL_MODEL}`). Les deux réponses s'affichent côte à "
+                "côte, avec leur latence, leur nombre de tokens et leur coût estimé (« non "
+                "disponible » quand il ne peut pas être calculé).\n\n"
+                + "\n".join(_puces_comparaison)
+            )
+        _ref_comparaison = " (voir ci-dessus)" if _mistral_actif else ""
         st.markdown(
-            "**Portabilité : conçue, pas testée**\n"
-            "Le message central de cette démo est la portabilité — la même architecture "
-            "pourrait fonctionner avec un autre modèle, propriétaire ou open source. C'est "
-            "vérifiable dans le code, mais non testé avec un autre fournisseur à ce jour : "
-            "les prompts et le format JSON attendu pourraient demander des ajustements."
+            "**Portabilité : testée sur un seul chemin**\n"
+            "La même architecture peut fonctionner avec un autre modèle. C'est vérifié "
+            f"uniquement sur le mode document uploadé, avec Mistral Large 3{_ref_comparaison} ; "
+            "le mode corpus ARESIA n'a été testé qu'avec Claude, et ses prompts ou son format "
+            "JSON pourraient demander des ajustements."
         )
         st.markdown(
             "**Garde-fous actifs**\n"
-            "- Question limitée à 500 caractères\n"
+            f"- Question limitée à {MAX_INPUT_CHARS} caractères\n"
             "- Plafond quotidien de questions\n"
+            f"- Plafond quotidien de {COMPARISON_DAILY_LIMIT} questions sur les documents "
+            "uploadés, tous visiteurs confondus\n"
             "- Une réponse au format invalide échoue proprement plutôt que de planter"
         )
         st.markdown(
@@ -573,12 +632,21 @@ with col_trace:
     trace = st.session_state.last_trace
 
     if st.session_state.upload_active:
-        st.info(
-            "📄 Mode document uploadé : la réponse est générée par un unique appel LLM sur "
-            "la collection éphémère de ce document (pas de planner, pas de reformulation — "
-            "inutile sur un document unique). Ce chemin ne passe pas par le graphe LangGraph "
-            "du corpus principal, donc aucune trace à afficher ici pour ce mode."
-        )
+        if mistral_disponible():
+            st.info(
+                "📄 Mode document uploadé : la même question est envoyée en parallèle aux deux "
+                "moteurs, sur les extraits les plus proches de votre document (une recherche, "
+                "sans planner ni reformulation — inutile sur un document unique). Ce chemin ne "
+                "passe pas par le graphe LangGraph du corpus principal, donc aucune trace à "
+                "afficher ici pour ce mode."
+            )
+        else:
+            st.info(
+                "📄 Mode document uploadé : la réponse est générée par un unique appel LLM sur "
+                "la collection éphémère de ce document (pas de planner, pas de reformulation — "
+                "inutile sur un document unique). Ce chemin ne passe pas par le graphe LangGraph "
+                "du corpus principal, donc aucune trace à afficher ici pour ce mode."
+            )
     elif not trace:
         st.info("La trace du graphe apparaîtra ici après votre première question.")
     else:

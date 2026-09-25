@@ -299,18 +299,106 @@ def test_pas_de_panneau_log_debug_visiteur(monkeypatch):
     assert not any("Log debug" in label for label in labels), f"panneau encore présent : {labels}"
 
 
-def test_expander_choix_et_limites_present_avec_contenu_attendu():
-    """Lot 1.3 changement D : page "Choix et limites", sans mock de run_agent (pas de question posée)."""
+def _configure_mistral(monkeypatch, actif: bool, server: str = "eu") -> None:
+    """Fixe l'état Mistral de façon déterministe, indépendamment de l'environnement local."""
+    if actif:
+        monkeypatch.setenv("MISTRAL_API_KEY", "dummy-not-a-real-key")
+        monkeypatch.setattr(agent, "MISTRAL_MODEL", "modele-mistral-de-test")
+    else:
+        monkeypatch.delenv("MISTRAL_API_KEY", raising=False)
+        monkeypatch.setattr(agent, "MISTRAL_MODEL", None)
+    monkeypatch.setattr(agent, "MISTRAL_SERVER", server)
+
+
+def _contenu_choix_et_limites(at: AppTest) -> str:
+    choix_expanders = [e for e in at.expander if "Choix et limites" in e.label]
+    assert len(choix_expanders) == 1
+    return " ".join(m.value for m in choix_expanders[0].markdown)
+
+
+def test_expander_choix_et_limites_present_avec_contenu_attendu(monkeypatch):
+    """Page "Choix et limites" avec comparaison Claude / Mistral, sans mock de run_agent (pas de question posée)."""
+    _configure_mistral(monkeypatch, actif=True, server="eu")
     at = AppTest.from_file(APP_PATH, default_timeout=15).run()
     assert not at.exception
 
-    choix_expanders = [e for e in at.expander if "Choix et limites" in e.label]
-    assert len(choix_expanders) == 1
-
-    contenu = " ".join(m.value for m in choix_expanders[0].markdown)
+    contenu = _contenu_choix_et_limites(at)
     assert "claude-sonnet-4-6" in contenu
-    assert "non testé avec un autre fournisseur" in contenu
+    assert "Comparaison de deux moteurs" in contenu
+    assert "Mistral Large 3" in contenu
+    assert "modele-mistral-de-test" in contenu
+    assert "Mistral Medium 3.5" in contenu
+    assert "endpoint européen, facturé 10 % plus cher" in contenu
+    assert "https://docs.mistral.ai/inference/regional-inference" in contenu
+    assert "25/09/2026" in contenu
+    assert "article 6.3 qui n'existe pas dans le document" in contenu
+    assert "écrit et ajusté pour Claude" in contenu
+    assert "Portabilité : testée sur un seul chemin" in contenu
+    assert "non testé avec un autre fournisseur" not in contenu
     assert "500 caractères" in contenu
+
+
+def test_choix_et_limites_sans_mistral_ni_bloc_comparaison_ni_affirmation_mistral(monkeypatch):
+    _configure_mistral(monkeypatch, actif=False)
+    at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    assert not at.exception
+
+    contenu = _contenu_choix_et_limites(at)
+    assert "Comparaison de deux moteurs" not in contenu
+    assert "en comparaison" not in contenu
+    assert "`claude-sonnet-4-6` seul" in contenu
+    assert "(voir ci-dessus)" not in contenu
+
+
+def test_choix_et_limites_endpoint_europeen_uniquement_si_serveur_eu(monkeypatch):
+    _configure_mistral(monkeypatch, actif=True, server="global")
+    at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    assert not at.exception
+
+    contenu = _contenu_choix_et_limites(at)
+    assert "Comparaison de deux moteurs" in contenu
+    assert "endpoint européen" not in contenu
+    assert "regional-inference" not in contenu
+
+
+def test_choix_et_limites_dollars_echappes(monkeypatch):
+    _configure_mistral(monkeypatch, actif=True)
+    at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    assert not at.exception
+
+    contenu = _contenu_choix_et_limites(at)
+    assert "0,5 \\$ / 1,5 \\$" in contenu
+    assert not re.search(r"(?<!\\)\$", contenu)
+
+
+def test_titre_assurconseil_rag_partout_dans_l_ui(monkeypatch):
+    _configure_mistral(monkeypatch, actif=False)
+    at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    assert not at.exception
+
+    assert [t.value for t in at.title] == ["🛡️ AssurConseil RAG"]
+
+    source = Path(APP_PATH).read_text(encoding="utf-8")
+    assert "AssurConseil 365" not in source
+    assert 'page_title="AssurConseil RAG · TKoidra"' in source
+
+
+def test_info_trace_mode_upload_selon_disponibilite_mistral(monkeypatch):
+    for actif, attendu, interdit in (
+        (True, "envoyée en parallèle aux deux moteurs", "unique appel LLM"),
+        (False, "unique appel LLM", "aux deux moteurs"),
+    ):
+        _configure_mistral(monkeypatch, actif=actif)
+        at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+        at.session_state["upload_active"] = True
+        at.session_state["upload_collection"] = object()
+        at.session_state["upload_doc_name"] = "mon-contrat.pdf"
+        at.run()
+        assert not at.exception
+
+        infos = " ".join(i.value for i in at.info)
+        assert attendu in infos
+        assert interdit not in infos
 
 
 def test_show_spinner_warm_up_mentionne_90_secondes():
