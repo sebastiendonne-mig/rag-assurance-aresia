@@ -316,12 +316,24 @@ if "upload_warnings" not in st.session_state:
     st.session_state.upload_warnings = []
 if "upload_last_processed_file_id" not in st.session_state:
     st.session_state.upload_last_processed_file_id = None
+if "upload_notice" not in st.session_state:
+    st.session_state.upload_notice = None
+
+# Tâche en cours de calcul (question ou indexation), ou None. Tant qu'elle existe, tous les
+# widgets qui déclencheraient un rerun sont désactivés : un rerun demandé pendant un calcul
+# interrompt le script au prochain appel st.* (ou accès à session_state) et perd la réponse
+# alors que les appels au modèle continuent. La tâche est posée à l'envoi, puis un rerun
+# affiche l'interface désactivée AVANT que l'exécuteur, en bas du script, ne lance le calcul.
+if "busy_task" not in st.session_state:
+    st.session_state.busy_task = None
+_busy = st.session_state.busy_task is not None
+_MSG_QUESTION_INTERROMPUE = "Votre question n'a pas pu être traitée. Merci de la reposer."
 
 _upload_session_id = upload_session.get_or_create_session_id()
 
 with st.sidebar:
     st.header("Conversation")
-    if st.button("🗑️ Vider la conversation", use_container_width=True):
+    if st.button("🗑️ Vider la conversation", use_container_width=True, disabled=_busy):
         st.session_state.messages = []
         st.session_state.last_trace = []
         st.session_state.last_usage = None
@@ -400,6 +412,7 @@ with col_chat:
                         mime="application/pdf",
                         use_container_width=True,
                         key=f"dl_{i}",
+                        on_click="ignore",  # un téléchargement ne doit pas relancer le script
                     )
                 else:
                     st.caption(f"_(fichier introuvable : {fname})_")
@@ -509,6 +522,8 @@ with col_chat:
         )
 
     # ── Session d'upload de document visiteur (lot 2a.1 suite) ──
+    uploaded = None
+    _index_slot = None
     with st.expander("📎 Tester avec votre propre document (PDF)", expanded=st.session_state.upload_active):
         if st.session_state.upload_active:
             st.success(f"📄 Mode document uploadé actif : **{st.session_state.upload_doc_name}**")
@@ -527,7 +542,7 @@ with col_chat:
                     f"⚠️ Article {w['article_num']} tronqué : {w['tokens_original']} → "
                     f"{w['tokens_conserves']} tokens conservés (limite du modèle d'embeddings)."
                 )
-            if st.button("📄 Nouveau document", use_container_width=True):
+            if st.button("📄 Nouveau document", use_container_width=True, disabled=_busy):
                 upload_session.release(_upload_session_id)
                 st.session_state.upload_active = False
                 st.session_state.upload_collection = None
@@ -537,7 +552,7 @@ with col_chat:
                 st.rerun()
         elif not st.session_state.upload_consent:
             st.markdown(_build_upload_consent_text(mistral_disponible(), MISTRAL_SERVER, _mistral_nom()))
-            if st.button("J'ai compris, je continue", key="upload_consent_btn"):
+            if st.button("J'ai compris, je continue", key="upload_consent_btn", disabled=_busy):
                 st.session_state.upload_consent = True
                 st.rerun()
         # is_busy() ne regarde pas l'âge du verrou : sans cette libération préalable d'un
@@ -551,53 +566,23 @@ with col_chat:
                 "Document PDF à analyser (contrat structuré par articles)",
                 type=["pdf"],
                 key="upload_pdf_uploader",
+                disabled=_busy,
             )
-            if uploaded is not None and uploaded.file_id != st.session_state.upload_last_processed_file_id:
+            # Emplacement de l'affichage de l'indexation : l'exécuteur, en bas du script,
+            # y écrit (spinner) une fois toute l'interface rendue désactivée.
+            _index_slot = st.container()
+            _notice = st.session_state.upload_notice
+            if uploaded is not None and _notice is not None:
+                (st.error if _notice["kind"] == "error" else st.warning)(_notice["text"])
+            if (
+                uploaded is not None
+                and not _busy
+                and uploaded.file_id != st.session_state.upload_last_processed_file_id
+            ):
                 st.session_state.upload_last_processed_file_id = uploaded.file_id
-                try:
-                    handle = upload_session.try_acquire(_upload_session_id)
-                except upload_session.UploadSessionBusyError:
-                    # Défense en profondeur : la vérification is_busy() ci-dessus laisse une
-                    # fenêtre de course entre deux sessions ; try_acquire() reste la source
-                    # de vérité (verrou réel), voir sa docstring dans upload_session.py.
-                    st.warning(upload_session.UPLOAD_BUSY_MESSAGE)
-                else:
-                    with st.spinner(
-                        "Analyse du document en cours… jusqu'à 3 minutes pour l'indexation "
-                        "(calcul intensif sur ce document précis). Merci de patienter sans "
-                        "recharger la page."
-                    ):
-                        tmp_path = Path(tempfile.gettempdir()) / f"upload_{_upload_session_id}.pdf"
-                        try:
-                            tmp_path.write_bytes(uploaded.getvalue())
-                            upload_session.validate_pdf_constraints(tmp_path)
-                            chunks = upload_session.extract_and_chunk_pdf(
-                                tmp_path, source_doc_id=f"UPLOAD-{_upload_session_id[:8]}"
-                            )
-                            chunks, warnings = upload_session.apply_length_guard(chunks)
-                            upload_session.embed_and_index(handle.collection, chunks)
-                        except (upload_session.FileTooLargeError, upload_session.NoStructureDetectedError) as exc:
-                            upload_session.release(_upload_session_id)
-                            st.error(str(exc))
-                        except Exception as exc:
-                            # Erreur inattendue (ex. PDF corrompu) : message neutre au visiteur,
-                            # même logique que format_user_error() pour le chat principal —
-                            # jamais str(exc) affiché (voir agent.format_user_error).
-                            upload_session.release(_upload_session_id)
-                            log.error(
-                                "UPLOAD_PIPELINE exception type=%s horodatage=%s",
-                                type(exc).__name__,
-                                datetime.now(timezone.utc).isoformat(),
-                            )
-                            st.error("Une erreur technique est survenue pendant l'analyse du document. Merci de réessayer.")
-                        else:
-                            st.session_state.upload_active = True
-                            st.session_state.upload_collection = handle.collection
-                            st.session_state.upload_doc_name = uploaded.name
-                            st.session_state.upload_warnings = warnings
-                            st.rerun()
-                        finally:
-                            tmp_path.unlink(missing_ok=True)
+                st.session_state.upload_notice = None
+                st.session_state.busy_task = {"kind": "index"}
+                st.rerun()
 
     # ── Questions de test cliquables (masquées en mode document uploadé) ──
     pending: str | None = None
@@ -606,7 +591,7 @@ with col_chat:
         for i, (question, legende) in enumerate(_DEMO_QUESTIONS):
             col_btn, col_leg = st.columns([5, 4])
             with col_btn:
-                if st.button(question, key=f"demo_q_{i}", use_container_width=True):
+                if st.button(question, key=f"demo_q_{i}", use_container_width=True, disabled=_busy):
                     pending = question
             with col_leg:
                 st.caption(f"↑ {legende}")
@@ -648,8 +633,11 @@ with col_chat:
         # reruns romprait alors l'identité du widget (valeur perdue en cours de
         # saisie au moment précis où le mode bascule).
         key="main_chat_input",
+        disabled=_busy,
     )
     prompt = pending or chat_prompt
+    if prompt and _busy:
+        prompt = None  # saisie arrivée entre deux runs alors qu'une tâche existe déjà : ignorée
 
     if prompt:
         # Garde-fou de longueur : conservé même si le widget limite déjà la saisie
@@ -659,92 +647,176 @@ with col_chat:
             st.stop()
 
         st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
+        st.session_state.busy_task = {
+            "kind": "question",
+            "prompt": prompt,
+            "upload_mode": st.session_state.upload_active,
+        }
+        st.rerun()
 
-        upload_mode = st.session_state.upload_active
+    # ── Exécuteur unique : le calcul tourne ici, une fois tous les widgets rendus désactivés ──
+    _task = st.session_state.busy_task
+    if _task is not None and _task["kind"] == "question":
+        prompt = _task["prompt"]
+        upload_mode = _task["upload_mode"]
         comparaison = None  # liste de résultats par moteur (mode upload), sinon None
         quota_atteint = False
-        with st.chat_message("assistant"):
-            with st.spinner(
-                _upload_waiting_message(mistral_disponible()) if upload_mode else "Recherche en cours…",
-                show_time=upload_mode,
-            ):
-                try:
-                    if upload_mode:
-                        # Chemin dédié : recherche sur la collection éphémère de la session, puis
-                        # un appel LLM par moteur disponible (Claude, et Mistral s'il est configuré)
-                        # en parallèle, SANS passer par run_agent()/le graphe LangGraph et SANS
-                        # jamais interroger get_chroma_col() (la collection globale). Le rendu se
-                        # fait dans la boucle d'historique : le st.rerun() final efface tout ce
-                        # qui serait dessiné ici.
-                        upload_session.touch(_upload_session_id)
-                        log.info(
-                            "RUN_UPLOAD question_len=%d doc=%r", len(prompt), st.session_state.upload_doc_name
-                        )
-                        resultats = upload_session.compare_engines_on_upload(
-                            st.session_state.upload_collection, prompt
-                        )
-                        comparaison = [
-                            {**dataclasses.asdict(r), "label": _engine_label(r.engine)} for r in resultats
-                        ]
-                        reponse = ""
+        assistant_msg = None
+        try:
+            with st.chat_message("assistant"):
+                with st.spinner(
+                    _upload_waiting_message(mistral_disponible()) if upload_mode else "Recherche en cours…",
+                    show_time=upload_mode,
+                ):
+                    try:
+                        if upload_mode:
+                            # Chemin dédié : recherche sur la collection éphémère de la session, puis
+                            # un appel LLM par moteur disponible (Claude, et Mistral s'il est configuré)
+                            # en parallèle, SANS passer par run_agent()/le graphe LangGraph et SANS
+                            # jamais interroger get_chroma_col() (la collection globale). Le rendu se
+                            # fait dans la boucle d'historique : le st.rerun() final efface tout ce
+                            # qui serait dessiné ici.
+                            upload_session.touch(_upload_session_id)
+                            log.info(
+                                "RUN_UPLOAD question_len=%d doc=%r", len(prompt), st.session_state.upload_doc_name
+                            )
+                            resultats = upload_session.compare_engines_on_upload(
+                                st.session_state.upload_collection, prompt
+                            )
+                            comparaison = [
+                                {**dataclasses.asdict(r), "label": _engine_label(r.engine)} for r in resultats
+                            ]
+                            reponse = ""
+                            st.session_state.last_trace = []
+                            st.session_state.last_usage = None
+                        else:
+                            log.info("RUN_AGENT question=%r", prompt[:80])
+                            state = run_agent(prompt)
+                            reponse = state["reponse_finale"]
+                            st.session_state.last_trace = state["trace_log"]
+                            st.session_state.last_usage = state.get("usage")
+                            trace_summary = [(e["etape"], e.get("decision", "")[:40]) for e in state["trace_log"]]
+                            log.info("RUN_AGENT done trace=%s reponse_start=%r", trace_summary, reponse[:80])
+                    except ComparisonDailyLimitExceeded as e:
+                        # Quota du mode upload atteint : la question est bloquée, jamais de bascule
+                        # silencieuse sur un seul moteur.
+                        log.warning("RUN_UPLOAD quota quotidien atteint")
+                        quota_atteint = True
+                        reponse = format_user_error(e)
                         st.session_state.last_trace = []
                         st.session_state.last_usage = None
+                    except Exception as e:
+                        # Log serveur minimal : type, status_code éventuel (ex. 401/429 d'un
+                        # anthropic.APIStatusError), TYPE de la cause éventuelle (__cause__,
+                        # jamais son message), et horodatage. Jamais le message brut de e.
+                        status_code = getattr(e, "status_code", None)
+                        cause_type = type(e.__cause__).__name__ if e.__cause__ is not None else None
+                        log.error(
+                            "%s exception type=%s status_code=%s cause_type=%s horodatage=%s",
+                            "RUN_UPLOAD" if upload_mode else "RUN_AGENT",
+                            type(e).__name__,
+                            status_code,
+                            cause_type,
+                            datetime.now(timezone.utc).isoformat(),
+                        )
+                        reponse = format_user_error(e)
+                        st.session_state.last_trace = []
+                        st.session_state.last_usage = None  # aucun affichage d'usage sur erreur
+
+            # La clé "usage" est réservée à l'affichage (caption sous la réponse,
+            # via la boucle d'historique) ; ne jamais envoyer
+            # st.session_state.messages tel quel à l'API Anthropic (le SDK
+            # n'écarte pas les clés inconnues, vérifié dans la source installée).
+            assistant_msg = {"role": "assistant", "content": reponse}
+            if upload_mode:
+                if comparaison is not None:
+                    assistant_msg["mode"] = "upload_compare"
+                    assistant_msg["results"] = comparaison
+                elif quota_atteint:
+                    assistant_msg["mode"] = "upload_blocked"
+                else:
+                    assistant_msg["mode"] = "upload"
+                assistant_msg["doc_name"] = st.session_state.upload_doc_name
+            if st.session_state.last_usage is not None:
+                assistant_msg["usage"] = st.session_state.last_usage
+        finally:
+            # Toujours : l'attente est levée (jamais de champ bloqué après une exception). Si
+            # aucune réponse n'a pu être construite (interruption externe : rechargement,
+            # rerun manuel), un message neutre évite une question orpheline.
+            if assistant_msg is None:
+                assistant_msg = {"role": "assistant", "content": _MSG_QUESTION_INTERROMPUE}
+            st.session_state.messages.append(assistant_msg)
+            st.session_state.messages = st.session_state.messages[-40:]
+            st.session_state.busy_task = None
+        st.rerun()
+
+    # ── Exécuteur : indexation d'un document déposé ──
+    if _task is not None and _task["kind"] == "index":
+        _index_termine = False
+        try:
+            if uploaded is not None and _index_slot is not None:
+                with _index_slot:
+                    try:
+                        handle = upload_session.try_acquire(_upload_session_id)
+                    except upload_session.UploadSessionBusyError:
+                        # Défense en profondeur : la vérification is_busy() plus haut laisse une
+                        # fenêtre de course entre deux sessions ; try_acquire() reste la source
+                        # de vérité (verrou réel), voir sa docstring dans upload_session.py.
+                        st.session_state.upload_notice = {
+                            "kind": "warning",
+                            "text": upload_session.UPLOAD_BUSY_MESSAGE,
+                        }
+                        _index_termine = True
                     else:
-                        log.info("RUN_AGENT question=%r", prompt[:80])
-                        state = run_agent(prompt)
-                        reponse = state["reponse_finale"]
-                        st.session_state.last_trace = state["trace_log"]
-                        st.session_state.last_usage = state.get("usage")
-                        trace_summary = [(e["etape"], e.get("decision", "")[:40]) for e in state["trace_log"]]
-                        log.info("RUN_AGENT done trace=%s reponse_start=%r", trace_summary, reponse[:80])
-                except ComparisonDailyLimitExceeded as e:
-                    # Quota du mode upload atteint : la question est bloquée, jamais de bascule
-                    # silencieuse sur un seul moteur.
-                    log.warning("RUN_UPLOAD quota quotidien atteint")
-                    quota_atteint = True
-                    reponse = format_user_error(e)
-                    st.session_state.last_trace = []
-                    st.session_state.last_usage = None
-                except Exception as e:
-                    # Log serveur minimal : type, status_code éventuel (ex. 401/429 d'un
-                    # anthropic.APIStatusError), TYPE de la cause éventuelle (__cause__,
-                    # jamais son message), et horodatage. Jamais le message brut de e.
-                    status_code = getattr(e, "status_code", None)
-                    cause_type = type(e.__cause__).__name__ if e.__cause__ is not None else None
-                    log.error(
-                        "%s exception type=%s status_code=%s cause_type=%s horodatage=%s",
-                        "RUN_UPLOAD" if upload_mode else "RUN_AGENT",
-                        type(e).__name__,
-                        status_code,
-                        cause_type,
-                        datetime.now(timezone.utc).isoformat(),
-                    )
-                    reponse = format_user_error(e)
-                    st.session_state.last_trace = []
-                    st.session_state.last_usage = None  # aucun affichage d'usage sur erreur
-
-            st.markdown(reponse)
-
-        # La clé "usage" est réservée à l'affichage (caption sous la réponse,
-        # via la boucle d'historique) ; ne jamais envoyer
-        # st.session_state.messages tel quel à l'API Anthropic (le SDK
-        # n'écarte pas les clés inconnues, vérifié dans la source installée).
-        assistant_msg = {"role": "assistant", "content": reponse}
-        if upload_mode:
-            if comparaison is not None:
-                assistant_msg["mode"] = "upload_compare"
-                assistant_msg["results"] = comparaison
-            elif quota_atteint:
-                assistant_msg["mode"] = "upload_blocked"
+                        with st.spinner(
+                            "Analyse du document en cours… jusqu'à 3 minutes pour l'indexation "
+                            "(calcul intensif sur ce document précis). Merci de patienter sans "
+                            "recharger la page."
+                        ):
+                            tmp_path = Path(tempfile.gettempdir()) / f"upload_{_upload_session_id}.pdf"
+                            try:
+                                tmp_path.write_bytes(uploaded.getvalue())
+                                upload_session.validate_pdf_constraints(tmp_path)
+                                chunks = upload_session.extract_and_chunk_pdf(
+                                    tmp_path, source_doc_id=f"UPLOAD-{_upload_session_id[:8]}"
+                                )
+                                chunks, warnings = upload_session.apply_length_guard(chunks)
+                                upload_session.embed_and_index(handle.collection, chunks)
+                            except (upload_session.FileTooLargeError, upload_session.NoStructureDetectedError) as exc:
+                                upload_session.release(_upload_session_id)
+                                st.session_state.upload_notice = {"kind": "error", "text": str(exc)}
+                                _index_termine = True
+                            except Exception as exc:
+                                # Erreur inattendue (ex. PDF corrompu) : message neutre au visiteur,
+                                # même logique que format_user_error() pour le chat principal —
+                                # jamais str(exc) affiché (voir agent.format_user_error).
+                                upload_session.release(_upload_session_id)
+                                log.error(
+                                    "UPLOAD_PIPELINE exception type=%s horodatage=%s",
+                                    type(exc).__name__,
+                                    datetime.now(timezone.utc).isoformat(),
+                                )
+                                st.session_state.upload_notice = {
+                                    "kind": "error",
+                                    "text": "Une erreur technique est survenue pendant l'analyse du document. Merci de réessayer.",
+                                }
+                                _index_termine = True
+                            else:
+                                st.session_state.upload_active = True
+                                st.session_state.upload_collection = handle.collection
+                                st.session_state.upload_doc_name = uploaded.name
+                                st.session_state.upload_warnings = warnings
+                                _index_termine = True
+                            finally:
+                                tmp_path.unlink(missing_ok=True)
             else:
-                assistant_msg["mode"] = "upload"
-            assistant_msg["doc_name"] = st.session_state.upload_doc_name
-        if st.session_state.last_usage is not None:
-            assistant_msg["usage"] = st.session_state.last_usage
-        st.session_state.messages.append(assistant_msg)
-        st.session_state.messages = st.session_state.messages[-40:]
+                _index_termine = True  # aucun fichier à traiter : rien à faire, l'attente est levée
+        finally:
+            if not _index_termine:
+                # Interruption externe : ne pas laisser un verrou détenu sans collection référencée.
+                upload_session.release(_upload_session_id)
+                st.session_state.upload_last_processed_file_id = None
+            st.session_state.busy_task = None
         st.rerun()
 
 # ─────────────────────────────────────────────

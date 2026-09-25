@@ -1004,3 +1004,342 @@ def test_libelle_mistral_sans_large_3_si_modele_non_tarife(monkeypatch):
     consentement = _texte_consentement(at2)
     assert "**Mistral** (Mistral AI)" in consentement
     assert "Large 3" not in consentement
+
+
+# ─────────────────────────────────────────────
+# Interactions désactivées pendant un calcul (tâche en attente + exécuteur unique)
+# ─────────────────────────────────────────────
+
+_MSG_INTERROMPUE = "Votre question n'a pas pu être traitée. Merci de la reposer."
+
+
+@pytest.fixture
+def widget_log(monkeypatch):
+    """
+    Enregistre, pour le run en cours, les widgets interactifs rendus par app.py avec leur
+    paramètre `disabled`. Le journal est remis à zéro à chaque run : le bouton de la barre
+    latérale est toujours le premier widget rendu.
+    """
+    journal: list[dict] = []
+
+    def _envelopper(nom):
+        original = getattr(st, nom)
+
+        def _widget(*args, **kwargs):
+            if nom == "button" and args and str(args[0]).startswith("🗑️"):
+                journal.clear()
+            journal.append(
+                {
+                    "widget": nom,
+                    "key": kwargs.get("key"),
+                    "disabled": kwargs.get("disabled", False),
+                    "on_click": kwargs.get("on_click"),
+                }
+            )
+            return original(*args, **kwargs)
+
+        return _widget
+
+    for nom in ("chat_input", "button", "download_button", "file_uploader"):
+        monkeypatch.setattr(st, nom, _envelopper(nom))
+    return journal
+
+
+def _tous_desactives(journal: list[dict]) -> bool:
+    return bool(journal) and all(
+        e["disabled"] or (e["widget"] == "download_button" and e["on_click"] == "ignore")
+        for e in journal
+    )
+
+
+def _tous_actifs(journal: list[dict]) -> bool:
+    return bool(journal) and not any(e["disabled"] for e in journal)
+
+
+def test_question_corpus_widgets_desactives_pendant_le_calcul_puis_reactives(monkeypatch, widget_log):
+    vu: dict = {}
+
+    def _fake_run_agent(question, *args, **kwargs):
+        vu["widgets"] = list(widget_log)
+        vu["busy_task"] = st.session_state.busy_task
+        vu["messages"] = list(st.session_state.messages)
+        return _make_success_state("Réponse de test.", _USAGE_Q1)
+
+    monkeypatch.setattr(agent, "run_agent", _fake_run_agent)
+    _configure_mistral(monkeypatch, actif=True)
+
+    at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    assert not at.exception
+    assert _tous_actifs(widget_log)
+
+    at.chat_input[0].set_value("Ma question").run()
+    assert not at.exception
+
+    # Pendant le calcul : tâche posée, question déjà dans l'historique, tout est désactivé.
+    assert vu["busy_task"] == {"kind": "question", "prompt": "Ma question", "upload_mode": False}
+    assert vu["messages"] == [{"role": "user", "content": "Ma question"}]
+    assert {e["widget"] for e in vu["widgets"]} >= {"chat_input", "button", "download_button"}
+    assert _tous_desactives(vu["widgets"]), vu["widgets"]
+    assert sum(1 for e in vu["widgets"] if e["key"] and e["key"].startswith("demo_q_")) == 5
+
+    # Après : attente levée, réponse enregistrée, champ et boutons réactivés.
+    assert at.session_state["busy_task"] is None
+    assert [m["role"] for m in at.session_state["messages"]] == ["user", "assistant"]
+    assert _tous_actifs(widget_log), widget_log
+    assert at.chat_input[0].proto.disabled is False
+
+
+def test_question_upload_widgets_desactives_pendant_le_calcul_puis_reactives(monkeypatch, widget_log):
+    vu: dict = {}
+
+    def _fake_compare(collection, question):
+        vu["widgets"] = list(widget_log)
+        vu["busy_task"] = st.session_state.busy_task
+        return [_resultat(agent.ENGINE_ANTHROPIC), _resultat(agent.ENGINE_MISTRAL)]
+
+    monkeypatch.setattr(upload_session, "compare_engines_on_upload", _fake_compare)
+    at = _app_mode_upload(monkeypatch)
+
+    at.chat_input[0].set_value("Q upload").run()
+    assert not at.exception
+
+    assert vu["busy_task"] == {"kind": "question", "prompt": "Q upload", "upload_mode": True}
+    assert {e["widget"] for e in vu["widgets"]} >= {"chat_input", "button"}
+    assert _tous_desactives(vu["widgets"]), vu["widgets"]
+
+    assert at.session_state["busy_task"] is None
+    assert at.session_state["messages"][-1]["mode"] == "upload_compare"
+    assert _tous_actifs(widget_log), widget_log
+    assert at.chat_input[0].proto.disabled is False
+
+
+@pytest.mark.parametrize("mode", ["corpus", "upload"])
+def test_exception_pendant_le_calcul_leve_l_attente_avec_message_neutre(monkeypatch, widget_log, mode):
+    def _boom(*args, **kwargs):
+        raise RuntimeError(_EXCEPTION_TEXT)
+
+    if mode == "corpus":
+        monkeypatch.setattr(agent, "run_agent", _boom)
+        _configure_mistral(monkeypatch, actif=True)
+        at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    else:
+        monkeypatch.setattr(upload_session, "compare_engines_on_upload", _boom)
+        at = _app_mode_upload(monkeypatch)
+
+    at.chat_input[0].set_value("Q").run()
+    assert not at.exception
+
+    assert at.session_state["busy_task"] is None
+    dernier = at.session_state["messages"][-1]
+    assert dernier["content"] == "Une erreur technique est survenue. Merci de réessayer dans quelques instants."
+    assert _EXCEPTION_TEXT not in " ".join(m.value for m in at.markdown)
+    assert _tous_actifs(widget_log), widget_log
+    assert at.chat_input[0].proto.disabled is False
+
+
+@pytest.mark.parametrize("mode", ["corpus", "upload"])
+def test_interruption_externe_pendant_le_calcul_message_neutre_et_attente_levee(monkeypatch, mode):
+    """Rerun manuel / arrêt de session au milieu du calcul : jamais de question orpheline ni de blocage."""
+    from streamlit.runtime.scriptrunner import StopException
+
+    def _interrompu(*args, **kwargs):
+        raise StopException()
+
+    if mode == "corpus":
+        monkeypatch.setattr(agent, "run_agent", _interrompu)
+        _configure_mistral(monkeypatch, actif=True)
+        at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    else:
+        monkeypatch.setattr(upload_session, "compare_engines_on_upload", _interrompu)
+        at = _app_mode_upload(monkeypatch)
+
+    at.chat_input[0].set_value("Q interrompue").run()
+
+    messages = at.session_state["messages"]
+    assert [m["role"] for m in messages] == ["user", "assistant"]
+    assert messages[0]["content"] == "Q interrompue"
+    assert messages[1]["content"] == _MSG_INTERROMPUE
+    assert at.session_state["busy_task"] is None
+
+
+def test_saisie_arrivee_pendant_une_tache_est_ignoree(monkeypatch):
+    calls: list[str] = []
+
+    def _fake_run_agent(question, *args, **kwargs):
+        calls.append(question)
+        return _make_success_state("Réponse P0.", _USAGE_Q1)
+
+    monkeypatch.setattr(agent, "run_agent", _fake_run_agent)
+    _configure_mistral(monkeypatch, actif=True)
+    at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+
+    at.session_state["messages"] = [{"role": "user", "content": "P0"}]
+    at.session_state["busy_task"] = {"kind": "question", "prompt": "P0", "upload_mode": False}
+    at.chat_input[0].set_value("P1").run()
+    assert not at.exception
+
+    assert calls == ["P0"]
+    contenus = [m["content"] for m in at.session_state["messages"]]
+    assert "P1" not in contenus
+    assert at.session_state["busy_task"] is None
+
+
+def test_tache_d_indexation_sans_fichier_leve_l_attente_sans_verrou(monkeypatch, widget_log):
+    def _interdit(*a, **k):
+        raise AssertionError("aucun verrou ne doit être pris sans fichier déposé")
+
+    monkeypatch.setattr(upload_session, "try_acquire", _interdit)
+    _configure_mistral(monkeypatch, actif=True)
+    at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    at.session_state["upload_consent"] = True
+    at.session_state["busy_task"] = {"kind": "index"}
+    at.run()
+    assert not at.exception
+
+    assert at.session_state["busy_task"] is None
+    assert upload_session.is_busy() is False
+    assert _tous_actifs(widget_log), widget_log  # le rerun final a réactivé l'interface
+
+
+def test_pendant_l_indexation_le_televersement_et_les_widgets_sont_desactives(monkeypatch, widget_log):
+    """Le journal est pris juste avant le rerun final de l'exécuteur : toute l'interface est alors désactivée."""
+    avant_rerun: dict = {}
+    rerun_original = st.rerun
+
+    def _rerun_espion(*args, **kwargs):
+        avant_rerun.setdefault("widgets", list(widget_log))
+        return rerun_original(*args, **kwargs)
+
+    monkeypatch.setattr(st, "rerun", _rerun_espion)
+    _configure_mistral(monkeypatch, actif=True)
+    at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    at.session_state["upload_consent"] = True
+    at.session_state["busy_task"] = {"kind": "index"}
+    at.run()
+    assert not at.exception
+
+    widgets = avant_rerun["widgets"]
+    assert any(e["widget"] == "file_uploader" and e["disabled"] for e in widgets), widgets
+    assert any(e["widget"] == "chat_input" and e["disabled"] for e in widgets), widgets
+    assert _tous_desactives(widgets), widgets
+
+
+def test_telechargements_ne_relancent_pas_le_script(monkeypatch, widget_log):
+    _configure_mistral(monkeypatch, actif=True)
+    at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    assert not at.exception
+
+    telechargements = [e for e in widget_log if e["widget"] == "download_button"]
+    assert len(telechargements) == 4
+    assert all(e["on_click"] == "ignore" for e in telechargements)
+
+
+# ─────────────────────────────────────────────
+# Indexation d'un document déposé : exécuteur en bas de script (file_uploader simulé)
+# ─────────────────────────────────────────────
+
+class _FichierDepose:
+    file_id = "fichier-1"
+    name = "contrat.pdf"
+
+    def getvalue(self):
+        return b"%PDF-1.4 factice"
+
+
+def _app_avec_depot(monkeypatch, *, embed=None, acquire=None):
+    """
+    Lance l'app avec un file_uploader simulé (AppTest ne pilote pas le vrai) et tout le pipeline
+    d'indexation remplacé : aucun modèle d'embeddings, aucune extraction PDF, aucun Chroma.
+    """
+    from types import SimpleNamespace
+
+    liberations: list[str] = []
+    collection = object()
+
+    monkeypatch.setattr(st, "file_uploader", lambda *a, **k: _FichierDepose())
+    monkeypatch.setattr(
+        upload_session, "try_acquire", acquire or (lambda session_id: SimpleNamespace(collection=collection))
+    )
+    monkeypatch.setattr(upload_session, "release", lambda session_id: liberations.append(session_id))
+    monkeypatch.setattr(upload_session, "validate_pdf_constraints", lambda path: None)
+    monkeypatch.setattr(upload_session, "extract_and_chunk_pdf", lambda path, source_doc_id: [])
+    monkeypatch.setattr(
+        upload_session,
+        "apply_length_guard",
+        lambda chunks: (chunks, [{"article_num": "7", "tokens_original": 600, "tokens_conserves": 512}]),
+    )
+    monkeypatch.setattr(upload_session, "embed_and_index", embed or (lambda collection, chunks: None))
+    _configure_mistral(monkeypatch, actif=True)
+
+    at = AppTest.from_file(APP_PATH, default_timeout=15)
+    at.session_state["upload_consent"] = True
+    at.run()
+    return at, liberations, collection
+
+
+def test_indexation_reussie_active_le_mode_document_et_leve_l_attente(monkeypatch):
+    at, liberations, collection = _app_avec_depot(monkeypatch)
+    assert not at.exception
+
+    assert at.session_state["busy_task"] is None
+    assert at.session_state["upload_active"] is True
+    assert at.session_state["upload_collection"] is collection
+    assert at.session_state["upload_doc_name"] == "contrat.pdf"
+    assert at.session_state["upload_last_processed_file_id"] == "fichier-1"
+    assert at.session_state["upload_warnings"][0]["article_num"] == "7"
+    assert liberations == []
+    assert any("contrat.pdf" in s.value for s in at.success)
+
+
+def test_indexation_fichier_refuse_affiche_le_message_et_libere_le_verrou(monkeypatch):
+    def _refuse(collection, chunks):
+        raise upload_session.FileTooLargeError("Fichier trop volumineux pour cette démo.")
+
+    at, liberations, _ = _app_avec_depot(monkeypatch, embed=_refuse)
+    assert not at.exception
+
+    assert at.session_state["busy_task"] is None
+    assert at.session_state["upload_active"] is False
+    assert len(liberations) == 1
+    assert "Fichier trop volumineux pour cette démo." in [e.value for e in at.error]
+
+
+def test_indexation_erreur_inattendue_reste_neutre(monkeypatch):
+    def _boom(collection, chunks):
+        raise RuntimeError(_EXCEPTION_TEXT)
+
+    at, liberations, _ = _app_avec_depot(monkeypatch, embed=_boom)
+    assert not at.exception
+
+    assert at.session_state["busy_task"] is None
+    assert at.session_state["upload_active"] is False
+    assert len(liberations) == 1
+    erreurs = [e.value for e in at.error]
+    assert erreurs == ["Une erreur technique est survenue pendant l'analyse du document. Merci de réessayer."]
+    assert _EXCEPTION_TEXT not in " ".join(erreurs)
+
+
+def test_indexation_verrou_pris_par_un_autre_visiteur_affiche_le_message_d_occupation(monkeypatch):
+    def _occupe(session_id):
+        raise upload_session.UploadSessionBusyError(1.0)
+
+    at, liberations, _ = _app_avec_depot(monkeypatch, acquire=_occupe)
+    assert not at.exception
+
+    assert at.session_state["busy_task"] is None
+    assert at.session_state["upload_active"] is False
+    assert upload_session.UPLOAD_BUSY_MESSAGE in [w.value for w in at.warning]
+
+
+def test_indexation_interrompue_libere_le_verrou_et_permet_de_redeposer(monkeypatch):
+    from streamlit.runtime.scriptrunner import StopException
+
+    def _interrompu(collection, chunks):
+        raise StopException()
+
+    at, liberations, _ = _app_avec_depot(monkeypatch, embed=_interrompu)
+
+    assert len(liberations) == 1  # jamais de verrou détenu sans collection référencée
+    assert at.session_state["busy_task"] is None
+    assert at.session_state["upload_active"] is False
+    assert at.session_state["upload_last_processed_file_id"] is None
