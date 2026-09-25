@@ -92,10 +92,11 @@ def _load_svg_b64(filename: str) -> str:
 
 def _format_usage_caption(usage: dict) -> str:
     """Formate la ligne de synthèse usage/coût affichée sous une réponse."""
+    cout = usage["cout_usd"]
+    cout_txt = "coût non disponible" if cout is None else f"≈{cout:.4f}\\$ *(estimation)*"
     return (
         f"⏱️ {usage['latence_s']:.1f}s · {usage['n_appels']} appel(s) LLM · "
-        f"{usage['tokens_in']}+{usage['tokens_out']} tokens (entrée+sortie) · "
-        f"≈{usage['cout_usd']:.4f}\\$ *(estimation)*"
+        f"{usage['tokens_in']}+{usage['tokens_out']} tokens (entrée+sortie) · {cout_txt}"
     )
 
 

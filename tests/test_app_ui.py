@@ -432,3 +432,24 @@ def test_verrou_upload_actif_recent_affiche_toujours_occupe(monkeypatch):
 
     assert len(_busy_warnings(at)) == 1
     assert upload_session.is_busy() is True
+
+
+def test_cout_none_affiche_non_disponible_sans_exception():
+    """Un usage sans coût calculable (tarif absent) ne doit ni lever ni afficher « None »."""
+    at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    at.session_state["messages"] = [
+        {"role": "user", "content": "q"},
+        {
+            "role": "assistant",
+            "content": "réponse",
+            "usage": {**_USAGE_Q1, "cout_usd": None},
+        },
+    ]
+    at.run()
+    assert not at.exception
+
+    captions = _usage_captions(at)
+    assert len(captions) == 1
+    assert "coût non disponible" in captions[0]
+    assert "None" not in captions[0]
+    assert "estimation" not in captions[0]
