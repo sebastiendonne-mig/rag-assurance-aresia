@@ -77,7 +77,9 @@ def _no_real_sleep(monkeypatch):
 def _mistral_configure(monkeypatch):
     """Moteur Mistral considéré comme configuré, sans jamais lire de vraie clé."""
     monkeypatch.setenv("MISTRAL_API_KEY", "dummy-not-a-real-key")
+    monkeypatch.delenv("MISTRAL_SERVER", raising=False)
     monkeypatch.setattr(agent, "MISTRAL_MODEL", "fake-model-for-tests")
+    monkeypatch.setattr(agent, "MISTRAL_SERVER", "eu")
     monkeypatch.setattr(agent, "_mistral_client", None)
     yield
     monkeypatch.setattr(agent, "_mistral_client", None)
@@ -355,3 +357,94 @@ def test_usage_tracker_record_tokens_est_thread_safe():
     assert tracker.n_appels == 800
     assert tracker.tokens_in == 800
     assert tracker.tokens_out == 800
+
+
+# ─────────────────────────────────────────────
+# Endpoint UE par défaut, jamais de repli silencieux sur "global"
+# ─────────────────────────────────────────────
+
+def test_serveur_absent_donne_eu(monkeypatch):
+    monkeypatch.delenv("MISTRAL_SERVER", raising=False)
+    assert agent._resolve_mistral_server() == "eu"
+
+
+@pytest.mark.parametrize("valeur", ["", " ", "   ", "\t", " \n "])
+def test_serveur_vide_ou_espaces_traite_comme_absent(monkeypatch, valeur):
+    """Un server vide retomberait sur "global" côté SDK : il ne doit jamais lui être transmis."""
+    monkeypatch.setenv("MISTRAL_SERVER", valeur)
+    assert agent._resolve_mistral_server() == "eu"
+
+
+@pytest.mark.parametrize("valeur", ["eu", "us", "global"])
+def test_serveurs_explicites_acceptes(monkeypatch, valeur):
+    monkeypatch.setenv("MISTRAL_SERVER", valeur)
+    assert agent._resolve_mistral_server() == valeur
+
+
+@pytest.mark.parametrize("valeur", ["EU", "Eu", " eu ", "eu ", " eu", "europe", "US", "Global", "api.eu.mistral.ai"])
+def test_serveur_invalide_leve_sans_repli_sur_global(monkeypatch, valeur):
+    """Minuscules strictes, sans normalisation : aucune tolérance, aucun repli."""
+    monkeypatch.setenv("MISTRAL_SERVER", valeur)
+    with pytest.raises(ValueError) as info:
+        agent._resolve_mistral_server()
+    message = str(info.value)
+    assert "MISTRAL_SERVER invalide" in message
+    assert "eu, us, global" in message
+    assert "minuscules" in message
+
+
+def test_le_defaut_n_est_pas_global():
+    assert agent.MISTRAL_SERVER_DEFAUT == "eu"
+    assert agent.MISTRAL_SERVER_DEFAUT != "global"
+
+
+def test_liste_des_serveurs_alignee_sur_le_sdk():
+    """Garde : une mise à jour du SDK qui ajoute/retire un serveur doit faire échouer la suite."""
+    from mistralai.client.sdkconfiguration import SERVERS
+
+    assert set(agent.MISTRAL_SERVERS_VALIDES) == set(SERVERS)
+
+
+def test_get_mistral_construit_un_client_vers_l_ue(monkeypatch):
+    """Résolution purement locale (get_server_details) : aucune requête émise."""
+    client = agent.get_mistral()
+    url, _ = client.sdk_configuration.get_server_details()
+    assert url == "https://api.eu.mistral.ai"
+
+
+@pytest.mark.parametrize(
+    "serveur, attendu",
+    [
+        ("eu", "https://api.eu.mistral.ai"),
+        ("us", "https://api.us.mistral.ai"),
+        ("global", "https://api.mistral.ai"),
+    ],
+)
+def test_get_mistral_suit_mistral_server(monkeypatch, serveur, attendu):
+    monkeypatch.setattr(agent, "MISTRAL_SERVER", serveur)
+    client = agent.get_mistral()
+    assert client.sdk_configuration.get_server_details()[0] == attendu
+
+
+def test_get_mistral_transmet_server_non_vide_et_jamais_server_url(monkeypatch):
+    import mistralai.client
+
+    recus = {}
+
+    class _Enregistreur:
+        def __init__(self, **kwargs):
+            recus.update(kwargs)
+
+    monkeypatch.setattr(mistralai.client, "Mistral", _Enregistreur)
+    agent.get_mistral()
+
+    assert recus["server"] == "eu"
+    assert recus["server"].strip() != ""
+    # server_url l'emporterait sur server (sdkconfiguration.py:52-53).
+    assert "server_url" not in recus
+
+
+def test_mistral_endpoint_host_derive_du_sdk(monkeypatch):
+    assert agent.mistral_endpoint_host() == "api.eu.mistral.ai"
+    monkeypatch.setattr(agent, "MISTRAL_SERVER", "global")
+    assert agent.mistral_endpoint_host() == "api.mistral.ai"

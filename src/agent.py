@@ -450,6 +450,50 @@ def get_anthropic() -> anthropic.Anthropic:
 # indisponible (voir mistral_disponible()).
 MISTRAL_MODEL = os.environ.get("MISTRAL_MODEL")
 
+# Endpoint : UE par défaut. Le SDK Mistral 2.10.1 accepte `server=` (nom) en plus
+# de `server_url=` (mistralai/client/sdk.py:80,82), avec la table
+# {"global", "eu", "us"} de sdkconfiguration.py:25-29.
+# Deux pièges vérifiés dans sdkconfiguration.py:51-60 (get_server_details) :
+#   - un `server` vide retombe SILENCIEUSEMENT sur "global" (lignes 54-55),
+#     endpoint sur lequel Mistral ne s'engage sur aucun lieu d'inférence
+#     (https://docs.mistral.ai/inference/regional-inference) ;
+#   - un `server_url` non vide l'emporte sur `server` (lignes 52-53).
+# On ne transmet donc au SDK qu'un nom validé et non vide, jamais server_url.
+# Liste écrite en dur pour ne pas importer mistralai au chargement du module ;
+# un test compare ces valeurs aux clés de SERVERS du SDK installé.
+MISTRAL_SERVERS_VALIDES = ("eu", "us", "global")
+MISTRAL_SERVER_DEFAUT = "eu"
+
+
+def _resolve_mistral_server() -> str:
+    """
+    Lit MISTRAL_SERVER. Absente, vide ou faite uniquement d'espaces : "eu".
+    Sinon comparaison EXACTE (ni strip, ni normalisation de casse) : toute
+    valeur inconnue lève ValueError, jamais de repli sur "global".
+    """
+    brut = os.environ.get("MISTRAL_SERVER")
+    if brut is None or brut.strip() == "":
+        return MISTRAL_SERVER_DEFAUT
+    if brut not in MISTRAL_SERVERS_VALIDES:
+        raise ValueError(
+            f"MISTRAL_SERVER invalide : {brut!r}. Valeurs acceptées : "
+            f"{', '.join(MISTRAL_SERVERS_VALIDES)} (minuscules, sans espaces)."
+        )
+    return brut
+
+
+MISTRAL_SERVER = _resolve_mistral_server()
+
+
+def mistral_endpoint_host() -> str:
+    """Nom d'hôte de l'endpoint choisi, dérivé de la table SERVERS du SDK."""
+    from urllib.parse import urlparse
+
+    from mistralai.client.sdkconfiguration import SERVERS
+
+    return urlparse(SERVERS[MISTRAL_SERVER]).hostname
+
+
 # Mêmes timeouts que côté Anthropic. Le SDK Mistral 2.10.1 n'expose pas d'objet
 # Timeout propre : il accepte un httpx.Client personnalisé (constructeur
 # `Mistral(client=...)`), ce qui revient au même réglage.
@@ -513,6 +557,7 @@ def get_mistral():
 
         _mistral_client = Mistral(
             api_key=os.environ["MISTRAL_API_KEY"],
+            server=MISTRAL_SERVER,
             client=httpx.Client(
                 timeout=httpx.Timeout(
                     connect=MISTRAL_TIMEOUT_CONNECT_S,
