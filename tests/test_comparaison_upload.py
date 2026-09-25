@@ -184,8 +184,8 @@ def test_les_deux_en_echec_restent_neutres(monkeypatch):
 # ─────────────────────────────────────────────
 
 def test_cout_isole_par_moteur(monkeypatch):
-    monkeypatch.setattr(agent, "PRIX_MISTRAL_INPUT_USD_PAR_MTOK", 2.0)
-    monkeypatch.setattr(agent, "PRIX_MISTRAL_OUTPUT_USD_PAR_MTOK", 6.0)
+    monkeypatch.setattr(agent, "MISTRAL_MODEL", agent.MISTRAL_PRICED_MODEL)
+    monkeypatch.setattr(agent, "MISTRAL_SERVER", "eu")
     monkeypatch.setattr(
         upload_session,
         "llm_call",
@@ -204,7 +204,8 @@ def test_cout_isole_par_moteur(monkeypatch):
     assert (anthropic_res.tokens_in, anthropic_res.tokens_out) == (1_000_000, 1_000_000)
     assert (mistral_res.tokens_in, mistral_res.tokens_out) == (2_000_000, 2_000_000)
     assert anthropic_res.cout_usd == pytest.approx(3.0 + 15.0)
-    assert mistral_res.cout_usd == pytest.approx(2.0 * 2 + 6.0 * 2)
+    # 2 M en entrée x 0.55 + 2 M en sortie x 1.65 (tarif catalogue x 1.1, endpoint UE).
+    assert mistral_res.cout_usd == pytest.approx(2 * 0.55 + 2 * 1.65)
 
 
 def test_cout_isole_meme_avec_appels_reellement_concurrents(monkeypatch):
@@ -213,8 +214,6 @@ def test_cout_isole_meme_avec_appels_reellement_concurrents(monkeypatch):
     moteur attend l'autre avant de comptabiliser, donc si les ContextVar
     fuyaient d'un thread à l'autre, les tokens se mélangeraient.
     """
-    monkeypatch.setattr(agent, "PRIX_MISTRAL_INPUT_USD_PAR_MTOK", 1.0)
-    monkeypatch.setattr(agent, "PRIX_MISTRAL_OUTPUT_USD_PAR_MTOK", 1.0)
     barriere = threading.Barrier(2, timeout=5)
     tokens = {
         agent.ENGINE_ANTHROPIC: (3_000, 300),
@@ -237,9 +236,8 @@ def test_cout_isole_meme_avec_appels_reellement_concurrents(monkeypatch):
     assert (mistral_res.tokens_in, mistral_res.tokens_out) == (6_000, 600)
 
 
-def test_cout_mistral_non_disponible_sans_tarif(monkeypatch):
-    monkeypatch.setattr(agent, "PRIX_MISTRAL_INPUT_USD_PAR_MTOK", None)
-    monkeypatch.setattr(agent, "PRIX_MISTRAL_OUTPUT_USD_PAR_MTOK", None)
+def test_cout_mistral_non_disponible_pour_un_modele_non_tarife(monkeypatch):
+    monkeypatch.setattr(agent, "MISTRAL_MODEL", "un-modele-non-tarife")
     monkeypatch.setattr(
         upload_session,
         "llm_call",

@@ -318,17 +318,79 @@ def test_message_neutre_si_moteur_indisponible():
 # Tarifs par moteur
 # ─────────────────────────────────────────────
 
-def test_cout_mistral_non_disponible_sans_tarif(monkeypatch):
-    monkeypatch.setattr(agent, "PRIX_MISTRAL_INPUT_USD_PAR_MTOK", None)
-    monkeypatch.setattr(agent, "PRIX_MISTRAL_OUTPUT_USD_PAR_MTOK", None)
+@pytest.fixture
+def _modele_tarife(monkeypatch):
+    monkeypatch.setattr(agent, "MISTRAL_MODEL", agent.MISTRAL_PRICED_MODEL)
+
+
+def test_le_modele_tarife_est_large_3():
+    assert agent.MISTRAL_PRICED_MODEL == "mistral-large-2512"
+
+
+@pytest.mark.parametrize("serveur", ["eu", "us"])
+def test_tarifs_effectifs_regionaux(monkeypatch, _modele_tarife, serveur):
+    """0.5 x 1.1 et 1.5 x 1.1 : jamais de == sur ces flottants, toujours approx."""
+    monkeypatch.setattr(agent, "MISTRAL_SERVER", serveur)
+    tarif_in, tarif_out = agent.mistral_tarifs_usd_par_mtok()
+    assert tarif_in == pytest.approx(0.55)
+    assert tarif_out == pytest.approx(1.65)
+
+
+def test_tarifs_effectifs_global_au_tarif_catalogue(monkeypatch, _modele_tarife):
+    monkeypatch.setattr(agent, "MISTRAL_SERVER", "global")
+    tarif_in, tarif_out = agent.mistral_tarifs_usd_par_mtok()
+    assert tarif_in == pytest.approx(0.5)
+    assert tarif_out == pytest.approx(1.5)
+
+
+@pytest.mark.parametrize("serveur, attendu", [("eu", 2.20), ("us", 2.20), ("global", 2.00)])
+def test_cout_mistral_complet_selon_l_endpoint(monkeypatch, _modele_tarife, serveur, attendu):
+    """1 M tokens en entrée + 1 M en sortie : (0.5 + 1.5) x multiplicateur."""
+    monkeypatch.setattr(agent, "MISTRAL_SERVER", serveur)
+    cout = agent.estimer_cout_usd(1_000_000, 1_000_000, agent.ENGINE_MISTRAL)
+    assert cout == pytest.approx(attendu)
+
+
+def test_le_multiplicateur_suit_l_endpoint_sans_reglage_separe(monkeypatch, _modele_tarife):
+    """Une seule source de vérité : changer MISTRAL_SERVER change le tarif."""
+    monkeypatch.setattr(agent, "MISTRAL_SERVER", "eu")
+    eu = agent.estimer_cout_usd(1_000_000, 0, agent.ENGINE_MISTRAL)
+    monkeypatch.setattr(agent, "MISTRAL_SERVER", "global")
+    glob = agent.estimer_cout_usd(1_000_000, 0, agent.ENGINE_MISTRAL)
+    assert eu == pytest.approx(glob * 1.1)
+
+
+@pytest.mark.parametrize(
+    "modele",
+    [
+        "fake-model-for-tests",
+        "mistral-large-latest",
+        "mistral-large-2512-x",
+        "Mistral-Large-2512",
+        " mistral-large-2512",
+        "mistral-large-2411",
+    ],
+)
+def test_modele_non_tarife_donne_un_cout_none(monkeypatch, modele):
+    """Égalité stricte : aucune normalisation, aucun préfixe, aucun alias."""
+    monkeypatch.setattr(agent, "MISTRAL_MODEL", modele)
+    assert agent.mistral_tarifs_usd_par_mtok() is None
     assert agent.estimer_cout_usd(1000, 100, agent.ENGINE_MISTRAL) is None
 
 
-def test_cout_mistral_calcule_si_tarif_configure(monkeypatch):
-    monkeypatch.setattr(agent, "PRIX_MISTRAL_INPUT_USD_PAR_MTOK", 2.0)
-    monkeypatch.setattr(agent, "PRIX_MISTRAL_OUTPUT_USD_PAR_MTOK", 6.0)
+def test_modele_absent_donne_un_cout_none(monkeypatch):
+    monkeypatch.setattr(agent, "MISTRAL_MODEL", None)
+    assert agent.estimer_cout_usd(1000, 100, agent.ENGINE_MISTRAL) is None
+
+
+def test_plus_aucune_surcharge_de_tarif_par_environnement(monkeypatch, _modele_tarife):
+    """PRIX_MISTRAL_* n'existent plus : ni symbole, ni lecture de l'environnement."""
+    monkeypatch.setenv("PRIX_MISTRAL_INPUT_USD_PAR_MTOK", "99")
+    monkeypatch.setenv("PRIX_MISTRAL_OUTPUT_USD_PAR_MTOK", "99")
+    assert not any(nom.startswith("PRIX_MISTRAL") for nom in dir(agent))
+    assert not hasattr(agent, "_prix_env")
     cout = agent.estimer_cout_usd(1_000_000, 1_000_000, agent.ENGINE_MISTRAL)
-    assert cout == pytest.approx(8.0)
+    assert cout == pytest.approx(2.20)  # inchangé malgré les variables posées
 
 
 def test_cout_anthropic_inchange():

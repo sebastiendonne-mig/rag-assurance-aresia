@@ -26,6 +26,10 @@ log = logging.getLogger("agent")
 
 load_dotenv()
 
+# Garde "une fois par processus" du warning de modèle Mistral non tarifé (voir
+# configure_stdout_logging, qui est ré-exécutée à chaque rerun Streamlit).
+_tarif_warning_emis = False
+
 
 def configure_stdout_logging() -> None:
     """
@@ -42,10 +46,16 @@ def configure_stdout_logging() -> None:
     Logging et restaient dans un fichier local perdu à chaque redémarrage
     d'instance (min-instances=0) — le comportement du verrou était donc
     inauditable en production.
+    Signale aussi, une seule fois par processus, un MISTRAL_MODEL non tarifé.
+    Ce warning est émis ICI et non au niveau module : app.py importe `agent`
+    (ligne 18) bien avant d'appeler cette fonction (ligne 67), donc un log
+    émis à l'import partirait avant l'existence de tout handler stdout et
+    n'atteindrait jamais Cloud Logging.
     Idempotent : n'ajoute rien si un handler du même nom est déjà présent sur
     le logger visé (ce code est réexécuté à chaque rerun Streamlit dans le
     même process).
     """
+    global _tarif_warning_emis
     handler_name = "stdout_warning_handler"
     for logger_name in ("streamlit_app", "agent", "upload_session"):
         logger = logging.getLogger(logger_name)
@@ -56,6 +66,11 @@ def configure_stdout_logging() -> None:
         handler.setLevel(logging.WARNING)
         handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s"))
         logger.addHandler(handler)
+
+    # Modèle absent : Mistral est déjà indisponible, rien à signaler.
+    if MISTRAL_MODEL and MISTRAL_MODEL != MISTRAL_PRICED_MODEL and not _tarif_warning_emis:
+        _tarif_warning_emis = True
+        log.warning("TARIF_MISTRAL modele_non_tarife=%s", MISTRAL_MODEL)
 
 ROOT = Path(__file__).parent.parent
 CHROMA_PATH = ROOT / "chroma_db"
@@ -217,23 +232,25 @@ def _check_comparison_daily_limit() -> None:
 PRIX_INPUT_USD_PAR_MTOK = 3.0
 PRIX_OUTPUT_USD_PAR_MTOK = 15.0
 
-# Tarifs Mistral : AUCUNE valeur par défaut volontairement. Le modèle Mistral
-# n'est pas arrêté à ce jour, donc son tarif non plus ; inventer un chiffre
-# afficherait un coût faux. Absents de l'environnement -> estimer_cout_usd()
-# renvoie None pour ce moteur, et l'interface affiche "non disponible".
-def _prix_env(nom: str) -> float | None:
-    brut = os.environ.get(nom)
-    if brut is None or brut.strip() == "":
-        return None
-    try:
-        return float(brut)
-    except ValueError:
-        log.warning("PRIX_ENV valeur non numerique ignoree nom=%s", nom)
-        return None
-
-
-PRIX_MISTRAL_INPUT_USD_PAR_MTOK = _prix_env("PRIX_MISTRAL_INPUT_USD_PAR_MTOK")
-PRIX_MISTRAL_OUTPUT_USD_PAR_MTOK = _prix_env("PRIX_MISTRAL_OUTPUT_USD_PAR_MTOK")
+# Tarif Mistral — un seul modèle tarifé, en dur, jamais surchargeable par
+# l'environnement. Le tarif ne vaut que pour MISTRAL_PRICED_MODEL : pour un autre
+# modèle, estimer_cout_usd() renvoie None (l'interface affiche "non disponible")
+# plutôt qu'un chiffre faux. Pour tarifer un autre modèle, on modifie ces
+# constantes dans le code, avec un test.
+# Sources (relevées le 25/09/2026) :
+#   - tarif catalogue de Mistral Large 3 : 0,5 $ entrée / 1,5 $ sortie par
+#     million de tokens — https://mistral.ai/pricing/api
+#   - les endpoints régionaux (eu, us) sont facturés 1,1x le tarif catalogue ;
+#     l'endpoint global au tarif catalogue —
+#     https://docs.mistral.ai/inference/regional-inference
+# Le multiplicateur est DÉRIVÉ de MISTRAL_SERVER (une seule source de vérité :
+# la même variable décide de la destination et du tarif). Tarifs effectifs en
+# eu/us : 0,55 / 1,65 $ par million de tokens.
+MISTRAL_PRICED_MODEL = "mistral-large-2512"
+MISTRAL_PRIX_CATALOGUE_INPUT_USD_PAR_MTOK = 0.5
+MISTRAL_PRIX_CATALOGUE_OUTPUT_USD_PAR_MTOK = 1.5
+MISTRAL_MULTIPLICATEUR_REGIONAL = 1.1
+MISTRAL_SERVERS_REGIONAUX = ("eu", "us")
 
 ENGINE_ANTHROPIC = "anthropic"
 ENGINE_MISTRAL = "mistral"
@@ -271,23 +288,42 @@ class UsageTracker:
 _usage_ctx: ContextVar["UsageTracker | None"] = ContextVar("usage_ctx", default=None)
 
 
+def mistral_tarifs_usd_par_mtok() -> tuple[float, float] | None:
+    """
+    Tarifs Mistral effectifs (entrée, sortie) en USD par million de tokens, ou
+    None si MISTRAL_MODEL n'est pas le modèle tarifé (égalité stricte : ni
+    casse, ni préfixe, ni alias comme "-latest"). Le multiplicateur régional
+    est dérivé de MISTRAL_SERVER, lu à l'appel.
+    """
+    if MISTRAL_MODEL != MISTRAL_PRICED_MODEL:
+        return None
+    multiplicateur = (
+        MISTRAL_MULTIPLICATEUR_REGIONAL if MISTRAL_SERVER in MISTRAL_SERVERS_REGIONAUX else 1.0
+    )
+    return (
+        MISTRAL_PRIX_CATALOGUE_INPUT_USD_PAR_MTOK * multiplicateur,
+        MISTRAL_PRIX_CATALOGUE_OUTPUT_USD_PAR_MTOK * multiplicateur,
+    )
+
+
 def estimer_cout_usd(
     tokens_in: int, tokens_out: int, engine: str = ENGINE_ANTHROPIC
 ) -> float | None:
     """
     Coût estimé en USD, hors tokens de cache (non utilisés ici).
-    Renvoie None quand le tarif du moteur n'est pas configuré (cas Mistral
-    tant qu'aucun tarif n'est fourni par l'environnement) : l'appelant affiche
-    alors "non disponible" plutôt qu'un chiffre inventé.
+    Renvoie None quand le moteur n'a pas de tarif applicable (Mistral avec un
+    modèle autre que MISTRAL_PRICED_MODEL) : l'appelant affiche alors
+    "non disponible" plutôt qu'un chiffre inventé.
     """
     if engine == ENGINE_ANTHROPIC:
         prix_in, prix_out = PRIX_INPUT_USD_PAR_MTOK, PRIX_OUTPUT_USD_PAR_MTOK
     elif engine == ENGINE_MISTRAL:
-        prix_in, prix_out = PRIX_MISTRAL_INPUT_USD_PAR_MTOK, PRIX_MISTRAL_OUTPUT_USD_PAR_MTOK
+        tarifs = mistral_tarifs_usd_par_mtok()
+        if tarifs is None:
+            return None
+        prix_in, prix_out = tarifs
     else:
         raise ValueError(f"moteur inconnu: {engine!r}")
-    if prix_in is None or prix_out is None:
-        return None
     return (tokens_in / 1_000_000) * prix_in + (tokens_out / 1_000_000) * prix_out
 
 
@@ -445,9 +481,11 @@ def get_anthropic() -> anthropic.Anthropic:
 # Moteur Mistral (chemin upload uniquement — voir llm_call)
 # ─────────────────────────────────────────────
 
-# Le modèle n'est pas arrêté à ce jour : aucune valeur par défaut, aucune
-# valeur devinée. Sans MISTRAL_MODEL dans l'environnement, la comparaison est
-# indisponible (voir mistral_disponible()).
+# Aucune valeur par défaut dans le code (décision du 24/09/2026), aucune valeur
+# devinée. Sans MISTRAL_MODEL dans l'environnement, la comparaison est
+# indisponible (voir mistral_disponible()). Modèle retenu au sous-lot 3.0
+# (25/09/2026) : mistral-large-2512 — seul modèle tarifé, voir
+# MISTRAL_PRICED_MODEL ; tout autre modèle donne un coût "non disponible".
 MISTRAL_MODEL = os.environ.get("MISTRAL_MODEL")
 
 # Endpoint : UE par défaut. Le SDK Mistral 2.10.1 accepte `server=` (nom) en plus
