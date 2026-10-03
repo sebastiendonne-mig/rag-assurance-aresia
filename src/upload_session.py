@@ -475,7 +475,14 @@ def answer_question_on_upload(collection: chromadb.Collection, question: str) ->
     reformulation HyDE pour ce MVP d'upload, un seul document donc pas besoin
     de routage multi-documents). Réutilise SYSTEM_PROMPT / llm_call /
     format_chunks_for_prompt d'agent.py tels quels, sans les modifier.
+
+    Comptée par le disjoncteur quotidien du lot 0 (DAILY_QUESTION_LIMIT),
+    avant tout appel (encodage de la question compris) : ce chemin n'était
+    couvert par aucun plafond jusqu'au sous-lot 2.1. Il n'est pas appelé par
+    app.py (le mode upload passe par compare_engines_on_upload, qui a son
+    propre disjoncteur) ; il reste exposé aux scripts et aux tests.
     """
+    agent._check_daily_limit()
     chunks = retrieve_from_upload(collection, question)
     return llm_call(
         [{"role": "user", "content": _build_upload_prompt(question, chunks)}],

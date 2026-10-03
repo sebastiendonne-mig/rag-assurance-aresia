@@ -417,3 +417,24 @@ def test_le_chemin_upload_simple_reste_inchange(monkeypatch):
     assert upload_session.answer_question_on_upload(_FakeCollection(), "q") == "réponse"
     assert vus == [{}]              # aucun engine passé
     assert agent._comparison_count == 0  # ni disjoncteur de comparaison touché
+    assert agent._daily_count == 1  # mais compté par le disjoncteur quotidien (sous-lot 2.1)
+
+
+def test_le_chemin_upload_simple_bloque_au_plafond_quotidien(monkeypatch):
+    """
+    Sous-lot 2.1 : la question simple en mode upload est comptée par le
+    disjoncteur quotidien du lot 0. Au plafond, ni encodage ni appel LLM.
+    """
+    appels = []
+    monkeypatch.setattr(agent, "DAILY_QUESTION_LIMIT", 2)
+    monkeypatch.setattr(
+        upload_session, "retrieve_from_upload", lambda *a, **k: appels.append("retrieve") or []
+    )
+    monkeypatch.setattr(upload_session, "llm_call", lambda *a, **k: appels.append("llm") or "r")
+
+    upload_session.answer_question_on_upload(_FakeCollection(), "q1")
+    upload_session.answer_question_on_upload(_FakeCollection(), "q2")
+    appels.clear()
+    with pytest.raises(agent.DailyLimitExceeded):
+        upload_session.answer_question_on_upload(_FakeCollection(), "q3")
+    assert appels == []
