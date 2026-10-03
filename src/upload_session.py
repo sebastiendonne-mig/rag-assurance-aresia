@@ -16,7 +16,7 @@ Ce module ne touche à aucun moment agent.get_chroma_col() / agent.retrieve_chun
 / agent.run_agent() / agent.build_graph() — la collection globale persistante et
 le graphe LangGraph du chat principal restent entièrement séparés de l'index
 éphémère créé ici. Seules des fonctions partagées et sans effet de bord sur la
-collection globale sont réutilisées depuis agent.py : get_embed_model(),
+collection globale sont réutilisées depuis agent.py : embed_texts(),
 llm_call(), format_chunks_for_prompt(), SYSTEM_PROMPT, MODEL_NAME.
 
 Aucune dépendance à Streamlit au niveau du module : testable sans serveur.
@@ -49,8 +49,8 @@ from agent import (
     ENGINE_MISTRAL,
     MODEL_NAME,
     SYSTEM_PROMPT,
+    embed_texts,
     format_chunks_for_prompt,
-    get_embed_model,
     llm_call,
 )
 
@@ -60,16 +60,20 @@ log = logging.getLogger("upload_session")
 # Garde-fous (Partie C — valeurs proposées, À VALIDER, voir rapport)
 # ─────────────────────────────────────────────
 
-# Le modèle intfloat/multilingual-e5-large tronque silencieusement au-delà de
-# 512 tokens (confirmé sous-lot 2a.0 : model card HuggingFace + max_seq_length
-# mesuré localement = 512). Choix retenu : TRONQUER le chunk fautif avec
-# avertissement explicite (log serveur + remonté à l'appelant pour affichage
-# visiteur), plutôt que rejeter tout le document pour un seul article trop
-# long — un vrai contrat peut avoir un article dense (barème, tableau de
-# garanties) sans que le reste du document soit en cause. Alternative non
-# retenue : rejet total du document, plus strict mais moins utile pour une
-# démo dont l'objectif est de montrer le pipeline sur un document réel.
-MAX_CHUNK_TOKENS = 512
+# Longueur maximale d'un chunk avant encodage, en CARACTÈRES (sous-lot 2.1).
+# Jusqu'au 03/10/2026 la limite était de 512 tokens, comptés avec le
+# tokenizer du modèle local e5 (qui tronquait silencieusement au-delà). Le
+# passage à l'API Mistral supprime ce tokenizer : 2 000 caractères est un
+# équivalent approximatif des 512 tokens (~4 caractères par token en
+# français, estimation non mesurée avec le tokenizer Mistral). La limite de
+# tokens par entrée de l'API Mistral n'est pas documentée dans la doc du SDK
+# consultée ; cette borne garde aussi les lots d'embedding de taille prudente.
+# Choix retenu (inchangé) : TRONQUER le chunk fautif avec avertissement
+# explicite (log serveur + remonté à l'appelant pour affichage visiteur),
+# plutôt que rejeter tout le document pour un seul article trop long — un
+# vrai contrat peut avoir un article dense (barème, tableau de garanties)
+# sans que le reste du document soit en cause.
+MAX_CHUNK_CHARS = 2000
 
 # Corpus fictif actuel (mesuré, sous-lot 2a.0/2a.1) : 5 à 10 pages, 12 à 23 Ko
 # par document. Un vrai contrat "conditions générales" peut être plus long que
@@ -379,26 +383,30 @@ def extract_and_chunk_pdf(pdf_path: Path, source_doc_id: str) -> list[dict]:
     return _chunk_lines_or_reject(lines, source_doc_id)
 
 
-def _truncate_chunk_if_needed(chunk: dict, tokenizer) -> tuple[dict, dict | None]:
+def _truncate_chunk_if_needed(chunk: dict) -> tuple[dict, dict | None]:
     text = chunk["text"]
-    ids = tokenizer(text, truncation=False)["input_ids"]
-    if len(ids) <= MAX_CHUNK_TOKENS:
+    if len(text) <= MAX_CHUNK_CHARS:
         return chunk, None
 
-    truncated_ids = tokenizer(text, truncation=True, max_length=MAX_CHUNK_TOKENS)["input_ids"]
-    truncated_text = tokenizer.decode(truncated_ids, skip_special_tokens=True)
+    # Coupe à la limite, puis recule jusqu'au dernier espace s'il est proche,
+    # pour ne pas couper un mot en deux.
+    truncated_text = text[:MAX_CHUNK_CHARS]
+    dernier_espace = truncated_text.rfind(" ")
+    if dernier_espace >= MAX_CHUNK_CHARS - 200:
+        truncated_text = truncated_text[:dernier_espace]
+    truncated_text = truncated_text.rstrip()
     warning = {
         "article_num": chunk["metadata"].get("article_num"),
-        "tokens_original": len(ids),
-        "tokens_conserves": len(truncated_ids),
+        "caracteres_original": len(text),
+        "caracteres_conserves": len(truncated_text),
     }
     log.warning(
-        "UPLOAD chunk tronqué : article=%s %d tokens -> %d tokens (limite modèle e5 = %d)",
-        warning["article_num"], warning["tokens_original"], warning["tokens_conserves"], MAX_CHUNK_TOKENS,
+        "UPLOAD chunk tronqué : article=%s %d caractères -> %d caractères (limite = %d)",
+        warning["article_num"], warning["caracteres_original"], warning["caracteres_conserves"], MAX_CHUNK_CHARS,
     )
     new_chunk = {
         "text": truncated_text,
-        "metadata": {**chunk["metadata"], "tronque": True, "tokens_original": len(ids)},
+        "metadata": {**chunk["metadata"], "tronque": True, "caracteres_original": len(text)},
     }
     return new_chunk, warning
 
@@ -406,20 +414,17 @@ def _truncate_chunk_if_needed(chunk: dict, tokenizer) -> tuple[dict, dict | None
 def apply_length_guard(chunks: list[dict]) -> tuple[list[dict], list[dict]]:
     """
     Contrôle explicite par chunk avant l'embedding (partie C) : tronque
-    proprement à MAX_CHUNK_TOKENS avec avertissement, au lieu de laisser le
-    modèle tronquer silencieusement à l'encode() (cf. constante MAX_CHUNK_TOKENS
-    ci-dessus pour la justification du choix troncature vs rejet).
+    proprement à MAX_CHUNK_CHARS avec avertissement (cf. constante
+    MAX_CHUNK_CHARS ci-dessus pour la justification du choix troncature vs rejet).
 
     Retourne (chunks_ajustés, avertissements) — avertissements = liste de
-    dicts {article_num, tokens_original, tokens_conserves}, destinée à être
-    affichée au visiteur (transparence) en plus du log serveur.
+    dicts {article_num, caracteres_original, caracteres_conserves}, destinée à
+    être affichée au visiteur (transparence) en plus du log serveur.
     """
-    model = get_embed_model()
-    tokenizer = model.tokenizer
     adjusted = []
     warnings = []
     for c in chunks:
-        new_c, warning = _truncate_chunk_if_needed(c, tokenizer)
+        new_c, warning = _truncate_chunk_if_needed(c)
         adjusted.append(new_c)
         if warning is not None:
             warnings.append(warning)
@@ -427,19 +432,16 @@ def apply_length_guard(chunks: list[dict]) -> tuple[list[dict], list[dict]]:
 
 
 def embed_and_index(collection: chromadb.Collection, chunks: list[dict]) -> None:
-    """Encode et indexe `chunks` dans `collection` (la collection éphémère de
-    LA session courante, jamais agent.get_chroma_col()). Réutilise le même
-    modèle chargé en mémoire par get_embed_model() (partagé avec le chat
-    principal — un seul modèle en RAM pour tout le process, pas de rechargement)."""
-    model = get_embed_model()
-    texts = ["passage: " + c["text"] for c in chunks]
-    embeddings = model.encode(texts, show_progress_bar=False, normalize_embeddings=True)
-    gc.collect()
+    """Encode (agent.embed_texts, API Mistral) et indexe `chunks` dans
+    `collection` — la collection éphémère de LA session courante, jamais
+    agent.get_chroma_col(). Le texte complet des chunks part donc chez Mistral
+    pour l'encodage, ce que le consentement d'upload annonce."""
+    embeddings = embed_texts([c["text"] for c in chunks])
 
     ids = [f"upload_{i}_{c['metadata'].get('article_num', '') or 'na'}" for i, c in enumerate(chunks)]
     collection.upsert(
         ids=ids,
-        embeddings=embeddings.tolist(),
+        embeddings=embeddings,
         documents=[c["text"] for c in chunks],
         metadatas=[c["metadata"] for c in chunks],
     )
@@ -454,9 +456,7 @@ def retrieve_from_upload(collection: chromadb.Collection, query: str, k: int = 1
     réservées à la collection globale persistante interrogée par le graphe
     LangGraph du chat principal (agent.build_graph() / agent.run_agent()).
     """
-    model = get_embed_model()
-    vec = model.encode(["query: " + query], show_progress_bar=False, normalize_embeddings=True).tolist()[0]
-    gc.collect()
+    vec = embed_texts([query])[0]
     results = collection.query(
         query_embeddings=[vec],
         n_results=k,

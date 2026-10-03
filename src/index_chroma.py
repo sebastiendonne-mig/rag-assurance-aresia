@@ -1,15 +1,13 @@
 """
 Indexation Chroma : lit les embeddings PRÉ-CALCULÉS (data/chunks/embeddings.npy
 + embeddings.meta.json, générés localement par src/precompute_embeddings.py)
-plutôt que de les calculer ici. Le calcul (model.encode) au build faisait
-expirer le build Cloud Build (30 min) — voir src/precompute_embeddings.py
-pour régénérer ces fichiers après tout changement de data/chunks/chunks.json.
+plutôt que de les calculer ici — voir src/precompute_embeddings.py pour
+régénérer ces fichiers après tout changement de data/chunks/chunks.json.
 
-Convention e5 : passages préfixés "passage: ", requêtes préfixées "query: ".
+Embeddings : API Mistral (mistral-embed) depuis le sous-lot 2.1, sans préfixe.
 
-Aucun import de sentence_transformers/torch ici : ce module est utilisé au
-build de l'image Docker et ne doit jamais charger de modèle ni calculer
-d'embedding.
+Aucun appel réseau ici : ce module est utilisé au build de l'image Docker et
+ne calcule jamais d'embedding (le build n'a pas de clé d'API).
 """
 import hashlib
 import json
@@ -24,7 +22,11 @@ EMBEDDINGS_PATH = ROOT / "data" / "chunks" / "embeddings.npy"
 META_PATH = ROOT / "data" / "chunks" / "embeddings.meta.json"
 CHROMA_PATH = ROOT / "chroma_db"
 COLLECTION_NAME = "assur_docs"
-MODEL_NAME = "intfloat/multilingual-e5-large"
+# Doit être identique à agent.MODEL_NAME (valeur par défaut) : c'est la valeur
+# écrite dans les métadonnées de la collection, que get_chroma_col() compare au
+# démarrage. Un test vérifie l'égalité. Écrite en dur pour ne pas importer
+# agent (anthropic, langgraph…) au build.
+MODEL_NAME = "mistral-embed"
 
 
 def chunk_id(chunk: dict) -> str:
@@ -48,6 +50,13 @@ def _load_precomputed_embeddings(chunks: list[dict]) -> np.ndarray:
         )
 
     meta = json.loads(META_PATH.read_text(encoding="utf-8"))
+
+    if meta.get("model_name") != MODEL_NAME:
+        raise RuntimeError(
+            f"Les embeddings pré-calculés viennent du modèle {meta.get('model_name')!r}, "
+            f"alors que l'index attend {MODEL_NAME!r}. Lancez `python src/precompute_embeddings.py` "
+            "en local pour régénérer, committez, puis relancez le build."
+        )
 
     actual_sha256 = hashlib.sha256(CHUNKS_PATH.read_bytes()).hexdigest()
     expected_sha256 = meta.get("chunks_sha256")
@@ -99,8 +108,8 @@ def build_index(force_reset: bool = False) -> chromadb.Collection:
         except Exception:
             pass
 
-    # Chroma gère ses propres embeddings via la fonction add(),
-    # mais on fournit les embeddings précalculés pour contrôler le préfixe e5
+    # On fournit les embeddings pré-calculés : Chroma n'utilise jamais sa
+    # fonction d'embedding par défaut.
     collection = client.get_or_create_collection(
         name=COLLECTION_NAME,
         metadata={"hnsw:space": "cosine", "model_name": MODEL_NAME},

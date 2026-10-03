@@ -77,9 +77,8 @@ _USAGE_Q1 = {
 _EXCEPTION_TEXT = "panne-reseau-secrete-jamais-affichee-au-visiteur"
 
 
-class _FakeEmbedModel:
-    def encode(self, *a, **k):
-        raise AssertionError("get_embed_model ne doit jamais être appelé réellement dans ces tests")
+def _embed_interdit(*a, **k):
+    raise AssertionError("embed_texts ne doit jamais être appelé réellement dans ces tests")
 
 
 class _FakeChromaCol:
@@ -99,8 +98,8 @@ class _FakeAnthropicClient:
 def _clear_resource_cache():
     """
     Isole chaque test : _warm_up() est décoré @st.cache_resource dans app.py.
-    Sans ce nettoyage avant ET après chaque test, les faux objets (embed
-    model, chroma, client Anthropic) mis en cache par un test fuiteraient
+    Sans ce nettoyage avant ET après chaque test, les faux objets (chroma,
+    client Anthropic) mis en cache par un test fuiteraient
     vers les tests suivants — ou un objet réel mis en cache par un run
     précédent fuiterait vers ce test.
     """
@@ -111,8 +110,10 @@ def _clear_resource_cache():
 
 @pytest.fixture(autouse=True)
 def _mock_heavy_deps(monkeypatch):
-    """Neutralise les dépendances lourdes/réseau appelées par _warm_up()."""
-    monkeypatch.setattr(agent, "get_embed_model", lambda: _FakeEmbedModel())
+    """Neutralise les dépendances lourdes/réseau appelées par _warm_up() et l'API d'embeddings."""
+    # upload_session importe embed_texts par son nom : les deux références sont remplacées.
+    monkeypatch.setattr(agent, "embed_texts", _embed_interdit)
+    monkeypatch.setattr(upload_session, "embed_texts", _embed_interdit)
     monkeypatch.setattr(agent, "get_chroma_col", lambda: _FakeChromaCol())
     monkeypatch.setattr(agent, "get_anthropic", lambda: _FakeAnthropicClient())
 
@@ -219,6 +220,26 @@ def test_texte_brut_exception_absent_de_tout_affichage(monkeypatch):
     displayed_captions = " ".join(c.value for c in at.caption)
     assert _EXCEPTION_TEXT not in displayed_markdown
     assert _EXCEPTION_TEXT not in displayed_captions
+
+
+def test_mistral_embeddings_indisponible_en_mode_corpus_message_neutre(monkeypatch):
+    """Pas de repli vers un modèle local : l'erreur d'encodage donne un message neutre, jamais son texte."""
+
+    def _fake_run_agent(question, *args, **kwargs):
+        raise agent.EmbeddingServiceError(_EXCEPTION_TEXT)
+
+    monkeypatch.setattr(agent, "run_agent", _fake_run_agent)
+    at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    at.chat_input[0].set_value("Question").run()
+    assert not at.exception
+
+    dernier = at.session_state["messages"][-1]
+    assert dernier["content"] == (
+        "La recherche dans les documents est momentanément indisponible. Merci de "
+        "réessayer dans quelques instants."
+    )
+    affiche = " ".join(m.value for m in at.markdown) + " ".join(c.value for c in at.caption)
+    assert _EXCEPTION_TEXT not in affiche
 
 
 def test_pas_de_dollar_non_echappe_dans_rendu_apres_succes(monkeypatch):
@@ -657,6 +678,21 @@ def test_erreur_technique_du_chemin_upload_reste_un_message_neutre(monkeypatch):
     dernier = at.session_state["messages"][-1]
     assert dernier["mode"] == "upload"
     assert dernier["content"] == "Une erreur technique est survenue. Merci de réessayer dans quelques instants."
+    assert _EXCEPTION_TEXT not in " ".join(m.value for m in at.markdown)
+
+
+def test_mistral_embeddings_indisponible_en_mode_upload_message_neutre(monkeypatch):
+    def _indisponible(collection, question):
+        raise agent.EmbeddingServiceError(_EXCEPTION_TEXT)
+
+    monkeypatch.setattr(upload_session, "compare_engines_on_upload", _indisponible)
+    at = _app_mode_upload(monkeypatch)
+    at.chat_input[0].set_value("Q").run()
+    assert not at.exception
+
+    dernier = at.session_state["messages"][-1]
+    assert dernier["content"] == agent.format_user_error(agent.EmbeddingServiceError("x"))
+    assert "momentanément indisponible" in dernier["content"]
     assert _EXCEPTION_TEXT not in " ".join(m.value for m in at.markdown)
 
 
@@ -1266,7 +1302,7 @@ def _app_avec_depot(monkeypatch, *, embed=None, acquire=None):
     monkeypatch.setattr(
         upload_session,
         "apply_length_guard",
-        lambda chunks: (chunks, [{"article_num": "7", "tokens_original": 600, "tokens_conserves": 512}]),
+        lambda chunks: (chunks, [{"article_num": "7", "caracteres_original": 2600, "caracteres_conserves": 1998}]),
     )
     monkeypatch.setattr(upload_session, "embed_and_index", embed or (lambda collection, chunks: None))
     _configure_mistral(monkeypatch, actif=True)
@@ -1287,6 +1323,7 @@ def test_indexation_reussie_active_le_mode_document_et_leve_l_attente(monkeypatc
     assert at.session_state["upload_doc_name"] == "contrat.pdf"
     assert at.session_state["upload_last_processed_file_id"] == "fichier-1"
     assert at.session_state["upload_warnings"][0]["article_num"] == "7"
+    assert "⚠️ Article 7 tronqué : 2600 → 1998 caractères conservés" in " ".join(c.value for c in at.caption)
     assert liberations == []
     assert any("contrat.pdf" in s.value for s in at.success)
 

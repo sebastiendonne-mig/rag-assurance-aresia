@@ -4,7 +4,6 @@ Agent RAG agentique — graphe LangGraph.
 """
 from __future__ import annotations
 
-import gc
 import json
 import logging
 import os
@@ -20,7 +19,6 @@ import anthropic
 import chromadb
 from dotenv import load_dotenv
 from langgraph.graph import END, StateGraph
-from sentence_transformers import SentenceTransformer
 
 log = logging.getLogger("agent")
 
@@ -105,16 +103,15 @@ def configure_stdout_logging() -> None:
 ROOT = Path(__file__).parent.parent
 CHROMA_PATH = ROOT / "chroma_db"
 COLLECTION_NAME = "assur_docs"
-MODEL_NAME = "intfloat/multilingual-e5-large"
-# Poids pré-téléchargés au build Docker (voir Dockerfile), fp32 (précision native
-# du modèle). Absent en dev local -> fallback ci-dessous.
-# Historique : bf16 utilisé du 21/09 au 23/09/2026 pour réduire l'empreinte
-# mémoire (~1.07 Go au lieu de ~2.24 Go), abandonné après investigation en
-# production (lot 2a) : le calcul en bf16 sur le vCPU Cloud Run (pas de support
-# matériel bf16 natif) s'est mesuré ~25x plus lent qu'en fp32 sur le même CPU
-# (287s vs 11s pour 21 chunks) — expliquait un temps d'analyse d'upload de ~8 min
-# au lieu de quelques secondes. Voir MAINTENANCE-APPS-TKOIDRA.md section 8.
-EMBED_MODEL_LOCAL_PATH = ROOT / "models" / "e5-large-fp32"
+# Modèle d'embeddings : API Mistral depuis le sous-lot 2.1 (03/10/2026), à la
+# place du modèle local intfloat/multilingual-e5-large (sentence-transformers),
+# dont le chargement coûtait 75 à 90 s à chaque démarrage à froid (mesuré dans
+# les logs Cloud Run du 26/09 au 03/10/2026). Configurable côté serveur, jamais
+# par le visiteur. MODEL_NAME est aussi la valeur écrite dans les métadonnées
+# de la collection Chroma (garde-fou de get_chroma_col) : changer de modèle
+# déclenche une reconstruction de l'index.
+MISTRAL_EMBED_MODEL = os.environ.get("MISTRAL_EMBED_MODEL") or "mistral-embed"
+MODEL_NAME = MISTRAL_EMBED_MODEL
 # Configurable côté serveur, jamais par le visiteur. Le défaut reproduit
 # exactement la valeur en dur précédente : sans CLAUDE_MODEL dans
 # l'environnement, le comportement est identique à celui du lot 2a.
@@ -146,7 +143,6 @@ class AgentState(TypedDict):
 # Ressources partagées (chargées une fois)
 # ─────────────────────────────────────────────
 
-_embed_model: SentenceTransformer | None = None
 _chroma_client: chromadb.PersistentClient | None = None  # référence forte pour éviter le GC
 _chroma_col: chromadb.Collection | None = None
 _chroma_lock = threading.Lock()  # évite une reconstruction concurrente si plusieurs sessions démarrent en même temps
@@ -155,7 +151,7 @@ _anthropic_client: anthropic.Anthropic | None = None
 # ── Compteurs d'instrumentation mémoire ──────────────────────────────────────
 # _current_turn  : numéro de la question en cours (Q1, Q2, …), mis à jour dans run_agent()
 # _turn_llm_seq  : compteur d'appels LLM dans le tour courant (remis à 0 par run_agent)
-# _turn_encode_seq : compteur d'appels encode() dans le tour courant
+# _turn_encode_seq : compteur d'encodages (embed_query/HyDE) dans le tour courant
 _turn_counter: int = 0
 _current_turn: int = 0
 _turn_llm_seq: int = 0
@@ -369,42 +365,28 @@ def log_memory(label: str) -> None:
     log.info(msg)
 
 
-def get_embed_model() -> SentenceTransformer:
-    global _embed_model
-    if _embed_model is None:
-        if EMBED_MODEL_LOCAL_PATH.exists():
-            # Poids fp32 pré-téléchargés sur disque (bakés au build).
-            _embed_model = SentenceTransformer(str(EMBED_MODEL_LOCAL_PATH))
-            source = str(EMBED_MODEL_LOCAL_PATH)
-        else:
-            # Fallback dev local (pas de pré-téléchargement baké) : télécharge et
-            # charge en fp32 (défaut). En prod (image Docker), ce chemin ne
-            # devrait jamais être emprunté — le warning signale une image mal
-            # construite plutôt que de replanter en OOM silencieusement.
-            log.warning(
-                "EMBED_MODEL_LOCAL_PATH introuvable (%s) — fallback téléchargement "
-                "à la volée. En prod, ceci indique un problème de build de l'image Docker.",
-                EMBED_MODEL_LOCAL_PATH,
-            )
-            _embed_model = SentenceTransformer(MODEL_NAME)
-            source = MODEL_NAME
-        # Sur Apple Silicon MPS, le warm-up encode() est toujours nécessaire pour
-        # forcer la compilation Metal et éviter un premier vecteur incorrect.
-        _ = _embed_model.encode(["query: warm-up"], normalize_embeddings=True)
-        gc.collect()
-        log.info("EMBED_MODEL loaded from %s + warm-up done, device=%s", source, _embed_model.device)
-        log_memory("startup - SentenceTransformer chargé + warm-up")
-    return _embed_model
-
-
-def _rebuild_chroma_index(client: chromadb.PersistentClient) -> chromadb.Collection:
-    """Reconstruit la collection Chroma avec le modèle d'embedding courant (déjà chargé en mémoire)."""
+def _rebuild_chroma_index(client: chromadb.PersistentClient, raison: str) -> chromadb.Collection:
+    """
+    Reconstruit la collection Chroma en encodant les chunks via embed_texts().
+    Chemin anormal en production : l'index est construit au build Docker
+    (src/index_chroma.py, à partir des embeddings pré-calculés). Le passer ici
+    signifie des appels réels à l'API d'embeddings depuis le serveur, d'où le
+    WARNING (visible dans Cloud Logging, sans aucun contenu).
+    """
     import hashlib as _hashlib
 
     chunks_path = ROOT / "data" / "chunks" / "chunks.json"
     with open(chunks_path, encoding="utf-8") as f:
         chunks = json.load(f)
-    log.info("CHROMA rebuild: %d chunks, modèle=%s", len(chunks), MODEL_NAME)
+    log.warning(
+        "CHROMA rebuild au runtime : raison=%s chunks=%d modele=%s — appels à l'API "
+        "d'embeddings depuis le serveur (l'index aurait dû être construit au build)",
+        raison, len(chunks), MODEL_NAME,
+    )
+
+    # Encodage AVANT de supprimer l'ancienne collection : si l'API échoue,
+    # l'erreur remonte sans avoir détruit l'index existant.
+    emb_list = embed_texts([c["text"] for c in chunks])
 
     try:
         client.delete_collection(COLLECTION_NAME)
@@ -416,17 +398,11 @@ def _rebuild_chroma_index(client: chromadb.PersistentClient) -> chromadb.Collect
         metadata={"hnsw:space": "cosine", "model_name": MODEL_NAME},
     )
 
-    model = get_embed_model()
-    texts = ["passage: " + c["text"] for c in chunks]
-    embeddings = model.encode(texts, show_progress_bar=False, normalize_embeddings=True)
-    gc.collect()
-
     def _id(c: dict) -> str:
         key = f"{c['metadata']['source_doc']}_{c['metadata']['article_num']}_{c['text'][:50]}"
         return _hashlib.md5(key.encode()).hexdigest()
 
     ids = [_id(c) for c in chunks]
-    emb_list = embeddings.tolist()
     batch_size = 50
     for i in range(0, len(chunks), batch_size):
         collection.upsert(
@@ -451,18 +427,21 @@ def get_chroma_col() -> chromadb.Collection:
             if _chroma_col is None:
                 _chroma_client = chromadb.PersistentClient(path=str(CHROMA_PATH))
 
-                needs_rebuild = False
+                raison = None
                 try:
                     col = _chroma_client.get_collection(COLLECTION_NAME)
-                    if col.metadata.get("model_name") != MODEL_NAME or col.count() == 0:
-                        needs_rebuild = True
+                    modele_index = (col.metadata or {}).get("model_name")
+                    if modele_index != MODEL_NAME:
+                        raison = f"modele_index={modele_index}"
+                    elif col.count() == 0:
+                        raison = "collection_vide"
                     else:
                         _chroma_col = col
                 except Exception:
-                    needs_rebuild = True
+                    raison = "collection_absente"
 
-                if needs_rebuild:
-                    _chroma_col = _rebuild_chroma_index(_chroma_client)
+                if raison is not None:
+                    _chroma_col = _rebuild_chroma_index(_chroma_client, raison)
 
                 log.info(
                     "CHROMA loaded: collection=%r count=%d id=%s",
@@ -615,11 +594,30 @@ def mistral_disponible() -> bool:
     return bool(os.environ.get("MISTRAL_API_KEY")) and bool(MISTRAL_MODEL)
 
 
+def mistral_embeddings_disponible() -> bool:
+    """
+    Vrai si l'API d'embeddings Mistral est utilisable : la clé suffit.
+    Distinct de mistral_disponible() : MISTRAL_MODEL ne concerne que le moteur
+    de chat comparé sur le chemin upload, pas l'encodage.
+    """
+    return bool(os.environ.get("MISTRAL_API_KEY"))
+
+
 def get_mistral():
+    """Client Mistral pour le moteur de chat : exige la clé ET MISTRAL_MODEL."""
+    if not mistral_disponible():
+        raise MistralUnavailableError("MISTRAL_API_KEY ou MISTRAL_MODEL absent")
+    return _get_mistral_client()
+
+
+def _get_mistral_client():
+    """
+    Client Mistral unique du processus, partagé par le chat et les embeddings
+    (même endpoint MISTRAL_SERVER, mêmes timeouts). Ne vérifie que la clé :
+    chaque appelant contrôle sa propre disponibilité avant.
+    """
     global _mistral_client
     if _mistral_client is None:
-        if not mistral_disponible():
-            raise MistralUnavailableError("MISTRAL_API_KEY ou MISTRAL_MODEL absent")
         import httpx
         from mistralai.client import Mistral
 
@@ -681,6 +679,128 @@ def _mistral_retry_delay_s(exc: Exception) -> float:
 
 
 # ─────────────────────────────────────────────
+# Embeddings (API Mistral — sous-lot 2.1)
+# ─────────────────────────────────────────────
+# Point d'entrée UNIQUE de tout encodage : questions (mode corpus et mode
+# upload), passages HyDE, chunks du corpus (reconstruction runtime et script
+# de pré-calcul) et chunks d'un document uploadé.
+# Aucun préfixe "query: " / "passage: " : convention propre à e5, la doc
+# Mistral n'en utilise pas. Vecteurs de norme 1 d'après la doc Mistral : la
+# métrique cosine des collections Chroma reste inchangée.
+# Pas de repli vers un modèle local : en cas d'indisponibilité ou d'erreur,
+# EmbeddingServiceError remonte et l'interface affiche un message neutre
+# (format_user_error).
+
+# Dimension attendue des vecteurs mistral-embed. Vérifiée sur chaque vecteur
+# reçu : un écart (autre modèle configuré, changement côté fournisseur) ferait
+# échouer l'insertion dans un index existant, ou pire, mélangerait deux
+# espaces de vecteurs incomparables.
+EMBED_DIMENSION = 1024
+
+# Taille de lot : la limite officielle (nombre d'entrées et tokens par
+# requête) n'est pas documentée dans la doc du SDK consultée le 03/10/2026.
+# Valeur prudente : 16 textes par requête. Les chunks font au plus ~2 000
+# caractères (corpus : 1 977 max ; upload : tronqués à MAX_CHUNK_CHARS), soit
+# environ 32 000 caractères par requête au pire. Si l'API refuse un lot, le
+# code HTTP est journalisé (sans contenu) et EmbeddingServiceError remonte.
+EMBED_BATCH_SIZE = 16
+
+
+class EmbeddingServiceError(Exception):
+    """
+    Encodage impossible : clé absente, erreur de l'API après réessai, ou
+    réponse inattendue (nombre ou dimension des vecteurs). Le message ne
+    contient jamais de texte encodé ; il n'est de toute façon jamais affiché
+    au visiteur (voir format_user_error).
+    """
+
+
+def _log_appel_embeddings(response, tentative: int, n_textes: int) -> None:
+    """Audit d'un appel d'embeddings réussi, même logique que _log_appel_mistral. Aucun contenu."""
+    audit_log.info(
+        "EMBED_CALL moteur=mistral endpoint=%s server=%s modele_demande=%s "
+        "modele_servi=%s request_id=%s n_textes=%d tentative=%d/%d",
+        mistral_endpoint_host(),
+        MISTRAL_SERVER,
+        MISTRAL_EMBED_MODEL,
+        getattr(response, "model", None) or "absent",
+        getattr(response, "id", None) or "absent",
+        n_textes,
+        tentative,
+        MISTRAL_MAX_ATTEMPTS,
+    )
+
+
+def _embed_batch(client, lot: list[str]) -> list[list[float]]:
+    """Un appel à l'API pour un lot, avec la politique de réessai du moteur de chat."""
+    for tentative in range(1, MISTRAL_MAX_ATTEMPTS + 1):
+        try:
+            response = client.embeddings.create(model=MISTRAL_EMBED_MODEL, inputs=lot)
+        except Exception as exc:
+            reessai = tentative < MISTRAL_MAX_ATTEMPTS and _mistral_should_retry(exc)
+            # Jamais le texte encodé dans le log : type, statut, taille du lot.
+            log.warning(
+                "EMBED_ERROR endpoint=%s server=%s modele=%s type=%s status_code=%s "
+                "n_textes=%d tentative=%d/%d reessai=%s",
+                mistral_endpoint_host(),
+                MISTRAL_SERVER,
+                MISTRAL_EMBED_MODEL,
+                type(exc).__name__,
+                _mistral_status_code(exc),
+                len(lot),
+                tentative,
+                MISTRAL_MAX_ATTEMPTS,
+                reessai,
+            )
+            if not reessai:
+                raise EmbeddingServiceError(
+                    f"échec de l'API d'embeddings ({type(exc).__name__}, "
+                    f"status_code={_mistral_status_code(exc)})"
+                ) from exc
+            time.sleep(_mistral_retry_delay_s(exc))
+            continue
+
+        _log_appel_embeddings(response, tentative, len(lot))
+        donnees = sorted(response.data or [], key=lambda d: d.index if d.index is not None else 0)
+        vecteurs = [d.embedding for d in donnees]
+        if len(vecteurs) != len(lot) or any(v is None for v in vecteurs):
+            log.warning(
+                "EMBED_REPONSE_INVALIDE attendus=%d recus=%d modele=%s",
+                len(lot), len(vecteurs), MISTRAL_EMBED_MODEL,
+            )
+            raise EmbeddingServiceError("nombre de vecteurs reçus différent du nombre de textes")
+        dimensions = {len(v) for v in vecteurs}
+        if dimensions != {EMBED_DIMENSION}:
+            log.warning(
+                "EMBED_DIMENSION_INATTENDUE attendue=%d recue=%s modele=%s",
+                EMBED_DIMENSION, sorted(dimensions), MISTRAL_EMBED_MODEL,
+            )
+            raise EmbeddingServiceError(f"dimension inattendue {sorted(dimensions)}")
+        return vecteurs
+    # Inatteignable : la boucle sort par return ou par raise.
+    raise EmbeddingServiceError("boucle de réessai épuisée")
+
+
+def embed_texts(texts: list[str]) -> list[list[float]]:
+    """
+    Encode `texts` via l'API d'embeddings Mistral, par lots de
+    EMBED_BATCH_SIZE, en conservant l'ordre. Un vecteur de EMBED_DIMENSION
+    floats par texte. Lève EmbeddingServiceError si la clé est absente ou si
+    un lot échoue (après le réessai unique pour les erreurs réessayables).
+    """
+    if not texts:
+        return []
+    if not mistral_embeddings_disponible():
+        log.warning("EMBED_INDISPONIBLE MISTRAL_API_KEY absente — aucun encodage possible")
+        raise EmbeddingServiceError("MISTRAL_API_KEY absente")
+    client = _get_mistral_client()
+    vecteurs: list[list[float]] = []
+    for debut in range(0, len(texts), EMBED_BATCH_SIZE):
+        vecteurs.extend(_embed_batch(client, texts[debut : debut + EMBED_BATCH_SIZE]))
+    return vecteurs
+
+
+# ─────────────────────────────────────────────
 # Prompt système
 # ─────────────────────────────────────────────
 
@@ -728,6 +848,11 @@ def format_user_error(exc: Exception) -> str:
         )
     if isinstance(exc, MistralUnavailableError):
         return "La comparaison entre moteurs n'est pas disponible pour le moment."
+    if isinstance(exc, EmbeddingServiceError):
+        return (
+            "La recherche dans les documents est momentanément indisponible. Merci de "
+            "réessayer dans quelques instants."
+        )
     return "Une erreur technique est survenue. Merci de réessayer dans quelques instants."
 
 
@@ -909,9 +1034,7 @@ def embed_query(text: str) -> list[float]:
     global _turn_encode_seq
     _turn_encode_seq += 1
     seq = _turn_encode_seq
-    model = get_embed_model()
-    vec = model.encode(["query: " + text], show_progress_bar=False, normalize_embeddings=True).tolist()[0]
-    gc.collect()  # libère les tenseurs torch intermédiaires dès que le vecteur est en liste Python
+    vec = embed_texts([text])[0]
     norm = math.sqrt(sum(x * x for x in vec))
     log.debug("EMBED query=%r norm=%.4f first5=%s", text[:60], norm, vec[:5])
     return vec
@@ -1167,13 +1290,11 @@ def _hyde_retrieve(question: str, doc_cible: str | None) -> list[dict]:
     )
     result = llm_json([{"role": "user", "content": f"Question : {question}"}], system=system)
     passage = result.get("passage_hypothetique", question)
-    # Embed avec le préfixe "passage:" — le vecteur d'un passage est plus proche des chunks réels
+    # Le passage hypothétique est encodé comme un chunk : son vecteur est plus proche des chunks réels
     global _turn_encode_seq
     _turn_encode_seq += 1
     seq = _turn_encode_seq
-    model = get_embed_model()
-    vec = model.encode(["passage: " + passage], show_progress_bar=False, normalize_embeddings=True).tolist()[0]
-    gc.collect()  # libère les tenseurs torch intermédiaires dès que le vecteur est en liste Python
+    vec = embed_texts([passage])[0]
     norm = _math.sqrt(sum(x * x for x in vec))
     log.info("HyDE passage='%s...' norm=%.4f", passage[:80], norm)
     col = get_chroma_col()

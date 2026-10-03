@@ -9,6 +9,7 @@ supprime la collection).
 """
 import hashlib
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -54,7 +55,7 @@ def _setup(tmp_path, monkeypatch, chunks, *, embeddings=None, meta_overrides=Non
     np.save(embeddings_path, embeddings)
 
     meta = {
-        "model_name": "fake-model",
+        "model_name": index_chroma.MODEL_NAME,
         "dimension": DIM,
         "n_chunks": len(chunks),
         "chunks_sha256": hashlib.sha256(chunks_bytes).hexdigest(),
@@ -159,3 +160,24 @@ def test_build_index_fichiers_absents_leve_erreur_explicite(tmp_path, monkeypatc
 
     with pytest.raises(RuntimeError, match=r"precompute_embeddings\.py"):
         index_chroma.build_index(force_reset=True)
+
+
+def test_build_index_embeddings_d_un_autre_modele_leve_erreur_explicite(tmp_path, monkeypatch):
+    # Sous-lot 2.1 : des embeddings e5 encore présents (même dimension 1024 que
+    # mistral-embed) ne doivent jamais être indexés sous le nom mistral-embed.
+    chunks = [_make_chunk(i, article_num=i) for i in range(5)]
+    _setup(tmp_path, monkeypatch, chunks, meta_overrides={"model_name": "intfloat/multilingual-e5-large"})
+
+    with pytest.raises(RuntimeError, match=r"precompute_embeddings\.py"):
+        index_chroma.build_index(force_reset=True)
+
+
+def test_model_name_aligne_sur_agent():
+    # index_chroma écrit MODEL_NAME en dur (pas d'import d'agent au build) :
+    # il doit rester identique au modèle par défaut d'agent, sans quoi
+    # get_chroma_col() reconstruirait l'index au premier démarrage.
+    import agent
+
+    assert index_chroma.MODEL_NAME == "mistral-embed"
+    if not os.environ.get("MISTRAL_EMBED_MODEL"):
+        assert agent.MODEL_NAME == index_chroma.MODEL_NAME

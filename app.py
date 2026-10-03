@@ -31,10 +31,10 @@ from agent import (
     configure_stdout_logging,
     exceeds_max_length,
     format_user_error,
-    get_embed_model,
     get_chroma_col,
     get_anthropic,
     get_graph,
+    log_memory,
     mistral_disponible,
     run_agent,
 )
@@ -195,11 +195,18 @@ def _upload_waiting_message(mistral_actif: bool) -> str:
 
 @st.cache_resource(show_spinner="Chargement du modèle d'embeddings… (jusqu'à 90 secondes au premier chargement)")
 def _warm_up():
-    """Charge les ressources une seule fois pour toute la durée de vie du serveur."""
-    get_embed_model()
+    """
+    Charge les ressources une seule fois pour toute la durée de vie du serveur.
+    Plus aucun modèle d'embeddings à charger depuis le sous-lot 2.1 : l'encodage
+    passe par l'API Mistral (agent.embed_texts), appelée seulement à l'usage.
+    """
     get_chroma_col()
     get_anthropic()
     get_graph()
+    # Repère de fin de démarrage sur stdout (Cloud Logging), qui remplace la ligne
+    # « startup - SentenceTransformer chargé + warm-up » utilisée pour mesurer le
+    # démarrage à froid.
+    log_memory("startup - warm-up terminé")
     return True
 
 
@@ -539,8 +546,9 @@ with col_chat:
             )
             for w in st.session_state.upload_warnings:
                 st.caption(
-                    f"⚠️ Article {w['article_num']} tronqué : {w['tokens_original']} → "
-                    f"{w['tokens_conserves']} tokens conservés (limite du modèle d'embeddings)."
+                    f"⚠️ Article {w['article_num']} tronqué : {w['caracteres_original']} → "
+                    f"{w['caracteres_conserves']} caractères conservés (longueur maximale "
+                    "d'un passage pour la recherche)."
                 )
             if st.button("📄 Nouveau document", use_container_width=True, disabled=_busy):
                 upload_session.release(_upload_session_id)

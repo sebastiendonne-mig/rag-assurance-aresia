@@ -62,8 +62,8 @@ REQUIRED_SERVER = "eu"
 
 # Estimation de coût AVANT le run : borne haute, HYPOTHÈSE non mesurée.
 # 1500 = max_tokens de llm_call (vrai plafond de sortie). 8000 en entrée =
-# 10 chunks <= 512 tokens e5 + prompt système, avec marge sur la tokenisation
-# française. Le coût réel est recalculé en fin de run à partir des tokens mesurés.
+# 10 chunks <= 2 000 caractères (upload_session.MAX_CHUNK_CHARS) + prompt système,
+# avec marge sur la tokenisation française. Le coût réel est recalculé en fin de run à partir des tokens mesurés.
 EST_TOKENS_IN_PAR_APPEL = 8000
 EST_TOKENS_OUT_PAR_APPEL = 1500
 
@@ -562,7 +562,7 @@ def run_evaluation(
                 continue
             report["documents"][spec.doc_id] = {
                 "chunks": info.n_chunks,
-                "chunks_tronques_512_tokens": info.n_tronques,
+                "chunks_tronques": info.n_tronques,
                 "articles_chapitre": sorted(info.refs.chapitres),
                 "articles_definis": sorted(info.refs.definitions),
             }
@@ -801,10 +801,9 @@ def _package_version(nom: str) -> str:
 
 def real_runtime() -> Runtime:
     """
-    Ordre imposé : HF hors ligne, .env neutralisé, PUIS import d'agent (dont les constantes
+    Ordre imposé : .env neutralisé, PUIS import d'agent (dont les constantes
     MISTRAL_MODEL / MISTRAL_SERVER / CLAUDE_MODEL sont figées à l'import).
     """
-    os.environ.setdefault("HF_HUB_OFFLINE", "1")
     neutralize_dotenv()
     for chemin in (str(SRC), str(HERE)):
         if chemin not in sys.path:

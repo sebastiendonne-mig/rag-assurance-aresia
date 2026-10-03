@@ -2,10 +2,10 @@
 Tests locaux du sous-lot 2a.1 — session d'upload éphémère de contrat visiteur.
 
 Aucun appel réseau, aucune clé API : llm_call est monkeypatché (jamais de vrai
-appel Anthropic, même dans le test de bout en bout). L'embedding, lui, est réel
-(modèle intfloat/multilingual-e5-large, déjà en cache HF local) — c'est le
-comportement exact de chromadb (EphemeralClient/PersistentClient) et du
-tokenizer du modèle qui sont sous test ici, pas des doublures.
+appel Anthropic, même dans le test de bout en bout), et l'encodage
+(embed_texts, API Mistral depuis le sous-lot 2.1) est remplacé par un double
+déterministe. C'est le comportement exact de chromadb
+(EphemeralClient/PersistentClient) qui est sous test ici, pas une doublure.
 
 chroma_db/ (la vraie collection globale du dépôt) n'est jamais touché par ces
 tests : agent.get_chroma_col() n'est appelé nulle part, ni directement ni par
@@ -42,6 +42,40 @@ def _reset_upload_lock_state():
         except Exception:
             pass
         upload_session._active = None
+
+
+def _faux_vecteur(texte: str) -> list[float]:
+    """Vecteur déterministe de norme 1, à la dimension de mistral-embed, dérivé du texte."""
+    import hashlib
+    import math
+
+    graine = hashlib.sha256(texte.encode("utf-8")).digest()
+    brut = [graine[i % len(graine)] - 127.5 + (i % 7) for i in range(agent.EMBED_DIMENSION)]
+    norme = math.sqrt(sum(x * x for x in brut))
+    return [x / norme for x in brut]
+
+
+@pytest.fixture(autouse=True)
+def _faux_embeddings(monkeypatch):
+    """Aucun appel à l'API d'embeddings : les deux références à embed_texts sont remplacées."""
+    appels: list[list[str]] = []
+
+    def _embed(texts):
+        appels.append(list(texts))
+        return [_faux_vecteur(t) for t in texts]
+
+    monkeypatch.setattr(agent, "embed_texts", _embed)
+    monkeypatch.setattr(upload_session, "embed_texts", _embed)
+    return appels
+
+
+@pytest.fixture(autouse=True)
+def _reset_disjoncteur():
+    agent._daily_count = 0
+    agent._daily_date = None
+    yield
+    agent._daily_count = 0
+    agent._daily_date = None
 
 
 def _md5(path: Path) -> str:
@@ -165,7 +199,7 @@ def test_3_timeout_liberation_automatique(monkeypatch):
 # Test 4 — Upload réel de bout en bout
 # ─────────────────────────────────────────────
 
-def test_4_upload_bout_en_bout_ne_touche_pas_la_collection_globale(monkeypatch):
+def test_4_upload_bout_en_bout_ne_touche_pas_la_collection_globale(monkeypatch, _faux_embeddings):
     real_chroma_db = ROOT / "chroma_db" / "chroma.sqlite3"
     md5_avant = _md5(real_chroma_db)
 
@@ -192,6 +226,9 @@ def test_4_upload_bout_en_bout_ne_touche_pas_la_collection_globale(monkeypatch):
 
     upload_session.embed_and_index(handle.collection, chunks)
     assert handle.collection.count() == len(chunks)
+    # Texte brut envoyé à l'encodage, sans préfixe e5.
+    assert _faux_embeddings[0] == [c["text"] for c in chunks]
+    assert not any(t.startswith(("query: ", "passage: ")) for t in _faux_embeddings[0])
 
     fake_answer = "**Réponse directe** : test.\n**Source(s)** : [Article 4 — test]\n**Point d'attention** : aucun."
     captured_prompt = {}
@@ -208,6 +245,7 @@ def test_4_upload_bout_en_bout_ne_touche_pas_la_collection_globale(monkeypatch):
     )
     assert reponse == fake_answer
     assert "messages" in captured_prompt  # le prompt a bien été construit et envoyé au "LLM"
+    assert _faux_embeddings[-1] == ["Quelles sont les options de franchise ?"]
 
     upload_session.release("session_e2e_test")
 
@@ -216,16 +254,16 @@ def test_4_upload_bout_en_bout_ne_touche_pas_la_collection_globale(monkeypatch):
 
 
 # ─────────────────────────────────────────────
-# Test 5 — Garde-fou de longueur (512 tokens)
+# Test 5 — Garde-fou de longueur (MAX_CHUNK_CHARS caractères)
 # ─────────────────────────────────────────────
 
 def test_5_garde_fou_longueur_tronque_avec_avertissement():
     long_chunk = {
-        "text": "mot " * 2000,  # bien au-delà de 512 tokens
+        "text": "mot " * 2000,  # 8 000 caractères, bien au-delà de MAX_CHUNK_CHARS
         "metadata": {"source_doc": "UPLOAD-TEST", "article_num": "99", "version": "upload", "titre_humain": "t"},
     }
     short_chunk = {
-        "text": "Ceci est un article court, largement sous la limite de tokens.",
+        "text": "Ceci est un article court, largement sous la limite.",
         "metadata": {"source_doc": "UPLOAD-TEST", "article_num": "1", "version": "upload", "titre_humain": "t"},
     }
 
@@ -234,23 +272,39 @@ def test_5_garde_fou_longueur_tronque_avec_avertissement():
     assert len(adjusted) == 2
     assert len(warnings) == 1
     assert warnings[0]["article_num"] == "99"
-    assert warnings[0]["tokens_original"] > upload_session.MAX_CHUNK_TOKENS
-    assert warnings[0]["tokens_conserves"] <= upload_session.MAX_CHUNK_TOKENS
+    assert warnings[0]["caracteres_original"] == len(long_chunk["text"])
+    assert warnings[0]["caracteres_conserves"] == len(adjusted[0]["text"])
 
-    # Le chunk tronqué reste non vide et strictement plus court que l'original.
+    # Le chunk tronqué reste non vide, sous la limite, et ne coupe pas un mot.
     truncated_text = adjusted[0]["text"]
-    assert 0 < len(truncated_text) < len(long_chunk["text"])
+    assert 0 < len(truncated_text) <= upload_session.MAX_CHUNK_CHARS
+    assert truncated_text.endswith("mot")
     assert adjusted[0]["metadata"]["tronque"] is True
+    assert adjusted[0]["metadata"]["caracteres_original"] == len(long_chunk["text"])
 
     # Le chunk court n'est pas altéré.
     assert adjusted[1]["text"] == short_chunk["text"]
     assert "tronque" not in adjusted[1]["metadata"]
 
-    # Vérification indépendante avec le vrai tokenizer : le texte tronqué
-    # rentre bien sous la limite une fois ré-encodé.
-    model = agent.get_embed_model()
-    ids_after = model.tokenizer(truncated_text, truncation=False)["input_ids"]
-    assert len(ids_after) <= upload_session.MAX_CHUNK_TOKENS
+
+def test_5b_garde_fou_longueur_sans_espace_coupe_a_la_limite():
+    chunk = {
+        "text": "x" * (upload_session.MAX_CHUNK_CHARS + 500),
+        "metadata": {"source_doc": "UPLOAD-TEST", "article_num": "3", "version": "upload", "titre_humain": "t"},
+    }
+    adjusted, warnings = upload_session.apply_length_guard([chunk])
+    assert len(adjusted[0]["text"]) == upload_session.MAX_CHUNK_CHARS
+    assert warnings[0]["caracteres_conserves"] == upload_session.MAX_CHUNK_CHARS
+
+
+def test_5c_chunk_exactement_a_la_limite_non_tronque():
+    chunk = {
+        "text": "y" * upload_session.MAX_CHUNK_CHARS,
+        "metadata": {"source_doc": "UPLOAD-TEST", "article_num": "4", "version": "upload", "titre_humain": "t"},
+    }
+    adjusted, warnings = upload_session.apply_length_guard([chunk])
+    assert warnings == []
+    assert adjusted[0] is chunk
 
 
 # ─────────────────────────────────────────────
