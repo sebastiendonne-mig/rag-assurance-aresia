@@ -4,19 +4,21 @@ data/chunks/chunks.json.
 
 Script de GÉNÉRATION LOCALE UNIQUEMENT — jamais exécuté au build Docker.
 src/index_chroma.py lit les fichiers produits ici au lieu de calculer les
-embeddings au build (le calcul via model.encode() faisait expirer le build
-Cloud Build à 30 min).
+embeddings au build (le build n'a pas de clé d'API).
 
-À relancer chaque fois que data/chunks/chunks.json change.
+À relancer chaque fois que data/chunks/chunks.json change, ou que le modèle
+d'embeddings change.
 
 Usage : python src/precompute_embeddings.py
-Prérequis : le modèle intfloat/multilingual-e5-large doit être présent en
-cache HF local (ou pré-téléchargé dans models/e5-large-fp32). Lancer avec
-HF_HUB_OFFLINE=1 pour garantir qu'aucun téléchargement n'est tenté.
+Prérequis : MISTRAL_API_KEY dans l'environnement (ou le .env local, lu par
+agent.py). APPELS RÉELS à l'API d'embeddings Mistral : un par lot de
+agent.EMBED_BATCH_SIZE chunks. Les fichiers ne sont écrits qu'après le succès
+de tous les lots.
 """
 import hashlib
 import json
 import platform
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -24,13 +26,6 @@ ROOT = Path(__file__).parent.parent
 CHUNKS_PATH = ROOT / "data" / "chunks" / "chunks.json"
 EMBEDDINGS_PATH = ROOT / "data" / "chunks" / "embeddings.npy"
 META_PATH = ROOT / "data" / "chunks" / "embeddings.meta.json"
-MODEL_NAME = "intfloat/multilingual-e5-large"
-# Même chemin que agent.py:EMBED_MODEL_LOCAL_PATH — si ce script tourne après
-# l'étape de pré-téléchargement du Dockerfile (ou un téléchargement local
-# équivalent), on réutilise ces poids plutôt que de retélécharger le modèle.
-# fp32 (précision native) depuis le 23/09/2026 — voir agent.py pour le
-# contexte du passage bf16 -> fp32 (lenteur ~25x en bf16 sur CPU Cloud Run).
-EMBED_MODEL_LOCAL_PATH = ROOT / "models" / "e5-large-fp32"
 
 
 def chunk_id(chunk: dict) -> str:
@@ -41,21 +36,20 @@ def chunk_id(chunk: dict) -> str:
     return hashlib.md5(key.encode()).hexdigest()
 
 
-def _load_embed_model():
-    from sentence_transformers import SentenceTransformer
-
-    if EMBED_MODEL_LOCAL_PATH.exists():
-        print(f"Chargement modèle (fp32 pré-téléchargé) : {EMBED_MODEL_LOCAL_PATH}")
-        return SentenceTransformer(str(EMBED_MODEL_LOCAL_PATH))
-    print(f"Chargement modèle : {MODEL_NAME} (pas de poids pré-téléchargés trouvés)")
-    return SentenceTransformer(MODEL_NAME)
-
-
 def main() -> None:
+    from importlib.metadata import version
+
     import numpy as np
-    import sentence_transformers
-    import torch
-    import transformers
+
+    sys.path.insert(0, str(ROOT / "src"))
+    import agent
+    import index_chroma
+
+    if agent.MODEL_NAME != index_chroma.MODEL_NAME:
+        sys.exit(
+            f"ERREUR : MISTRAL_EMBED_MODEL={agent.MODEL_NAME!r} diffère du modèle attendu par "
+            f"src/index_chroma.py ({index_chroma.MODEL_NAME!r}) : le build refuserait ces fichiers."
+        )
 
     print("Chargement chunks...")
     with open(CHUNKS_PATH, encoding="utf-8") as f:
@@ -65,27 +59,26 @@ def main() -> None:
     chunks_sha256 = hashlib.sha256(CHUNKS_PATH.read_bytes()).hexdigest()
     ids = [chunk_id(c) for c in chunks]
 
-    model = _load_embed_model()
-
-    # Préfixe e5 obligatoire pour les passages
-    texts_to_embed = ["passage: " + c["text"] for c in chunks]
-
-    print("Calcul des embeddings (peut prendre 1-2 min)...")
-    embeddings = model.encode(texts_to_embed, show_progress_bar=True, normalize_embeddings=True)
-    embeddings = np.asarray(embeddings, dtype=np.float32)
+    print(
+        f"Encodage via l'API Mistral : modèle {agent.MODEL_NAME}, serveur {agent.MISTRAL_SERVER} "
+        f"({agent.mistral_endpoint_host()}), lots de {agent.EMBED_BATCH_SIZE}..."
+    )
+    embeddings = np.asarray(agent.embed_texts([c["text"] for c in chunks]), dtype=np.float32)
+    normes = np.linalg.norm(embeddings, axis=1)
     print(f"  Embeddings calculés : shape {embeddings.shape}, dtype {embeddings.dtype}")
+    print(f"  Normes : min={normes.min():.4f} max={normes.max():.4f} (1 attendu d'après la doc Mistral)")
 
     np.save(EMBEDDINGS_PATH, embeddings)
 
     meta = {
-        "model_name": MODEL_NAME,
+        "model_name": agent.MODEL_NAME,
         "dimension": int(embeddings.shape[1]),
         "n_chunks": int(embeddings.shape[0]),
         "chunks_sha256": chunks_sha256,
         "chunk_ids": ids,
-        "sentence_transformers_version": sentence_transformers.__version__,
-        "transformers_version": transformers.__version__,
-        "torch_version": torch.__version__,
+        "mistral_server": agent.MISTRAL_SERVER,
+        "mistral_endpoint_host": agent.mistral_endpoint_host(),
+        "mistralai_version": version("mistralai"),
         "platform_machine": platform.machine(),
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
     }

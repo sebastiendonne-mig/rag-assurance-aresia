@@ -1,16 +1,30 @@
 """
-Test de retrieval pur (sans LLM) sur un sous-ensemble du golden set.
-Valide que le bon article est en top-3 pour chaque question.
-Convention e5 : requêtes préfixées "query: "
+Test de retrieval pur (sans LLM) sur le golden set : rang de l'article attendu
+dans le top-10, scores top-1 / top-3 / top-10, distances cosine du top-1.
+Même format de mesure que la référence e5 du 03/10/2026
+(tests/results/baseline_e5_retrieval_20261003.txt).
+
+Encodage des questions : agent.embed_texts (API Mistral, sans préfixe), avec
+un cache local des vecteurs dans tests/results/ (non versionné) : un nouveau
+lancement n'appelle l'API que pour les questions absentes du cache.
+Aucun appel Anthropic. Interroge la collection locale chroma_db/, qui doit
+avoir été construite avec le même modèle (python src/index_chroma.py).
+
+Usage : python src/test_retrieval.py
 """
+import hashlib
+import json
+import statistics
+import sys
 from pathlib import Path
+
 import chromadb
-from sentence_transformers import SentenceTransformer
 
 ROOT = Path(__file__).parent.parent
 CHROMA_PATH = ROOT / "chroma_db"
 COLLECTION_NAME = "assur_docs"
-MODEL_NAME = "intfloat/multilingual-e5-large"
+CACHE_PATH = ROOT / "tests" / "results" / "retrieval_query_cache.json"
+K = 10
 
 TESTS = [
     {
@@ -136,65 +150,84 @@ TESTS = [
 ]
 
 
-def run_retrieval_tests(k: int = 5):
-    print(f"Chargement modèle {MODEL_NAME}...")
-    model = SentenceTransformer(MODEL_NAME)
+def _cle_cache(modele: str, question: str) -> str:
+    return hashlib.sha256(f"{modele}\n{question}".encode("utf-8")).hexdigest()
+
+
+def _vecteurs_questions(modele: str, questions: list[str]) -> list[list[float]]:
+    """Vecteurs des questions, depuis le cache local ou, à défaut, via embed_texts (un seul appel groupé)."""
+    from agent import embed_texts
+
+    cache = json.loads(CACHE_PATH.read_text(encoding="utf-8")) if CACHE_PATH.exists() else {}
+    manquantes = [q for q in questions if _cle_cache(modele, q) not in cache]
+    if manquantes:
+        print(f"Encodage de {len(manquantes)} question(s) via l'API ({modele})...")
+        for q, v in zip(manquantes, embed_texts(manquantes)):
+            cache[_cle_cache(modele, q)] = v
+        CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
+        CACHE_PATH.write_text(json.dumps(cache), encoding="utf-8")
+    else:
+        print(f"Vecteurs des questions lus depuis le cache ({CACHE_PATH.name}), aucun appel API.")
+    return [cache[_cle_cache(modele, q)] for q in questions]
+
+
+def run_retrieval_tests(k: int = K) -> None:
+    sys.path.insert(0, str(ROOT / "src"))
+    from agent import MODEL_NAME
 
     client = chromadb.PersistentClient(path=str(CHROMA_PATH))
     collection = client.get_collection(COLLECTION_NAME)
-    print(f"Collection chargée : {collection.count()} chunks\n")
-
-    passed = 0
-    total_non_q20 = len([t for t in TESTS if t["expected_article"] is not None])
-
-    for test in TESTS:
-        query_text = "query: " + test["question"]
-        embedding = model.encode([query_text], normalize_embeddings=True).tolist()
-
-        results = collection.query(
-            query_embeddings=embedding,
-            n_results=k,
-            include=["metadatas", "distances", "documents"],
+    modele_index = (collection.metadata or {}).get("model_name")
+    print(f"Collection chargée : {collection.count()} chunks, modèle de l'index : {modele_index}")
+    if modele_index != MODEL_NAME:
+        # Comparer des vecteurs de deux modèles différents n'a aucun sens (même à dimension égale).
+        sys.exit(
+            f"ERREUR : l'index a été construit avec {modele_index!r}, les questions seraient encodées "
+            f"avec {MODEL_NAME!r}. Reconstruisez l'index : python src/index_chroma.py"
         )
 
-        metas = results["metadatas"][0]
-        distances = results["distances"][0]
+    vecteurs = _vecteurs_questions(MODEL_NAME, [t["question"] for t in TESTS])
+    print()
+
+    rangs: list[int | None] = []
+    dist_top1: list[float] = []
+    dist_q20 = None
+    for test, vec in zip(TESTS, vecteurs):
+        results = collection.query(query_embeddings=[vec], n_results=k, include=["metadatas", "distances"])
+        metas, distances = results["metadatas"][0], results["distances"][0]
 
         if test["expected_article"] is None:
-            # Q20 : vérifier que le score du top-1 est bas (> 0.3 = peu similaire en cosine)
-            top_dist = distances[0]
-            # distance cosine : 0 = identique, 2 = opposé — on veut > 0.5 pour "non trouvé"
-            ok = top_dist > 0.35
-            marker = "✅" if ok else "⚠️ "
-            print(f"{marker} {test['label']}")
-            print(f"     Top-1 distance={top_dist:.3f} [{metas[0]['source_doc']} Art.{metas[0]['article_num']}]")
-            print(f"     {'→ Aucun doc pertinent (bon)' if ok else '→ ATTENTION: un doc proche trouvé'}")
-        else:
-            # Chercher si l'article attendu est dans le top-k
-            top_k_found = [
-                (m["source_doc"], m["article_num"], d)
-                for m, d in zip(metas, distances)
-            ]
-            hit = next(
-                (i + 1 for i, (src, art, _) in enumerate(top_k_found)
-                 if src == test["expected_doc"] and art == test["expected_article"]),
-                None,
-            )
-            ok = hit is not None
-            if ok:
-                passed += 1
-            marker = "✅" if ok else "❌"
-            rank_str = f"rank {hit}" if ok else "non trouvé dans top-5"
-            print(f"{marker} {test['label']}")
-            for rank, (src, art, dist) in enumerate(top_k_found[:3], 1):
-                flag = " ← CIBLE" if (src == test["expected_doc"] and art == test["expected_article"]) else ""
-                print(f"     #{rank} [{src}] Art.{art}  dist={dist:.3f}{flag}")
+            dist_q20 = distances[0]
+            print(f"{test['label']:<40} top1_dist={distances[0]:.4f} "
+                  f"[{metas[0]['source_doc']} Art.{metas[0]['article_num']}]")
+            continue
 
-        print()
+        rang = next(
+            (i + 1 for i, m in enumerate(metas)
+             if m["source_doc"] == test["expected_doc"] and m["article_num"] == test["expected_article"]),
+            None,
+        )
+        rangs.append(rang)
+        dist_top1.append(distances[0])
+        cible = f" dist_cible={distances[rang - 1]:.4f}" if rang else ""
+        print(f"{test['label']:<40} rang={rang if rang else f'>{k}'} top1_dist={distances[0]:.4f}{cible}")
+        for r, (m, d) in enumerate(zip(metas[:3], distances[:3]), 1):
+            flag = " ← CIBLE" if r == rang else ""
+            print(f"     #{r} [{m['source_doc']}] Art.{m['article_num']}  dist={d:.4f}{flag}")
 
-    print(f"{'='*50}")
-    print(f"Score retrieval : {passed}/{total_non_q20} articles cibles en top-{k}")
+    n = len(rangs)
+    print(f"\n{'=' * 50}")
+    print(f"Modèle : {MODEL_NAME} — questions avec cible : {n}")
+    for seuil in (1, 3, 5, 10):
+        if seuil <= k:
+            print(f"top-{seuil}: {sum(1 for r in rangs if r and r <= seuil)}/{n}")
+    print(f"top-1 dist ({n} questions): min={min(dist_top1):.4f} "
+          f"médiane={statistics.median(dist_top1):.4f} max={max(dist_top1):.4f}")
+    if dist_q20 is not None:
+        # Information seulement : aucun seuil de distance n'est calibré pour ce modèle
+        # (avec e5, Q20 tombait dans la plage des questions valides).
+        print(f"Q20 top-1 dist: {dist_q20:.4f}")
 
 
 if __name__ == "__main__":
-    run_retrieval_tests(k=5)
+    run_retrieval_tests()
