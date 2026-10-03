@@ -377,6 +377,31 @@ def test_choix_et_limites_sans_mistral_ni_bloc_comparaison_ni_affirmation_mistra
     assert "(voir ci-dessus)" not in contenu
 
 
+@pytest.mark.parametrize("actif", [True, False])
+def test_choix_et_limites_annonce_l_encodage_par_mistral(monkeypatch, actif):
+    """Sous-lot 2.1 : questions des deux modes et documents déposés encodés par Mistral, avec ou sans comparaison."""
+    _configure_mistral(monkeypatch, actif=actif, server="eu")
+    at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    assert not at.exception
+
+    contenu = _contenu_choix_et_limites(at)
+    assert "Recherche dans les documents (embeddings)" in contenu
+    assert "en mode corpus ARESIA comme en mode document uploadé" in contenu
+    assert "le texte complet des documents déposés" in contenu
+    assert f"API d'embeddings de Mistral AI (`{agent.MISTRAL_EMBED_MODEL}`), via son endpoint européen" in contenu
+    assert "même sans comparaison de moteurs" in contenu
+
+
+def test_choix_et_limites_encodage_sans_endpoint_europeen_si_serveur_global(monkeypatch):
+    _configure_mistral(monkeypatch, actif=False, server="global")
+    at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    assert not at.exception
+
+    contenu = _contenu_choix_et_limites(at)
+    assert "Recherche dans les documents (embeddings)" in contenu
+    assert "via son endpoint européen" not in contenu
+
+
 def test_choix_et_limites_endpoint_europeen_uniquement_si_serveur_eu(monkeypatch):
     _configure_mistral(monkeypatch, actif=True, server="global")
     at = AppTest.from_file(APP_PATH, default_timeout=15).run()
@@ -908,17 +933,43 @@ def test_consentement_phrase_ue_absente_si_serveur_non_eu(monkeypatch):
     assert "Mistral Large 3" in texte
 
 
-def test_consentement_sans_mistral_ne_nomme_pas_mistral(monkeypatch):
+def test_consentement_sans_comparaison_nomme_mistral_pour_l_encodage(monkeypatch):
+    """Sous-lot 2.1 : sans moteur Mistral comparé, le document et les questions partent quand même chez Mistral."""
     _configure_mistral(monkeypatch, actif=False, server="eu")
     at = AppTest.from_file(APP_PATH, default_timeout=15).run()
     assert not at.exception
 
     texte = _texte_consentement(at)
-    assert "Mistral" not in texte
-    assert "Union européenne" not in texte
     assert "**Claude** (Anthropic)" in texte
+    assert "deux services" not in texte
+    assert "Large 3" not in texte
+    assert "le texte complet de votre document et chacune de vos questions" in texte
+    assert f"API d'embeddings de **Mistral AI** (`{agent.MISTRAL_EMBED_MODEL}`)" in texte
+    assert "même sans comparaison de moteurs" in texte
+    assert "L'inférence Mistral est exécutée dans l'Union européenne." in texte
     assert "hébergée aux États-Unis" in texte
     assert "transmis à Anthropic" in texte
+
+
+@pytest.mark.parametrize("actif", [True, False])
+def test_consentement_annonce_toujours_l_encodage_par_mistral(monkeypatch, actif):
+    _configure_mistral(monkeypatch, actif=actif, server="eu")
+    at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    assert not at.exception
+
+    texte = _texte_consentement(at)
+    assert "le texte complet de votre document et chacune de vos questions" in texte
+    assert "Mistral AI" in texte
+    # L'ancienne formule (seuls des extraits quittent le serveur) n'est plus exacte.
+    assert "traité pour l'indexation" not in texte
+
+
+def test_consentement_sans_comparaison_phrase_ue_absente_si_serveur_non_eu(monkeypatch):
+    _configure_mistral(monkeypatch, actif=False, server="global")
+    at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    assert not at.exception
+
+    assert "Union européenne" not in _texte_consentement(at)
 
 
 @pytest.mark.parametrize("actif", [True, False])

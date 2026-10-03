@@ -22,6 +22,7 @@ from agent import (
     DAILY_QUESTION_LIMIT,
     ENGINE_MISTRAL,
     ComparisonDailyLimitExceeded,
+    MISTRAL_EMBED_MODEL,
     MISTRAL_MODEL,
     MISTRAL_MULTIPLICATEUR_REGIONAL,
     MISTRAL_PRICED_MODEL,
@@ -51,11 +52,15 @@ def _mistral_nom() -> str:
     return "Mistral Large 3" if MISTRAL_MODEL == MISTRAL_PRICED_MODEL else "Mistral"
 
 
-def _build_upload_consent_text(mistral_actif: bool, mistral_server: str, mistral_nom: str) -> str:
+def _build_upload_consent_text(
+    mistral_actif: bool, mistral_server: str, mistral_nom: str, embed_model: str
+) -> str:
     """
     Texte de consentement avant dépôt d'un document. La phrase sur l'Union
     européenne n'apparaît que si l'endpoint configuré est l'endpoint UE : elle
-    est dérivée de la configuration, jamais affirmée en dur.
+    est dérivée de la configuration, jamais affirmée en dur. Mistral est nommé
+    dans tous les cas : depuis le sous-lot 2.1, l'encodage du document et des
+    questions passe par son API d'embeddings, avec ou sans comparaison.
     """
     if mistral_actif:
         destinataires = (
@@ -63,31 +68,32 @@ def _build_upload_consent_text(mistral_actif: bool, mistral_server: str, mistral
             "d'IA** pour générer deux réponses comparables : **Claude** (Anthropic) et "
             f"**{mistral_nom}** (Mistral AI)."
         )
-        conservation = (
-            "Chacun conserve les données envoyées pendant 30 jours : Anthropic par défaut, "
-            "Mistral pour la surveillance des abus. Aucune option de conservation zéro n'est "
-            "activée."
-        )
         transmis_a = "aux deux services"
     else:
         destinataires = (
             "Des extraits de votre document et votre question seront envoyés à **Claude** "
             "(Anthropic) pour générer une réponse."
         )
-        conservation = (
-            "Anthropic conserve les données envoyées pendant 30 jours par défaut. Aucune option "
-            "de conservation zéro n'est activée."
-        )
         transmis_a = "à Anthropic"
+    encodage = (
+        "Pour la recherche, le texte complet de votre document et chacune de vos questions "
+        f"sont aussi envoyés à l'API d'embeddings de **Mistral AI** (`{embed_model}`), qui les "
+        "convertit en vecteurs. Cet envoi a lieu même sans comparaison de moteurs."
+    )
+    conservation = (
+        "Chacun conserve les données envoyées pendant 30 jours : Anthropic par défaut, "
+        "Mistral pour la surveillance des abus. Aucune option de conservation zéro n'est "
+        "activée."
+    )
     phrase_ue = (
         "L'inférence Mistral est exécutée dans l'Union européenne. "
-        if mistral_actif and mistral_server == "eu"
+        if mistral_server == "eu"
         else ""
     )
     hebergement = (
-        f"{phrase_ue}Cette application est hébergée aux États-Unis : votre document y est traité "
-        f"pour l'indexation, puis seuls les extraits utiles à votre question sont transmis "
-        f"{transmis_a}."
+        f"{phrase_ue}Cette application est hébergée aux États-Unis : votre document y est découpé "
+        f"et indexé, puis seuls les extraits utiles à votre question sont transmis {transmis_a} "
+        "pour générer la réponse."
     )
     minutes = upload_session.UPLOAD_LOCK_TIMEOUT_S // 60
     index = (
@@ -101,7 +107,7 @@ def _build_upload_consent_text(mistral_actif: bool, mistral_server: str, mistral
         "Merci d'utiliser un document fictif, ou dont vous acceptez le partage dans ces "
         "conditions."
     )
-    return "\n\n".join([destinataires, conservation, hebergement, index, merci])
+    return "\n\n".join([destinataires, encodage, conservation, hebergement, index, merci])
 
 
 ROOT = Path(__file__).parent
@@ -451,6 +457,18 @@ with col_chat:
             "c'est cette couture qui rend un changement de modèle possible sans réécrire le "
             f"pipeline. {_modele_upload}"
         )
+        _endpoint_embeddings = (
+            ", via son endpoint européen" if MISTRAL_SERVER == "eu" else ""
+        )
+        st.markdown(
+            "**Recherche dans les documents (embeddings)**\n"
+            "Pour retrouver les passages utiles, le texte de chaque question — en mode corpus "
+            "ARESIA comme en mode document uploadé — et le texte complet des documents déposés "
+            f"sont envoyés à l'API d'embeddings de Mistral AI (`{MISTRAL_EMBED_MODEL}`)"
+            f"{_endpoint_embeddings}, qui les convertit en vecteurs. Cet envoi a lieu même sans "
+            "comparaison de moteurs. Les documents du corpus fictif ont été encodés une seule "
+            "fois, à la préparation de la démo."
+        )
         if _mistral_actif:
             if MISTRAL_MODEL == MISTRAL_PRICED_MODEL:
                 _puces_comparaison = [
@@ -559,7 +577,11 @@ with col_chat:
                 st.session_state.upload_last_processed_file_id = None
                 st.rerun()
         elif not st.session_state.upload_consent:
-            st.markdown(_build_upload_consent_text(mistral_disponible(), MISTRAL_SERVER, _mistral_nom()))
+            st.markdown(
+                _build_upload_consent_text(
+                    mistral_disponible(), MISTRAL_SERVER, _mistral_nom(), MISTRAL_EMBED_MODEL
+                )
+            )
             if st.button("J'ai compris, je continue", key="upload_consent_btn", disabled=_busy):
                 st.session_state.upload_consent = True
                 st.rerun()
