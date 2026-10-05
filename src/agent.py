@@ -15,10 +15,18 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import TypedDict
 
+import startup_timing
+
 import anthropic
+
+startup_timing.mark("agent : import anthropic")
 import chromadb
+
+startup_timing.mark("agent : import chromadb")
 from dotenv import load_dotenv
 from langgraph.graph import END, StateGraph
+
+startup_timing.mark("agent : import langgraph")
 
 log = logging.getLogger("agent")
 

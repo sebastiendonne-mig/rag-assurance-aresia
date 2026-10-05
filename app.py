@@ -2,17 +2,28 @@
 Interface Streamlit — RAG agentique assurance ARESIA
 Colonne gauche : chat  |  Colonne droite : trace du graphe LangGraph
 """
-import base64
-import dataclasses
-import json
-import logging
-import os
 import sys
-import tempfile
-from datetime import datetime, timezone
 from pathlib import Path
 
-import streamlit as st
+# Repères de démarrage (sous-lot 2.5) : doit rester en tête, avant tout import
+# de bibliothèque tierce. src/ est ajouté ici plutôt qu'en dessous pour que ce
+# module soit importable ; l'insertion plus bas est conservée (sans effet double).
+sys.path.insert(0, str(Path(__file__).parent / "src"))
+import startup_timing  # noqa: E402
+
+startup_timing.mark("app.py début")
+
+import base64  # noqa: E402
+import dataclasses  # noqa: E402
+import json  # noqa: E402
+import logging  # noqa: E402
+import os  # noqa: E402
+import tempfile  # noqa: E402
+from datetime import datetime, timezone  # noqa: E402
+
+import streamlit as st  # noqa: E402
+
+startup_timing.mark("import streamlit")
 
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
@@ -39,7 +50,11 @@ from agent import (
     mistral_disponible,
     run_agent,
 )
-import upload_session
+
+startup_timing.mark("import agent (module complet)")
+import upload_session  # noqa: E402
+
+startup_timing.mark("import upload_session (pdfplumber…)")
 
 MAX_INPUT_CHARS = int(os.environ.get("MAX_INPUT_CHARS", "500"))
 
@@ -207,12 +222,16 @@ def _warm_up():
     passe par l'API Mistral (agent.embed_texts), appelée seulement à l'usage.
     """
     get_chroma_col()
+    startup_timing.mark("warm-up : get_chroma_col")
     get_anthropic()
+    startup_timing.mark("warm-up : get_anthropic")
     get_graph()
+    startup_timing.mark("warm-up : get_graph")
     # Repère de fin de démarrage sur stdout (Cloud Logging), qui remplace la ligne
     # « startup - SentenceTransformer chargé + warm-up » utilisée pour mesurer le
     # démarrage à froid.
     log_memory("startup - warm-up terminé")
+    startup_timing.mark("warm-up terminé")
     return True
 
 
