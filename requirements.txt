@@ -2,15 +2,13 @@
 #
 # Déploiement cible : Google Cloud Run (build via Dockerfile, cf. `gcloud run
 # deploy --source .`). Le Dockerfile installe ce fichier via
-# `pip install -r requirements.txt` — pas de lecture de uv.lock. La ligne
-# --extra-index-url ci-dessous force pip à résoudre torch depuis l'index
-# CPU-only (comme le fait uv via [tool.uv.sources] dans pyproject.toml), pour
-# éviter de télécharger les wheels CUDA (plusieurs Go, inutiles sur Cloud Run CPU).
+# `pip install -r requirements.txt` — pas de lecture de uv.lock.
+#
+# Plus de torch, sentence-transformers ni transformers depuis le sous-lot 2.3 :
+# les embeddings passent par l'API Mistral (mistral-embed), voir agent.embed_texts.
 #
 # Installation locale équivalente : uv sync (respecte pyproject.toml + uv.lock)
 
---extra-index-url https://download.pytorch.org/whl/cpu
-torch==2.12.1
 anthropic==0.111.0
 # Moteur alternatif proposé au visiteur sur le chemin upload uniquement
 # (lot 3.1). Résolution vérifiée le 24/09/2026 : n'ajoute que mistralai,
@@ -20,8 +18,8 @@ mistralai==2.10.1
 langgraph==1.2.6
 langchain-core>=1.4.0
 chromadb==1.5.9
-sentence-transformers==5.6.0
-transformers==5.12.1
+# huggingface-hub : gardé car exigé par tokenizers, lui-même exigé par chromadb
+# (vérifié dans les métadonnées des paquets installés). N'est plus importé par le code.
 huggingface-hub==1.20.1
 pypdf>=6.0.0
 pdfplumber>=0.11.0
