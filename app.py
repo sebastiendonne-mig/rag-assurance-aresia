@@ -199,7 +199,7 @@ def _upload_waiting_message(mistral_actif: bool) -> str:
     )
 
 
-@st.cache_resource(show_spinner="Chargement du modèle d'embeddings… (jusqu'à 90 secondes au premier chargement)")
+@st.cache_resource(show_spinner="Démarrage de l'application… Merci de patienter.")
 def _warm_up():
     """
     Charge les ressources une seule fois pour toute la durée de vie du serveur.
@@ -799,9 +799,7 @@ with col_chat:
                         _index_termine = True
                     else:
                         with st.spinner(
-                            "Analyse du document en cours… jusqu'à 3 minutes pour l'indexation "
-                            "(calcul intensif sur ce document précis). Merci de patienter sans "
-                            "recharger la page."
+                            "Analyse du document en cours… Merci de patienter sans recharger la page."
                         ):
                             tmp_path = Path(tempfile.gettempdir()) / f"upload_{_upload_session_id}.pdf"
                             try:

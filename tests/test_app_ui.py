@@ -453,11 +453,15 @@ def test_info_trace_mode_upload_selon_disponibilite_mistral(monkeypatch):
         assert interdit not in infos
 
 
-def test_show_spinner_warm_up_mentionne_90_secondes():
-    """Lot 1.4 : le message d'attente du démarrage à froid prévient le visiteur de la durée possible."""
+def test_show_spinner_warm_up_neutre_sans_duree_ni_modele():
+    """
+    Sous-lot 2.4 : plus de modèle à charger, donc plus de durée annoncée ni de
+    mention des embeddings dans le message d'attente du démarrage.
+    """
     show_spinner = _extract_warm_up_show_spinner()
-    assert "90 secondes" in show_spinner
-    assert show_spinner == "Chargement du modèle d'embeddings… (jusqu'à 90 secondes au premier chargement)"
+    assert show_spinner == "Démarrage de l'application… Merci de patienter."
+    assert "secondes" not in show_spinner
+    assert "modèle" not in show_spinner
 
 
 def test_vider_conversation_reinitialise_messages_et_last_usage(monkeypatch):
@@ -1431,3 +1435,23 @@ def test_indexation_interrompue_libere_le_verrou_et_permet_de_redeposer(monkeypa
     assert at.session_state["busy_task"] is None
     assert at.session_state["upload_active"] is False
     assert at.session_state["upload_last_processed_file_id"] is None
+
+
+def test_spinner_d_indexation_neutre_sans_duree_ni_calcul_intensif(monkeypatch):
+    import contextlib
+
+    vus: list[str] = []
+
+    @contextlib.contextmanager
+    def _spinner(text="", *args, **kwargs):
+        vus.append(text)
+        yield
+
+    monkeypatch.setattr(st, "spinner", _spinner)
+    at, _, _ = _app_avec_depot(monkeypatch)
+    assert not at.exception
+
+    textes = [t for t in vus if t.startswith("Analyse du document")]
+    assert textes == ["Analyse du document en cours… Merci de patienter sans recharger la page."]
+    assert "minutes" not in textes[0]
+    assert "intensif" not in textes[0]
