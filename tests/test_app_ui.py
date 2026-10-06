@@ -1469,3 +1469,223 @@ def test_spinner_d_indexation_neutre_sans_duree_ni_calcul_intensif(monkeypatch):
     assert textes == ["Analyse du document en cours… Merci de patienter sans recharger la page."]
     assert "minutes" not in textes[0]
     assert "intensif" not in textes[0]
+
+
+# ─────────────────────────────────────────────
+# Instance froide : page affichée avant l'import de l'agent (sous-lot 2.5, option 1)
+# ─────────────────────────────────────────────
+
+_MSG_DEMARRAGE_IMPOSSIBLE = "L'application n'a pas pu démarrer. Merci de recharger la page dans quelques instants."
+_IMPORTS_LOURDS = {"agent", "upload_session", "anthropic", "chromadb", "langgraph", "extract_chunks", "pdfplumber"}
+
+
+@pytest.fixture
+def instance_froide(monkeypatch):
+    """Agent pas encore prêt dans le processus : la première exécution passe par la coquille."""
+    monkeypatch.setattr(demarrage, "_pret", False)
+
+
+@pytest.fixture
+def premiere_execution(monkeypatch, widget_log):
+    """
+    Photographie de l'exécution 1 (la coquille), prise au premier st.rerun : widgets et
+    leur état, expanders affichés, indicateur de démarrage. `reruns` compte tous les
+    st.rerun de l'app (une boucle de rechargement se verrait ici).
+    """
+    vu: dict = {"reruns": 0}
+    rerun_original = st.rerun
+    expander_original = st.expander
+    expanders: list[str] = []
+
+    def _rerun_espion(*args, **kwargs):
+        vu["reruns"] += 1
+        if "widgets" not in vu:
+            vu["widgets"] = list(widget_log)
+            vu["expanders"] = list(expanders)
+            vu["pret"] = demarrage.est_pret()
+            vu["messages"] = list(st.session_state.messages)
+        return rerun_original(*args, **kwargs)
+
+    def _expander_espion(label, *args, **kwargs):
+        expanders.append(label)
+        return expander_original(label, *args, **kwargs)
+
+    monkeypatch.setattr(st, "rerun", _rerun_espion)
+    monkeypatch.setattr(st, "expander", _expander_espion)
+    return vu
+
+
+def test_instance_froide_coquille_sans_agent_puis_page_complete(monkeypatch, instance_froide, premiere_execution, widget_log):
+    """
+    Exécution 1 : aucune exception (un nom d'agent utilisé dans la coquille lèverait
+    NameError), tous les widgets désactivés sauf les téléchargements, ni « Choix et
+    limites » ni dépôt de document. Puis une seule relance et la page complète, active.
+    """
+    appels_anthropic: list[int] = []
+
+    def _get_anthropic():
+        appels_anthropic.append(1)
+        return _FakeAnthropicClient()
+
+    monkeypatch.setattr(agent, "get_anthropic", _get_anthropic)
+    _configure_mistral(monkeypatch, actif=True)
+
+    at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    assert not at.exception, f"exception sur instance froide : {at.exception}"
+
+    # Exécution 1 (coquille), photographiée au rerun qui suit le chargement.
+    coquille = premiere_execution
+    assert coquille["reruns"] == 1
+    assert {e["widget"] for e in coquille["widgets"]} >= {"chat_input", "button", "download_button"}
+    assert _tous_desactives(coquille["widgets"]), coquille["widgets"]
+    assert sum(1 for e in coquille["widgets"] if e["key"] and e["key"].startswith("demo_q_")) == 5
+    assert any(e["widget"] == "download_button" for e in coquille["widgets"])
+    assert not any("Choix et limites" in label for label in coquille["expanders"])
+    assert not any("Tester avec votre propre document" in label for label in coquille["expanders"])
+    assert any("Documents sources" in label for label in coquille["expanders"])
+    assert coquille["pret"] is True  # posé APRÈS _warm_up(), avant le rerun
+    assert coquille["messages"] == []
+
+    # Le chargement est passé par les remplacements des tests (garde-fou) : agent.X lu à l'appel.
+    assert appels_anthropic == [1]
+
+    # Exécution 2 : page complète et active.
+    assert demarrage.est_pret() is True
+    assert _tous_actifs(widget_log), widget_log
+    labels = [e.label for e in at.expander]
+    assert any("Choix et limites" in label for label in labels)
+    assert any("Tester avec votre propre document" in label for label in labels)
+    assert at.chat_input[0].proto.disabled is False
+    assert [e.value for e in at.error] == []
+
+
+def test_instance_froide_echec_du_chargement_message_neutre_sans_boucle(monkeypatch, capsys, instance_froide, premiere_execution, widget_log):
+    """
+    Échec de _warm_up() : message neutre, jamais le texte de l'exception, une ligne stdout
+    avec le seul type, aucune relance (pas de boucle), indicateur toujours faux, interface
+    toujours désactivée. Puis, la cause disparue, une nouvelle exécution réessaie : la
+    fonction est bien réexécutée (l'échec n'a pas été mis en cache par st.cache_resource).
+    """
+    appels: list[str] = []
+
+    def _chroma_en_panne():
+        appels.append("panne")
+        raise RuntimeError(_EXCEPTION_TEXT)
+
+    monkeypatch.setattr(agent, "get_chroma_col", _chroma_en_panne)
+    _configure_mistral(monkeypatch, actif=True)
+
+    at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    assert not at.exception, f"exception remontée au visiteur : {at.exception}"
+
+    assert [e.value for e in at.error] == [_MSG_DEMARRAGE_IMPOSSIBLE]
+    affiche = " ".join(m.value for m in [*at.markdown, *at.error, *at.caption, *at.info, *at.warning])
+    assert _EXCEPTION_TEXT not in affiche
+    sortie = capsys.readouterr().out
+    assert "startup-error type=RuntimeError" in sortie
+    assert _EXCEPTION_TEXT not in sortie
+    assert premiere_execution["reruns"] == 0
+    assert demarrage.est_pret() is False
+    assert _tous_desactives(widget_log), widget_log
+    assert appels == ["panne"]
+
+    # Cause disparue : nouvelle exécution, nouveau chargement réussi.
+    def _chroma_reparee():
+        appels.append("ok")
+        return _FakeChromaCol()
+
+    monkeypatch.setattr(agent, "get_chroma_col", _chroma_reparee)
+    at.run()
+    assert not at.exception
+    assert appels == ["panne", "ok"]
+    assert demarrage.est_pret() is True
+    assert [e.value for e in at.error] == []
+    assert _tous_actifs(widget_log), widget_log
+
+
+def test_instance_froide_cache_deja_rempli_un_seul_rerun(monkeypatch, instance_froide, premiere_execution):
+    """
+    _warm_up() déjà en cache mais indicateur faux (cas où le corps n'est pas réexécuté) :
+    l'indicateur est posé quand même, une seule relance, pas de boucle.
+    """
+    appels_graphe: list[int] = []
+
+    def _get_graph():
+        appels_graphe.append(1)
+        return object()
+
+    monkeypatch.setattr(agent, "get_graph", _get_graph)
+    at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    assert not at.exception
+    assert appels_graphe == [1] and premiere_execution["reruns"] == 1
+
+    monkeypatch.setattr(demarrage, "_pret", False)
+    at.run()
+    assert not at.exception
+    assert appels_graphe == [1]  # corps de _warm_up() non réexécuté : servi par le cache
+    assert premiere_execution["reruns"] == 2  # une seule relance de plus
+    assert demarrage.est_pret() is True
+
+
+def test_instance_froide_saisie_pendant_le_chargement_ignoree(monkeypatch, instance_froide, premiere_execution):
+    """Une saisie qui arriverait pendant la coquille (champ pourtant désactivé) est ignorée par la garde."""
+    calls: list[str] = []
+
+    def _fake_run_agent(question, *args, **kwargs):
+        calls.append(question)
+        return _make_success_state("Réponse.", _USAGE_Q1)
+
+    monkeypatch.setattr(agent, "run_agent", _fake_run_agent)
+    at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    assert not at.exception
+
+    # Instance redevenue « froide » (cache déjà rempli) et saisie envoyée pendant la coquille.
+    monkeypatch.setattr(demarrage, "_pret", False)
+    at.chat_input[0].set_value("Question trop tôt").run()
+    assert not at.exception
+
+    assert premiere_execution["messages"] == []
+    assert calls == []
+    assert "Question trop tôt" not in [m["content"] for m in at.session_state["messages"]]
+    assert at.session_state["busy_task"] is None
+
+
+def _imports_hors_fonctions_et_bloc_pret(arbre: ast.Module) -> set[str]:
+    """Modules importés par app.py à l'exécution du script, hors fonctions et hors bloc `if _agent_pret:`."""
+    modules: set[str] = set()
+
+    def _visiter(noeuds):
+        for noeud in noeuds:
+            if isinstance(noeud, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                continue
+            if isinstance(noeud, ast.If) and isinstance(noeud.test, ast.Name) and noeud.test.id == "_agent_pret":
+                _visiter(noeud.orelse)
+                continue
+            if isinstance(noeud, ast.Import):
+                modules.update(a.name.split(".")[0] for a in noeud.names)
+            elif isinstance(noeud, ast.ImportFrom) and noeud.module:
+                modules.add(noeud.module.split(".")[0])
+            for champ in ("body", "orelse", "finalbody", "handlers"):
+                _visiter(getattr(noeud, champ, []) or [])
+
+    _visiter(arbre.body)
+    return modules
+
+
+def test_app_n_importe_l_agent_qu_apres_la_coquille():
+    """
+    Garde statique : à la portée du script, aucun import lourd hors de _warm_up() et du
+    bloc `if _agent_pret:` (où ils sont instantanés). Un import ajouté en tête de app.py
+    annulerait silencieusement le gain de l'option 1.
+    """
+    arbre = ast.parse(Path(APP_PATH).read_text(encoding="utf-8"))
+    assert not _imports_hors_fonctions_et_bloc_pret(arbre) & _IMPORTS_LOURDS
+
+    warm_up = next(n for n in ast.walk(arbre) if isinstance(n, ast.FunctionDef) and n.name == "_warm_up")
+    importes = {a.name for n in ast.walk(warm_up) if isinstance(n, ast.Import) for a in n.names}
+    assert {"agent", "upload_session"} <= importes
+    bloc_pret = [
+        n for n in arbre.body
+        if isinstance(n, ast.If) and isinstance(n.test, ast.Name) and n.test.id == "_agent_pret"
+    ]
+    assert len(bloc_pret) == 1

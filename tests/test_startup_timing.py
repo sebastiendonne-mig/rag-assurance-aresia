@@ -74,8 +74,14 @@ def test_le_module_n_importe_que_la_bibliotheque_standard():
     assert modules <= {"threading", "time", "os", "psutil"}  # psutil : import local, protégé par try/except
 
 
+# 12 repères depuis l'option 1 du sous-lot 2.5 (ajout de « page : coquille émise »), soit
+# exactement l'ancienne limite. Relevée à 14 pour laisser une petite marge, tout en gardant
+# une instrumentation courte : au-delà, se demander si chaque repère sert encore une mesure.
+MAX_REPERES = 14
+
+
 def test_etapes_instrumentees_dans_app_et_agent():
-    """Les repères demandés existent, et leur nombre reste une douzaine au plus."""
+    """Les repères demandés existent, et leur nombre reste borné (MAX_REPERES)."""
     etapes = []
     for fichier in ("app.py", "src/agent.py"):
         arbre = ast.parse((ROOT / fichier).read_text(encoding="utf-8"))
@@ -88,10 +94,12 @@ def test_etapes_instrumentees_dans_app_et_agent():
                 and noeud.func.value.id == "startup_timing"
             ):
                 etapes.append(noeud.args[0].value)
-    assert len(etapes) == len(set(etapes)) <= 12
+    assert len(etapes) == len(set(etapes)) <= MAX_REPERES
     for attendu in (
         "app.py début",
         "import streamlit",
+        "page : coquille émise",
+        "import agent (module complet)",
         "agent : import anthropic",
         "agent : import chromadb",
         "agent : import langgraph",
