@@ -27,34 +27,11 @@ startup_timing.mark("import streamlit")
 
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from agent import (
-    CLAUDE_MODEL,
-    COMPARISON_DAILY_LIMIT,
-    DAILY_QUESTION_LIMIT,
-    ENGINE_MISTRAL,
-    ComparisonDailyLimitExceeded,
-    MISTRAL_EMBED_MODEL,
-    MISTRAL_MODEL,
-    MISTRAL_MULTIPLICATEUR_REGIONAL,
-    MISTRAL_PRICED_MODEL,
-    MISTRAL_SERVER,
-    PRIX_INPUT_USD_PAR_MTOK,
-    PRIX_OUTPUT_USD_PAR_MTOK,
-    configure_stdout_logging,
-    exceeds_max_length,
-    format_user_error,
-    get_chroma_col,
-    get_anthropic,
-    get_graph,
-    log_memory,
-    mistral_disponible,
-    run_agent,
-)
-
-startup_timing.mark("import agent (module complet)")
-import upload_session  # noqa: E402
-
-startup_timing.mark("import upload_session (pdfplumber…)")
+# Option 1 du sous-lot 2.5 : agent (anthropic, chromadb, langgraph) et upload_session
+# ne sont PLUS importés ici. Sur une instance froide, la page s'affiche d'abord sans
+# eux, puis _warm_up() les importe tout en bas du script (voir « Chargement de
+# l'agent »). demarrage dit si c'est déjà fait dans ce processus.
+import demarrage  # noqa: E402
 
 MAX_INPUT_CHARS = int(os.environ.get("MAX_INPUT_CHARS", "500"))
 
@@ -145,8 +122,9 @@ if not logging.root.handlers:
 log = logging.getLogger("streamlit_app")
 
 # WARNING et au-dessus en plus sur stdout (Cloud Logging capture stdout/stderr
-# du conteneur, jamais un fichier local) — voir agent.configure_stdout_logging.
-configure_stdout_logging()
+# du conteneur, jamais un fichier local) — voir agent.configure_stdout_logging,
+# appelée dans _warm_up() juste après l'import d'agent, puis à chaque exécution
+# une fois l'agent prêt (idempotente).
 
 
 # ─────────────────────────────────────────────
@@ -220,22 +198,64 @@ def _warm_up():
     Charge les ressources une seule fois pour toute la durée de vie du serveur.
     Plus aucun modèle d'embeddings à charger depuis le sous-lot 2.1 : l'encodage
     passe par l'API Mistral (agent.embed_texts), appelée seulement à l'usage.
+
+    Depuis l'option 1 du sous-lot 2.5, fait aussi les imports lourds (agent,
+    upload_session) et n'est appelée que tout en bas du script, sur une instance
+    froide, une fois la page affichée. Les fonctions sont lues sur le module
+    (agent.X) au moment de l'appel : les remplacements faits par les tests
+    s'appliquent donc toujours.
     """
-    get_chroma_col()
+    import agent
+
+    startup_timing.mark("import agent (module complet)")
+    # Tout de suite après l'import : les journaux du reste du démarrage (index Chroma,
+    # etc.) atteignent stdout, donc Cloud Logging.
+    agent.configure_stdout_logging()
+    import upload_session  # noqa: F401 (chargé ici pour que la page complète soit instantanée)
+
+    startup_timing.mark("import upload_session (pdfplumber…)")
+    agent.get_chroma_col()
     startup_timing.mark("warm-up : get_chroma_col")
-    get_anthropic()
+    agent.get_anthropic()
     startup_timing.mark("warm-up : get_anthropic")
-    get_graph()
+    agent.get_graph()
     startup_timing.mark("warm-up : get_graph")
     # Repère de fin de démarrage sur stdout (Cloud Logging), qui remplace la ligne
     # « startup - SentenceTransformer chargé + warm-up » utilisée pour mesurer le
     # démarrage à froid.
-    log_memory("startup - warm-up terminé")
+    agent.log_memory("startup - warm-up terminé")
     startup_timing.mark("warm-up terminé")
     return True
 
 
-_warm_up()
+# Vrai une fois _warm_up() réussie dans ce processus : les imports ci-dessous sont alors
+# instantanés (modules déjà en mémoire). Faux sur une instance froide : la page s'affiche
+# sans ce qui dépend de l'agent, tous les widgets désactivés, et le chargement a lieu en
+# bas du script.
+_agent_pret = demarrage.est_pret()
+if _agent_pret:
+    from agent import (
+        CLAUDE_MODEL,
+        COMPARISON_DAILY_LIMIT,
+        DAILY_QUESTION_LIMIT,
+        ENGINE_MISTRAL,
+        ComparisonDailyLimitExceeded,
+        MISTRAL_EMBED_MODEL,
+        MISTRAL_MODEL,
+        MISTRAL_MULTIPLICATEUR_REGIONAL,
+        MISTRAL_PRICED_MODEL,
+        MISTRAL_SERVER,
+        PRIX_INPUT_USD_PAR_MTOK,
+        PRIX_OUTPUT_USD_PAR_MTOK,
+        configure_stdout_logging,
+        exceeds_max_length,
+        format_user_error,
+        mistral_disponible,
+        run_agent,
+    )
+    import upload_session
+
+    configure_stdout_logging()
 
 st.markdown("""
 <style>
@@ -359,13 +379,16 @@ if "upload_notice" not in st.session_state:
 if "busy_task" not in st.session_state:
     st.session_state.busy_task = None
 _busy = st.session_state.busy_task is not None
+# Même règle pendant le chargement de l'agent (instance froide) : rien ne doit relancer le
+# script avant la fin de _warm_up(). Seuls les téléchargements restent actifs (on_click="ignore").
+_inactif = _busy or not _agent_pret
 _MSG_QUESTION_INTERROMPUE = "Votre question n'a pas pu être traitée. Merci de la reposer."
 
-_upload_session_id = upload_session.get_or_create_session_id()
+_upload_session_id = upload_session.get_or_create_session_id() if _agent_pret else None
 
 with st.sidebar:
     st.header("Conversation")
-    if st.button("🗑️ Vider la conversation", use_container_width=True, disabled=_busy):
+    if st.button("🗑️ Vider la conversation", use_container_width=True, disabled=_inactif):
         st.session_state.messages = []
         st.session_state.last_trace = []
         st.session_state.last_usage = None
@@ -453,185 +476,192 @@ with col_chat:
             "toute réponse peut être vérifiée par recoupement avec leur contenu."
         )
 
-    # ── Choix et limites ──
-    with st.expander("ℹ️ Choix et limites de cette démo"):
-        st.markdown(
-            "**Ce que fait cette démo**\n"
-            "Cette démo interroge un corpus de 4 documents fictifs (prévoyance invalidité, "
-            "assurance vie, garanties IARD, conformité réglementaire — explicitement fictifs, "
-            "créés pour cette démonstration) via un pipeline RAG piloté par LangGraph."
-        )
-        _mistral_actif = mistral_disponible()
-        if _mistral_actif:
-            _modele_upload = (
-                f"Mode document uploadé : `{CLAUDE_MODEL}` et {_mistral_nom()} "
-                f"(`{MISTRAL_MODEL}`), en comparaison."
-            )
-        else:
-            _modele_upload = f"Mode document uploadé : `{CLAUDE_MODEL}` seul."
-        st.markdown(
-            "**Modèle utilisé aujourd'hui**\n"
-            f"Mode corpus ARESIA : `{CLAUDE_MODEL}`. Toutes les décisions du pipeline (routage, "
-            "évaluation, génération) passent par deux points d'entrée uniques dans le code — "
-            "c'est cette couture qui rend un changement de modèle possible sans réécrire le "
-            f"pipeline. {_modele_upload}"
-        )
-        _endpoint_embeddings = (
-            ", via son endpoint européen" if MISTRAL_SERVER == "eu" else ""
-        )
-        st.markdown(
-            "**Recherche dans les documents (embeddings)**\n"
-            "Pour retrouver les passages utiles, le texte de chaque question — en mode corpus "
-            "ARESIA comme en mode document uploadé — et le texte complet des documents déposés "
-            f"sont envoyés à l'API d'embeddings de Mistral AI (`{MISTRAL_EMBED_MODEL}`)"
-            f"{_endpoint_embeddings}, qui les convertit en vecteurs. Cet envoi a lieu même sans "
-            "comparaison de moteurs. Les documents du corpus fictif ont été encodés une seule "
-            "fois, à la préparation de la démo."
-        )
-        if _mistral_actif:
-            if MISTRAL_MODEL == MISTRAL_PRICED_MODEL:
-                _puces_comparaison = [
-                    "- **Pourquoi Mistral Large 3.** Modèle généraliste phare de Mistral, à poids "
-                    "ouverts. Choisi plutôt que Mistral Medium 3.5, pourtant recommandé par "
-                    "Mistral pour la plupart des tâches, pour son coût (0,5 \\$ / 1,5 \\$ par "
-                    "million de tokens contre 1,5 \\$ / 7,5 \\$, tarifs catalogue relevés le "
-                    "25/09/2026) et parce qu'il ne fait pas de raisonnement préalable, ce qui "
-                    "garde un format de réponse directement comparable à celui de Claude."
-                ]
-            else:
-                _puces_comparaison = [
-                    f"- **Modèle Mistral.** `{MISTRAL_MODEL}` — tarif non configuré : le coût de "
-                    "Mistral s'affiche « non disponible »."
-                ]
-            if MISTRAL_SERVER == "eu":
-                _surcout_pct = round((MISTRAL_MULTIPLICATEUR_REGIONAL - 1) * 100)
-                _puces_comparaison.append(
-                    "- **Pourquoi l'endpoint européen.** Les appels à Mistral passent par son "
-                    f"endpoint européen, facturé {_surcout_pct} % plus cher : l'endpoint global "
-                    "de Mistral ne s'engage sur aucun lieu d'inférence "
-                    "([source](https://docs.mistral.ai/inference/regional-inference)). Le coût "
-                    "affiché en tient compte."
-                )
-            _puces_comparaison += [
-                "- **Ce que montre la comparaison.** Évaluation du 25/09/2026, avec Mistral Large 3 "
-                f"(`{MISTRAL_PRICED_MODEL}`) : 20 questions "
-                "réparties sur les 4 documents du corpus fictif, chargés un par un en mode "
-                "document. Le plancher fixé est respecté par les deux moteurs : aucune panne "
-                "technique (20 réponses sur 20 pour chacun), garde-fou respecté (refus sur une "
-                "question hors document), aucune citation inventée. Les écarts observés portent "
-                "sur le contenu (articles cités, nuances de formulation). Ce n'est pas un "
-                "classement : 20 questions ne suffisent pas à en établir un. Nuance : le contrat "
-                "de prévoyance renvoie à un article 6.3 qui n'existe pas dans le document ; "
-                "Mistral a relayé ce renvoi à deux reprises. C'est un défaut du document source, "
-                "pas une citation inventée par le modèle."
-                + (
-                    ""
-                    if MISTRAL_MODEL == MISTRAL_PRICED_MODEL
-                    else f" Le modèle Mistral configuré ici (`{MISTRAL_MODEL}`) n'a pas été évalué."
-                ),
-                "- **Limite.** Le prompt système a été écrit et ajusté pour Claude. Mistral est "
-                "évalué avec le même prompt, sans adaptation : un prompt travaillé pour Mistral "
-                "pourrait donner des résultats différents.",
-            ]
-            st.markdown(
-                "**Comparaison de deux moteurs (mode document uploadé)**\n"
-                f"Quand vous interrogez un document déposé, la même question, avec les mêmes "
-                f"extraits et le même prompt, est envoyée en parallèle à Claude (`{CLAUDE_MODEL}`) "
-                f"et à {_mistral_nom()} (`{MISTRAL_MODEL}`). Les deux réponses s'affichent côte à "
-                "côte, avec leur latence, leur nombre de tokens et leur coût estimé (« non "
-                "disponible » quand il ne peut pas être calculé).\n\n"
-                + "\n".join(_puces_comparaison)
-            )
-        _ref_comparaison = " (voir ci-dessus)" if _mistral_actif else ""
-        st.markdown(
-            "**Portabilité : testée sur un seul chemin**\n"
-            "La même architecture peut fonctionner avec un autre modèle. C'est vérifié "
-            f"uniquement sur le mode document uploadé, avec Mistral Large 3{_ref_comparaison} ; "
-            "le mode corpus ARESIA n'a été testé qu'avec Claude, et ses prompts ou son format "
-            "JSON pourraient demander des ajustements."
-        )
-        st.markdown(
-            "**Garde-fous actifs**\n"
-            f"- Question limitée à {MAX_INPUT_CHARS} caractères\n"
-            f"- Plafond quotidien de {DAILY_QUESTION_LIMIT} questions sur le corpus ARESIA\n"
-            f"- Plafond quotidien de {COMPARISON_DAILY_LIMIT} questions sur les documents "
-            "uploadés, tous visiteurs confondus\n"
-            "- Une réponse au format invalide échoue proprement plutôt que de planter"
-        )
-        st.markdown(
-            "**Ce qu'un test de 20 questions mesure — et ne mesure pas**\n"
-            "Il vérifie que l'article de référence attendu est bien cité. Il ne mesure ni "
-            "la qualité rédactionnelle ni l'exactitude complète des réponses — seulement "
-            "la présence de la bonne citation."
-        )
-
-    # ── Session d'upload de document visiteur (lot 2a.1 suite) ──
+    # Ces deux blocs lisent agent (modèles, quotas, Mistral) et upload_session : sur une
+    # instance froide, ils n'existent pas encore. L'emplacement réservé reçoit le spinner
+    # du chargement, lancé tout en bas du script (voir « Chargement de l'agent »).
     uploaded = None
     _index_slot = None
-    with st.expander("📎 Tester avec votre propre document (PDF)", expanded=st.session_state.upload_active):
-        if st.session_state.upload_active:
-            st.success(f"📄 Mode document uploadé actif : **{st.session_state.upload_doc_name}**")
-            if not mistral_disponible():
-                st.info(
-                    "La comparaison entre moteurs n'est pas disponible sur cette instance : le "
-                    "moteur Mistral n'est pas configuré. Vos questions sur ce document sont "
-                    "traitées par Claude seul, sans seconde réponse à comparer."
-                )
-            st.caption(
-                "Les questions posées ci-dessous portent uniquement sur ce document — "
-                "le corpus ARESIA habituel n'est pas interrogé tant que ce mode est actif."
-            )
-            for w in st.session_state.upload_warnings:
-                st.caption(
-                    f"⚠️ Article {w['article_num']} tronqué : {w['caracteres_original']} → "
-                    f"{w['caracteres_conserves']} caractères conservés (longueur maximale "
-                    "d'un passage pour la recherche)."
-                )
-            if st.button("📄 Nouveau document", use_container_width=True, disabled=_busy):
-                upload_session.release(_upload_session_id)
-                st.session_state.upload_active = False
-                st.session_state.upload_collection = None
-                st.session_state.upload_doc_name = None
-                st.session_state.upload_warnings = []
-                st.session_state.upload_last_processed_file_id = None
-                st.rerun()
-        elif not st.session_state.upload_consent:
+    _slot_chargement = None
+    if _agent_pret:
+        # ── Choix et limites ──
+        with st.expander("ℹ️ Choix et limites de cette démo"):
             st.markdown(
-                _build_upload_consent_text(
-                    mistral_disponible(), MISTRAL_SERVER, _mistral_nom(), MISTRAL_EMBED_MODEL
+                "**Ce que fait cette démo**\n"
+                "Cette démo interroge un corpus de 4 documents fictifs (prévoyance invalidité, "
+                "assurance vie, garanties IARD, conformité réglementaire — explicitement fictifs, "
+                "créés pour cette démonstration) via un pipeline RAG piloté par LangGraph."
+            )
+            _mistral_actif = mistral_disponible()
+            if _mistral_actif:
+                _modele_upload = (
+                    f"Mode document uploadé : `{CLAUDE_MODEL}` et {_mistral_nom()} "
+                    f"(`{MISTRAL_MODEL}`), en comparaison."
                 )
+            else:
+                _modele_upload = f"Mode document uploadé : `{CLAUDE_MODEL}` seul."
+            st.markdown(
+                "**Modèle utilisé aujourd'hui**\n"
+                f"Mode corpus ARESIA : `{CLAUDE_MODEL}`. Toutes les décisions du pipeline (routage, "
+                "évaluation, génération) passent par deux points d'entrée uniques dans le code — "
+                "c'est cette couture qui rend un changement de modèle possible sans réécrire le "
+                f"pipeline. {_modele_upload}"
             )
-            if st.button("J'ai compris, je continue", key="upload_consent_btn", disabled=_busy):
-                st.session_state.upload_consent = True
-                st.rerun()
-        # is_busy() ne regarde pas l'âge du verrou : sans cette libération préalable d'un
-        # verrou inactif > UPLOAD_LOCK_TIMEOUT_S, un onglet abandonné bloquerait le dépôt
-        # pour tous les visiteurs (try_acquire(), seul autre point de libération, n'est
-        # atteint qu'une fois is_busy() faux).
-        elif not upload_session.check_and_release_if_stale() and upload_session.is_busy():
-            st.warning(upload_session.UPLOAD_BUSY_MESSAGE)
-        else:
-            uploaded = st.file_uploader(
-                "Document PDF à analyser (contrat structuré par articles)",
-                type=["pdf"],
-                key="upload_pdf_uploader",
-                disabled=_busy,
+            _endpoint_embeddings = (
+                ", via son endpoint européen" if MISTRAL_SERVER == "eu" else ""
             )
-            # Emplacement de l'affichage de l'indexation : l'exécuteur, en bas du script,
-            # y écrit (spinner) une fois toute l'interface rendue désactivée.
-            _index_slot = st.container()
-            _notice = st.session_state.upload_notice
-            if uploaded is not None and _notice is not None:
-                (st.error if _notice["kind"] == "error" else st.warning)(_notice["text"])
-            if (
-                uploaded is not None
-                and not _busy
-                and uploaded.file_id != st.session_state.upload_last_processed_file_id
-            ):
-                st.session_state.upload_last_processed_file_id = uploaded.file_id
-                st.session_state.upload_notice = None
-                st.session_state.busy_task = {"kind": "index"}
-                st.rerun()
+            st.markdown(
+                "**Recherche dans les documents (embeddings)**\n"
+                "Pour retrouver les passages utiles, le texte de chaque question — en mode corpus "
+                "ARESIA comme en mode document uploadé — et le texte complet des documents déposés "
+                f"sont envoyés à l'API d'embeddings de Mistral AI (`{MISTRAL_EMBED_MODEL}`)"
+                f"{_endpoint_embeddings}, qui les convertit en vecteurs. Cet envoi a lieu même sans "
+                "comparaison de moteurs. Les documents du corpus fictif ont été encodés une seule "
+                "fois, à la préparation de la démo."
+            )
+            if _mistral_actif:
+                if MISTRAL_MODEL == MISTRAL_PRICED_MODEL:
+                    _puces_comparaison = [
+                        "- **Pourquoi Mistral Large 3.** Modèle généraliste phare de Mistral, à poids "
+                        "ouverts. Choisi plutôt que Mistral Medium 3.5, pourtant recommandé par "
+                        "Mistral pour la plupart des tâches, pour son coût (0,5 \\$ / 1,5 \\$ par "
+                        "million de tokens contre 1,5 \\$ / 7,5 \\$, tarifs catalogue relevés le "
+                        "25/09/2026) et parce qu'il ne fait pas de raisonnement préalable, ce qui "
+                        "garde un format de réponse directement comparable à celui de Claude."
+                    ]
+                else:
+                    _puces_comparaison = [
+                        f"- **Modèle Mistral.** `{MISTRAL_MODEL}` — tarif non configuré : le coût de "
+                        "Mistral s'affiche « non disponible »."
+                    ]
+                if MISTRAL_SERVER == "eu":
+                    _surcout_pct = round((MISTRAL_MULTIPLICATEUR_REGIONAL - 1) * 100)
+                    _puces_comparaison.append(
+                        "- **Pourquoi l'endpoint européen.** Les appels à Mistral passent par son "
+                        f"endpoint européen, facturé {_surcout_pct} % plus cher : l'endpoint global "
+                        "de Mistral ne s'engage sur aucun lieu d'inférence "
+                        "([source](https://docs.mistral.ai/inference/regional-inference)). Le coût "
+                        "affiché en tient compte."
+                    )
+                _puces_comparaison += [
+                    "- **Ce que montre la comparaison.** Évaluation du 25/09/2026, avec Mistral Large 3 "
+                    f"(`{MISTRAL_PRICED_MODEL}`) : 20 questions "
+                    "réparties sur les 4 documents du corpus fictif, chargés un par un en mode "
+                    "document. Le plancher fixé est respecté par les deux moteurs : aucune panne "
+                    "technique (20 réponses sur 20 pour chacun), garde-fou respecté (refus sur une "
+                    "question hors document), aucune citation inventée. Les écarts observés portent "
+                    "sur le contenu (articles cités, nuances de formulation). Ce n'est pas un "
+                    "classement : 20 questions ne suffisent pas à en établir un. Nuance : le contrat "
+                    "de prévoyance renvoie à un article 6.3 qui n'existe pas dans le document ; "
+                    "Mistral a relayé ce renvoi à deux reprises. C'est un défaut du document source, "
+                    "pas une citation inventée par le modèle."
+                    + (
+                        ""
+                        if MISTRAL_MODEL == MISTRAL_PRICED_MODEL
+                        else f" Le modèle Mistral configuré ici (`{MISTRAL_MODEL}`) n'a pas été évalué."
+                    ),
+                    "- **Limite.** Le prompt système a été écrit et ajusté pour Claude. Mistral est "
+                    "évalué avec le même prompt, sans adaptation : un prompt travaillé pour Mistral "
+                    "pourrait donner des résultats différents.",
+                ]
+                st.markdown(
+                    "**Comparaison de deux moteurs (mode document uploadé)**\n"
+                    f"Quand vous interrogez un document déposé, la même question, avec les mêmes "
+                    f"extraits et le même prompt, est envoyée en parallèle à Claude (`{CLAUDE_MODEL}`) "
+                    f"et à {_mistral_nom()} (`{MISTRAL_MODEL}`). Les deux réponses s'affichent côte à "
+                    "côte, avec leur latence, leur nombre de tokens et leur coût estimé (« non "
+                    "disponible » quand il ne peut pas être calculé).\n\n"
+                    + "\n".join(_puces_comparaison)
+                )
+            _ref_comparaison = " (voir ci-dessus)" if _mistral_actif else ""
+            st.markdown(
+                "**Portabilité : testée sur un seul chemin**\n"
+                "La même architecture peut fonctionner avec un autre modèle. C'est vérifié "
+                f"uniquement sur le mode document uploadé, avec Mistral Large 3{_ref_comparaison} ; "
+                "le mode corpus ARESIA n'a été testé qu'avec Claude, et ses prompts ou son format "
+                "JSON pourraient demander des ajustements."
+            )
+            st.markdown(
+                "**Garde-fous actifs**\n"
+                f"- Question limitée à {MAX_INPUT_CHARS} caractères\n"
+                f"- Plafond quotidien de {DAILY_QUESTION_LIMIT} questions sur le corpus ARESIA\n"
+                f"- Plafond quotidien de {COMPARISON_DAILY_LIMIT} questions sur les documents "
+                "uploadés, tous visiteurs confondus\n"
+                "- Une réponse au format invalide échoue proprement plutôt que de planter"
+            )
+            st.markdown(
+                "**Ce qu'un test de 20 questions mesure — et ne mesure pas**\n"
+                "Il vérifie que l'article de référence attendu est bien cité. Il ne mesure ni "
+                "la qualité rédactionnelle ni l'exactitude complète des réponses — seulement "
+                "la présence de la bonne citation."
+            )
+
+        # ── Session d'upload de document visiteur (lot 2a.1 suite) ──
+        with st.expander("📎 Tester avec votre propre document (PDF)", expanded=st.session_state.upload_active):
+            if st.session_state.upload_active:
+                st.success(f"📄 Mode document uploadé actif : **{st.session_state.upload_doc_name}**")
+                if not mistral_disponible():
+                    st.info(
+                        "La comparaison entre moteurs n'est pas disponible sur cette instance : le "
+                        "moteur Mistral n'est pas configuré. Vos questions sur ce document sont "
+                        "traitées par Claude seul, sans seconde réponse à comparer."
+                    )
+                st.caption(
+                    "Les questions posées ci-dessous portent uniquement sur ce document — "
+                    "le corpus ARESIA habituel n'est pas interrogé tant que ce mode est actif."
+                )
+                for w in st.session_state.upload_warnings:
+                    st.caption(
+                        f"⚠️ Article {w['article_num']} tronqué : {w['caracteres_original']} → "
+                        f"{w['caracteres_conserves']} caractères conservés (longueur maximale "
+                        "d'un passage pour la recherche)."
+                    )
+                if st.button("📄 Nouveau document", use_container_width=True, disabled=_inactif):
+                    upload_session.release(_upload_session_id)
+                    st.session_state.upload_active = False
+                    st.session_state.upload_collection = None
+                    st.session_state.upload_doc_name = None
+                    st.session_state.upload_warnings = []
+                    st.session_state.upload_last_processed_file_id = None
+                    st.rerun()
+            elif not st.session_state.upload_consent:
+                st.markdown(
+                    _build_upload_consent_text(
+                        mistral_disponible(), MISTRAL_SERVER, _mistral_nom(), MISTRAL_EMBED_MODEL
+                    )
+                )
+                if st.button("J'ai compris, je continue", key="upload_consent_btn", disabled=_inactif):
+                    st.session_state.upload_consent = True
+                    st.rerun()
+            # is_busy() ne regarde pas l'âge du verrou : sans cette libération préalable d'un
+            # verrou inactif > UPLOAD_LOCK_TIMEOUT_S, un onglet abandonné bloquerait le dépôt
+            # pour tous les visiteurs (try_acquire(), seul autre point de libération, n'est
+            # atteint qu'une fois is_busy() faux).
+            elif not upload_session.check_and_release_if_stale() and upload_session.is_busy():
+                st.warning(upload_session.UPLOAD_BUSY_MESSAGE)
+            else:
+                uploaded = st.file_uploader(
+                    "Document PDF à analyser (contrat structuré par articles)",
+                    type=["pdf"],
+                    key="upload_pdf_uploader",
+                    disabled=_inactif,
+                )
+                # Emplacement de l'affichage de l'indexation : l'exécuteur, en bas du script,
+                # y écrit (spinner) une fois toute l'interface rendue désactivée.
+                _index_slot = st.container()
+                _notice = st.session_state.upload_notice
+                if uploaded is not None and _notice is not None:
+                    (st.error if _notice["kind"] == "error" else st.warning)(_notice["text"])
+                if (
+                    uploaded is not None
+                    and not _inactif
+                    and uploaded.file_id != st.session_state.upload_last_processed_file_id
+                ):
+                    st.session_state.upload_last_processed_file_id = uploaded.file_id
+                    st.session_state.upload_notice = None
+                    st.session_state.busy_task = {"kind": "index"}
+                    st.rerun()
+    else:
+        _slot_chargement = st.container()
 
     # ── Questions de test cliquables (masquées en mode document uploadé) ──
     pending: str | None = None
@@ -640,7 +670,7 @@ with col_chat:
         for i, (question, legende) in enumerate(_DEMO_QUESTIONS):
             col_btn, col_leg = st.columns([5, 4])
             with col_btn:
-                if st.button(question, key=f"demo_q_{i}", use_container_width=True, disabled=_busy):
+                if st.button(question, key=f"demo_q_{i}", use_container_width=True, disabled=_inactif):
                     pending = question
             with col_leg:
                 st.caption(f"↑ {legende}")
@@ -682,11 +712,13 @@ with col_chat:
         # reruns romprait alors l'identité du widget (valeur perdue en cours de
         # saisie au moment précis où le mode bascule).
         key="main_chat_input",
-        disabled=_busy,
+        disabled=_inactif,
     )
     prompt = pending or chat_prompt
-    if prompt and _busy:
-        prompt = None  # saisie arrivée entre deux runs alors qu'une tâche existe déjà : ignorée
+    if prompt and _inactif:
+        # Saisie arrivée entre deux runs alors qu'une tâche existe déjà, ou avant la fin du
+        # chargement de l'agent : ignorée.
+        prompt = None
 
     if prompt:
         # Garde-fou de longueur : conservé même si le widget limite déjà la saisie
@@ -704,7 +736,9 @@ with col_chat:
         st.rerun()
 
     # ── Exécuteur unique : le calcul tourne ici, une fois tous les widgets rendus désactivés ──
-    _task = st.session_state.busy_task
+    # Jamais d'exécuteur avant la fin du chargement de l'agent (les noms qu'il utilise
+    # n'existent pas encore).
+    _task = st.session_state.busy_task if _agent_pret else None
     if _task is not None and _task["kind"] == "question":
         prompt = _task["prompt"]
         upload_mode = _task["upload_mode"]
@@ -893,7 +927,7 @@ with col_trace:
 
     trace = st.session_state.last_trace
 
-    if st.session_state.upload_active:
+    if _agent_pret and st.session_state.upload_active:
         if mistral_disponible():
             st.info(
                 "📄 Mode document uploadé : la même question est envoyée en parallèle aux deux "
@@ -997,3 +1031,26 @@ st.markdown(f"""
   </div>
 </div>
 """, unsafe_allow_html=True)
+
+# ─────────────────────────────────────────────
+# Chargement de l'agent (instance froide uniquement)
+# ─────────────────────────────────────────────
+# Tout ce qui précède est déjà parti vers le navigateur : le visiteur voit la page (widgets
+# désactivés) pendant les imports lourds. Même schéma que l'exécuteur du lot 3.3 : le travail
+# tourne en bas du script, dans un emplacement réservé, puis un rerun réaffiche tout.
+if not _agent_pret:
+    startup_timing.mark("page : coquille émise")
+    try:
+        with _slot_chargement:
+            _warm_up()
+    except Exception as exc:  # RerunException/StopException héritent de BaseException : non captées
+        # Le handler stdout de agent n'existe peut-être pas (import en échec) : print direct,
+        # type seul, jamais le message (il pourrait contenir une valeur de configuration).
+        print(f"startup-error type={type(exc).__name__}", flush=True)
+        with _slot_chargement:
+            st.error("L'application n'a pas pu démarrer. Merci de recharger la page dans quelques instants.")
+        st.stop()  # surtout pas de rerun : il relancerait le chargement en boucle
+    # Après l'appel, jamais dans le corps de _warm_up() : quand le cache répond sans réexécuter
+    # la fonction, l'indicateur doit quand même être posé, sinon le rerun bouclerait.
+    demarrage.marquer_pret()
+    st.rerun()

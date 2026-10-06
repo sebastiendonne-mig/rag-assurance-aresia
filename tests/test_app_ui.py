@@ -18,6 +18,7 @@ from streamlit.testing.v1 import AppTest
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 import agent
+import demarrage
 import upload_session
 
 APP_PATH = str(Path(__file__).parent.parent / "app.py")
@@ -106,6 +107,19 @@ def _clear_resource_cache():
     st.cache_resource.clear()
     yield
     st.cache_resource.clear()
+
+
+@pytest.fixture(autouse=True)
+def _instance_chaude(monkeypatch):
+    """
+    Par défaut, agent déjà importé et préparé dans le processus (instance chaude) : la page
+    complète s'affiche dès la première exécution, comme avant le sous-lot 2.5. Sans ce
+    réglage, l'état dépendrait de l'ordre des tests (le premier test passant par le chemin
+    froid poserait l'indicateur pour tous les suivants). monkeypatch, jamais une affectation
+    brute : la valeur d'origine est restaurée après chaque test. Le chemin froid a ses
+    propres tests, qui remettent l'indicateur à False.
+    """
+    monkeypatch.setattr(demarrage, "_pret", True)
 
 
 @pytest.fixture(autouse=True)
