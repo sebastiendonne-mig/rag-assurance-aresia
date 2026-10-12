@@ -1,0 +1,108 @@
+{
+  "doc": "CG-AV-MULTI-2024",
+  "pdf": "CG-assurance-vie.pdf",
+  "pdf_sha256": "cb3c6231a1e63c6203733ebe0ee0a87a51e2d4bdacc7091e2bcc9404a0bbd907",
+  "titre": "CG Assurance Vie ARESIA Patrimoine+",
+  "version": "3.1",
+  "methode": "upload_session.extract_and_chunk_pdf + apply_length_guard (aucun appel API)",
+  "extraits": [
+    {
+      "id": "upload_0_na",
+      "article": "",
+      "chapitre_titre": "",
+      "texte": "ARESIA Assurances\nConditions Générales — Assurance Vie\nMultisupport\nRéf. : CG-AV-MULTI-2024 | Produit : ARESIA Patrimoine+\nVersion 3.1 — Mars 2024 — Document fictif à usage de démonstration\nSOMMAIRE",
+      "tronque": false
+    },
+    {
+      "id": "upload_1_1",
+      "article": "1",
+      "chapitre_titre": "CHAPITRE 1 — PRÉSENTATION DU CONTRAT ET PARTIES",
+      "texte": "Article 1 — Nature et caractéristiques du contrat\nARESIA Patrimoine+ est un contrat d'assurance vie individuel à versements libres, multisupport, libellé en euros\net en unités de compte, soumis aux dispositions du Code des assurances et plus particulièrement à ses articles\nL.131-1 et suivants.\nCe contrat n'est pas un produit d'épargne bancaire. La valeur des unités de compte n'est pas garantie et est\nsujette à des fluctuations à la hausse comme à la baisse, dépendant des marchés financiers. ARESIA\nAssurances ne s'engage que sur le nombre d'unités de compte, non sur leur valeur.\nn Article 1.2 — MISE EN GARDE : Les investissements sur les supports en unités de compte comportent un\nrisque de perte en capital. Les performances passées ne préjugent pas des performances futures. Ce contrat est\nsoumis aux risques inhérents aux marchés financiers.",
+      "tronque": false
+    },
+    {
+      "id": "upload_2_2",
+      "article": "2",
+      "chapitre_titre": "CHAPITRE 1 — PRÉSENTATION DU CONTRAT ET PARTIES",
+      "texte": "Article 2 — Définitions\nSouscripteur / Adhérent : Personne physique ou morale qui conclut le contrat avec ARESIA Assurances et\neffectue les versements.\nAssuré : Personne physique sur la tête de laquelle repose le risque assuré (décès ou vie). Par défaut, le\nsouscripteur est également l'assuré.\nBénéficiaire en cas de vie : Personne désignée pour recevoir la valeur de rachat ou le capital à l'échéance du\ncontrat.\nBénéficiaire en cas de décès : Personne désignée pour recevoir le capital décès à la survenance du décès de\nl'assuré.\nSupport en euros : Fonds général de l'assureur offrant une garantie en capital. Les intérêts crédités sont\ndéfinitivement acquis.\nSupport en unités de compte (UC) : Support financier dont la valeur est exprimée en unités, non garantie,\nreflétant la valeur des actifs sous-jacents (OPCVM, ETF, SCPI, etc.).\nValeur de rachat : Montant que le souscripteur peut obtenir en cas de rachat total ou partiel, calculé à la date\nde valorisation.\nDate de valorisation : Date à laquelle est calculée la valeur liquidative des supports, généralement chaque jour\nouvré de Bourse.\nPrélèvements sociaux : Contribution Sociale Généralisée (CSG), Contribution au Remboursement de la Dette\nSociale (CRDS) et prélèvements annexes applicables aux revenus du patrimoine.",
+      "tronque": false
+    },
+    {
+      "id": "upload_3_8",
+      "article": "8",
+      "chapitre_titre": "CHAPITRE 3 — VERSEMENTS ET GESTION DES PRIMES",
+      "texte": "Article 8 — Versement initial et versements complémentaires\nType de versement Montant minimum Modalités\nVersement initial à l'ouverture 1 000 € Par virement bancaire ou prélèvement\nVersement complémentaire libre 300 € À tout moment, sans préavis\nVersement programmé mensuel 100 €/mois Prélèvement automatique le 5 ou 15 du mois\nPrélèvement automatique au choix du\nVersement programmé trimestriel 250 €/trimestre\nsouscripteur\nVersement programmé annuel 1 000 €/an Date anniversaire du contrat",
+      "tronque": false
+    },
+    {
+      "id": "upload_4_9",
+      "article": "9",
+      "chapitre_titre": "CHAPITRE 3 — VERSEMENTS ET GESTION DES PRIMES",
+      "texte": "Article 9 — Frais applicables aux versements\nNature des frais Taux standard Taux partenaire conseiller\nFrais sur versements 0% à 4,5% selon le réseau 0% pour les versements programmés\nFrais de gestion annuels — Fonds euros 0,60% par an Non négociable\nFrais de gestion annuels — Unités de\n0,80% par an Non négociable\ncompte\n0,50% du montant arbitré (min. 15 Gratuit pour 4 arbitrages/an en gestion\nFrais d'arbitrage\n€) libre\nFrais de rachat partiel 0€ 0€\nFrais de rachat total anticipé (< 1 an) 1% de la valeur de rachat 1% de la valeur de rachat\nn Article 9.4 — Les frais de gestion annuels sont prélevés par réduction du nombre d'unités de compte pour les supports\nUC, et déduits des intérêts crédités pour le fonds euros. Ils n'apparaissent pas comme un prélèvement visible mais\nimpactent la performance nette.",
+      "tronque": false
+    },
+    {
+      "id": "upload_5_10",
+      "article": "10",
+      "chapitre_titre": "CHAPITRE 4 — SUPPORTS D'INVESTISSEMENT ET GESTION",
+      "texte": "Article 10 — Fonds en euros ARESIA Sécurité\nLe fonds en euros ARESIA Sécurité est le support garanti du contrat. Il est investi principalement en obligations\nd'État et d'entreprises notées investment grade (‡ BBB-), avec une poche de diversification immobilière ne\ndépassant pas 20% de l'actif.\nCaractéristique Valeur 2024\nTaux de rendement servi 2023 2,80% net de frais de gestion\nParticipation aux bénéfices minimale 85% des bénéfices techniques et financiers\nGarantie en capital 100% du capital versé net de frais sur versements\nRéserve de capitalisation Conforme aux exigences Solvabilité II\nNotation S&P; de l'assureur AA- (fictif — à vérifier)\nn Article 10.3 — Le taux de rendement du fonds euros est susceptible de varier chaque année. Le taux 2023\naffiché ne préjuge pas du taux qui sera servi pour les exercices suivants. ARESIA Assurances se réserve le droit\nde limiter les versements sur le fonds euros ou d'imposer une diversification minimale en unités de compte.",
+      "tronque": false
+    },
+    {
+      "id": "upload_6_11",
+      "article": "11",
+      "chapitre_titre": "CHAPITRE 4 — SUPPORTS D'INVESTISSEMENT ET GESTION",
+      "texte": "Article 11 — Supports en unités de compte disponibles\nLa liste complète des supports en unités de compte disponibles figure à l'Annexe 4, mise à jour\ntrimestriellement. À titre indicatif, voici les catégories proposées :\n(cid:127) Fonds actions Europe (OPCVM — risque 5/7 à 7/7 selon le profil)\n(cid:127) Fonds actions monde (ETF indiciels — réplication physique ou synthétique)\n(cid:127) Fonds obligataires (court terme, long terme, haut rendement)\n(cid:127) Fonds diversifiés / patrimoniaux (flexibles, résilients, multi-actifs)\n(cid:127) Supports immobiliers (SCPI, OPCI — liquidité limitée, délai de jouissance de 6 mois)\n(cid:127) Fonds à impact / ISR labellisés (label ISR, Greenfin, ou équivalent)\n(cid:127) Produits structurés à capital partiellement protégé (durée minimale 5 ans)",
+      "tronque": false
+    },
+    {
+      "id": "upload_7_12",
+      "article": "12",
+      "chapitre_titre": "CHAPITRE 4 — SUPPORTS D'INVESTISSEMENT ET GESTION",
+      "texte": "Article 12 — Profils de gestion\nLe souscripteur peut opter pour l'un des profils de gestion suivants, modifiable une fois par an :\nProfil Allocation indicative Risque indicatif (SRI)\nPrudent 80% Fonds euros | 20% UC obligations 2/7\nÉquilibré 50% Fonds euros | 30% UC diversifié | 20% UC actions 3/7\nDynamique 20% Fonds euros | 30% UC diversifié | 50% UC actions 5/7\nOffensif 0% Fonds euros | 100% UC actions / thématiques 6/7\nLibre Allocation 100% personnalisable Variable",
+      "tronque": false
+    },
+    {
+      "id": "upload_8_14",
+      "article": "14",
+      "chapitre_titre": "CHAPITRE 5 — VALEUR DE RACHAT ET AVANCES",
+      "texte": "Article 14 — Calcul de la valeur de rachat\nLa valeur de rachat à une date donnée est égale à la somme :\n(cid:127) De la valeur de la part fonds euros (capital + intérêts crédités à ce jour)\n(cid:127) De la valeur de liquidation des unités de compte détenues, calculée au cours de valorisation du jour\n(cid:127) Diminuée des frais de rachat anticipé le cas échéant (Article 9)\n(cid:127) Diminuée des éventuelles avances non remboursées et de leurs intérêts",
+      "tronque": false
+    },
+    {
+      "id": "upload_9_15",
+      "article": "15",
+      "chapitre_titre": "CHAPITRE 5 — VALEUR DE RACHAT ET AVANCES",
+      "texte": "Article 15 — Avances sur contrat\nLe souscripteur peut demander une avance sur son contrat à tout moment, dans la limite de 80% de la valeur\nde rachat pour le fonds euros et 60% pour les unités de compte, avec un minimum de 1 500 € par avance.\nDurée de l'avance Taux d'intérêt annuel Renouvellement\n1 an Taux moyen des OAT 10 ans + 1,5% Renouvelable 2 fois\n2 ans Taux moyen des OAT 10 ans + 2% Non renouvelable\n3 ans (maximum) Taux moyen des OAT 10 ans + 2,5% Non renouvelable\nn Article 15.4 — L'avance ne constitue pas un rachat et n'est pas fiscalisée. Elle n'interrompt pas l'antériorité fiscale du\ncontrat. En cas de non-remboursement à l'échéance, l'avance est transformée en rachat partiel et fiscalisée en\nconséquence.",
+      "tronque": false
+    },
+    {
+      "id": "upload_10_23",
+      "article": "23",
+      "chapitre_titre": "CHAPITRE 9 — FISCALITÉ DU CONTRAT",
+      "texte": "Article 23 — Fiscalité des rachats\nLa fiscalité applicable aux rachats dépend de la durée de détention du contrat et de la date de versement des\nprimes. Seule la part des plus-values (intérêts et gains) est imposable, non le capital versé.\nDurée contrat Primes versées avant 09/2017 Primes versées après 09/2017 (PFU)\n35% IR ou barème progressif + PS\n< 4 ans 12,8% PFU + 17,2% PS = 30% flat tax\n17,2%\n15% IR ou barème progressif + PS\n4 à 8 ans 12,8% PFU + 17,2% PS = 30% flat tax\n17,2%\n7,5% IR après abattement + PS 7,5% après abattement 4 600 €/9 200 € +\n> 8 ans (contrat < 150 k€)\n17,2% PS\n7,5% IR sur 150 k€ + 12,8% au-delà +\n> 8 ans (contrat > 150 k€) Même règle — seuil 150 k€ tous contrats\nPS\nn Article 23.1 — Les abattements après 8 ans s'élèvent à 4 600 € pour une personne seule et 9 200 € pour un couple\nsoumis à imposition commune, par an et tous contrats confondus. Ces seuils sont susceptibles d'évoluer selon la\nlégislation fiscale en vigueur.\nn Article 23.3 — La fiscalité de l'assurance vie est complexe et personnelle. ARESIA Assurances recommande\nvivement de consulter un conseiller fiscal ou un notaire pour toute décision de rachat ayant un impact fiscal\nsignificatif. Les informations du présent chapitre sont données à titre indicatif et ne constituent pas un conseil\nfiscal.",
+      "tronque": false
+    },
+    {
+      "id": "upload_11_24",
+      "article": "24",
+      "chapitre_titre": "CHAPITRE 9 — FISCALITÉ DU CONTRAT",
+      "texte": "Article 24 — Fiscalité en cas de décès\nLa transmission du capital décès d'un contrat d'assurance vie bénéficie d'un régime fiscal favorable, distinct des\nrègles de succession ordinaires, conformément à l'Article 990-I du Code général des impôts.\nÂge des versements Abattement par bénéficiaire Taxation au-delà\n20% de 152 500 € à 852 500 € |\nPrimes versées avant 70 ans 152 500 € par bénéficiaire\n31,25% au-delà\nDroits de succession ordinaires\nPrimes versées après 70 ans 30 500 € global (tous bénéficiaires)\nsur le surplus\nn Article 24.2 — Le conjoint ou partenaire de PACS bénéficiaire est totalement exonéré de toute taxation sur les capitaux\ndécès d'assurance vie, quel que soit le montant et la date des versements.\nDocument fictif — ARESIA Assurances (société imaginaire) — Créé pour AssurConseil 365 / tkoidra.com — Juin 2026",
+      "tronque": false
+    }
+  ],
+  "controle": {
+    "reference": "upload_eval_20260925_104952.json",
+    "extraits": {
+      "obtenus": 12,
+      "25_09": 12
+    },
+    "extraits_tronques": {
+      "obtenus": 0,
+      "25_09": 0
+    },
+    "articles_chapitre_identiques": true,
+    "articles_definis_identiques": true,
+    "ecarts": []
+  }
+}

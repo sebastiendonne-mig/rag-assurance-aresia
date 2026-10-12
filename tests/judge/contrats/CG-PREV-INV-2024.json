@@ -1,0 +1,171 @@
+{
+  "doc": "CG-PREV-INV-2024",
+  "pdf": "CG-prevoyance-invalidite.pdf",
+  "pdf_sha256": "860a63a0bf6a681eb550fd835daa512d89c4f79f7fc79424164247982f8a7b12",
+  "titre": "CG Prévoyance Invalidité",
+  "version": "4.2",
+  "methode": "upload_session.extract_and_chunk_pdf + apply_length_guard (aucun appel API)",
+  "extraits": [
+    {
+      "id": "upload_0_na",
+      "article": "",
+      "chapitre_titre": "",
+      "texte": "ARESIA Assurances\nConditions Générales — Prévoyance\nInvalidité\nRéf. : CG-PREV-INV-2024 | Approuvé ACPR\nVersion 4.2 — Janvier 2024 — Document fictif à usage de démonstration\nSOMMAIRE",
+      "tronque": false
+    },
+    {
+      "id": "upload_1_1",
+      "article": "1",
+      "chapitre_titre": "TITRE I — DÉFINITIONS ET CHAMP D'APPLICATION",
+      "texte": "Article 1 — Définitions\nAssuré : Toute personne physique désignée aux Conditions Particulières, âgée de 18 ans révolus et de moins\nde 65 ans à la date d'adhésion, exerçant une activité professionnelle déclarée sur le territoire de l'Espace\nÉconomique Européen.\nSouscripteur : La personne morale ou physique qui conclut le contrat avec ARESIA Assurances et s'engage\nau paiement des cotisations.\nBénéficiaire : La personne désignée pour recevoir les prestations en cas de sinistre. À défaut de désignation\nexpresse, il s'agit de l'assuré lui-même pour les garanties de son vivant, et de sa succession pour la garantie\ndécès.\nIncapacité Temporaire de Travail (ITT) : Impossibilité médicalement constatée et totale pour l'assuré\nd'exercer son activité professionnelle habituelle, résultant d'un accident ou d'une maladie, pour une durée\ncontinue supérieure à la franchise contractuelle.\nInvalidité Permanente Totale (IPT) : État de l'assuré dont le taux d'invalidité fonctionnelle est supérieur ou égal\nà 66%, reconnu par le médecin conseil de l'assureur après consolidation, rendant impossible tout exercice\nd'une activité professionnelle rémunérée.\nInvalidité Permanente Partielle (IPP) : État de l'assuré dont le taux d'invalidité fonctionnelle est compris entre\n33% et 65% inclus, après consolidation et avis du médecin conseil.\nFranchise : Délai exprimé en jours continus d'arrêt de travail à partir duquel l'assureur commence à verser les\nindemnités journalières. La franchise est non rachetable sauf mention contraire aux Conditions Particulières.\nSinistre : Tout événement (accident ou maladie) entraînant une incapacité ou une invalidité ouvrant droit aux\ngaranties du présent contrat, survenu pendant la période de couverture.\nDate de consolidation : Date à laquelle l'état de santé de l'assuré est considéré comme stabilisé et ne pouvant\nplus être amélioré par un traitement approprié, constatée par le médecin traitant et confirmée par le médecin\nconseil de l'assureur.",
+      "tronque": false
+    },
+    {
+      "id": "upload_2_2",
+      "article": "2",
+      "chapitre_titre": "TITRE I — DÉFINITIONS ET CHAMP D'APPLICATION",
+      "texte": "Article 2 — Champ d'application territorial\nLe présent contrat couvre les sinistres survenus et les soins reçus dans l'ensemble des pays membres de\nl'Espace Économique Européen (EEE), ainsi qu'en Suisse. Pour les déplacements professionnels hors EEE\nd'une durée inférieure à 90 jours consécutifs, la garantie est maintenue sous réserve que l'activité exercée\nfigure sur la liste des professions couvertes en Annexe 3.\nTout déplacement hors EEE supérieur à 90 jours doit faire l'objet d'une déclaration préalable à ARESIA\nAssurances. L'absence de déclaration entraîne la suspension de la garantie pour la durée du séjour non\ndéclaré.\nn Les expatriés fiscaux bénéficient d'un régime spécifique détaillé à l'Article 2.3 des présentes Conditions Générales.",
+      "tronque": false
+    },
+    {
+      "id": "upload_3_3",
+      "article": "3",
+      "chapitre_titre": "TITRE I — DÉFINITIONS ET CHAMP D'APPLICATION",
+      "texte": "Article 3 — Conditions d'adhésion\nPour être éligible à l'adhésion, l'assuré doit remplir l'ensemble des conditions cumulatives suivantes :\n(cid:127) Être âgé de 18 ans révolus et de moins de 60 ans à la date d'effet de l'adhésion\n(cid:127) Exercer une activité professionnelle principale génératrice de revenus, déclarée aux organismes sociaux\ncompétents\n(cid:127) Résider fiscalement en France métropolitaine ou dans les départements et régions d'outre-mer (DROM)\n(cid:127) Ne pas être en arrêt de travail ou en invalidité à la date de souscription\n(cid:127) Avoir complété et signé le questionnaire médical de santé (QMS) sans réserve, ou avec réserves\nacceptées par le service médical de l'assureur\n(cid:127) S'acquitter de la cotisation initiale dans les 30 jours suivant la date d'effet\nn Toute fausse déclaration intentionnelle lors du questionnaire médical de santé entraîne la nullité du contrat\nconformément à l'Article L.113-8 du Code des assurances. Les primes versées restent acquises à l'assureur à titre\nde dommages et intérêts.",
+      "tronque": false
+    },
+    {
+      "id": "upload_4_4",
+      "article": "4",
+      "chapitre_titre": "TITRE II — GARANTIES INCAPACITÉ TEMPORAIRE DE TRAVAIL",
+      "texte": "Article 4 — Définition et déclenchement de la garantie ITT\nLa garantie Incapacité Temporaire de Travail est déclenchée lorsque l'assuré se trouve dans l'impossibilité\ntotale, médicalement constatée, d'exercer son activité professionnelle habituelle, et ce de façon continue\npendant une durée supérieure à la franchise choisie aux Conditions Particulières.",
+      "tronque": false
+    },
+    {
+      "id": "upload_5_4.1",
+      "article": "4.1",
+      "chapitre_titre": "TITRE II — GARANTIES INCAPACITÉ TEMPORAIRE DE TRAVAIL",
+      "texte": "Article 4.1 — Franchise\nLa franchise applicable est celle définie aux Conditions Particulières parmi les options suivantes :\nOption franchise Délai carence (jours) Impact cotisation\nFranchise 15 jours 15 jours consécutifs Cotisation de base × 1,00\nFranchise 30 jours 30 jours consécutifs Cotisation de base × 0,82\nFranchise 60 jours 60 jours consécutifs Cotisation de base × 0,64\nFranchise 90 jours 90 jours consécutifs Cotisation de base × 0,51\nn Article 4.1 — La franchise est calculée par sinistre et non par année civile. En cas de rechute survenant dans les 30\njours suivant la reprise d'activité, l'arrêt est considéré comme la continuité du sinistre initial et aucune nouvelle franchise ne\ns'applique.",
+      "tronque": false
+    },
+    {
+      "id": "upload_6_4.2",
+      "article": "4.2",
+      "chapitre_titre": "TITRE II — GARANTIES INCAPACITÉ TEMPORAIRE DE TRAVAIL",
+      "texte": "Article 4.2 — Montant des indemnités journalières\nL'indemnité journalière (IJ) est versée à terme échu, mensuellement. Son montant est déterminé aux Conditions\nParticulières en fonction du revenu professionnel déclaré et de l'option choisie, dans les limites suivantes :\nTranche de revenu annuel net IJ maximale (Option Standard) IJ maximale (Option Premium)\nJusqu'à 30 000 € 90 €/jour 120 €/jour\nDe 30 001 € à 60 000 € 150 €/jour 200 €/jour\nDe 60 001 € à 100 000 € 220 €/jour 295 €/jour\nDe 100 001 € à 150 000 € 310 €/jour 415 €/jour\nSupérieur à 150 000 € Sur devis médical Sur devis médical\nLe cumul des indemnités perçues au titre de ce contrat et des prestations versées par les régimes obligatoires\nne peut excéder 100% du revenu net journalier habituel de l'assuré, calculé sur la base des 12 derniers mois\nprécédant le sinistre.",
+      "tronque": false
+    },
+    {
+      "id": "upload_7_4.3",
+      "article": "4.3",
+      "chapitre_titre": "TITRE II — GARANTIES INCAPACITÉ TEMPORAIRE DE TRAVAIL",
+      "texte": "Article 4.3 — Durée maximale d'indemnisation ITT\nLa durée maximale d'indemnisation au titre de la garantie ITT est de 1 095 jours (soit 3 ans) par sinistre et par\nassuré, tous sinistres confondus sur la durée du contrat.\nAu-delà de cette durée, si l'assuré ne peut reprendre son activité professionnelle, le dossier est\nautomatiquement orienté vers l'évaluation de la garantie Invalidité Permanente (Articles 5 à 7 des présentes).",
+      "tronque": false
+    },
+    {
+      "id": "upload_8_5",
+      "article": "5",
+      "chapitre_titre": "TITRE II — GARANTIES INCAPACITÉ TEMPORAIRE DE TRAVAIL",
+      "texte": "Article 5 — Prise en charge des affections longue durée (ALD)\nLes pathologies reconnues comme Affections de Longue Durée (ALD) par l'Assurance Maladie bénéficient d'un\ntraitement spécifique. La liste des ALD prises en charge sans surprime est disponible en Annexe 1.\nPour les ALD non listées en Annexe 1, ou pour les affections psychiatriques, une surprime ou une exclusion\nspécifique peut être appliquée sur la base du questionnaire médical de santé, après avis du médecin conseil de\nl'assureur.\nn Article 5.1 — Les affections psychiatriques (dépression, burn-out, troubles anxieux) sont couvertes sans limitation de\ndurée spécifique pour les assurés ayant souscrit l'option Premium, sous réserve d'un suivi psychiatrique régulier attesté.",
+      "tronque": false
+    },
+    {
+      "id": "upload_9_6",
+      "article": "6",
+      "chapitre_titre": "TITRE III — GARANTIES INVALIDITÉ PERMANENTE TOTALE (IPT)",
+      "texte": "Article 6 — Conditions de reconnaissance de l'IPT\nLa garantie IPT est acquise lorsque le médecin conseil de l'assureur, après examen du dossier médical complet\net, si nécessaire, expertise médicale contradictoire, reconnaît un taux d'invalidité fonctionnelle supérieur ou égal\nà 66%.",
+      "tronque": false
+    },
+    {
+      "id": "upload_10_6.1",
+      "article": "6.1",
+      "chapitre_titre": "TITRE III — GARANTIES INVALIDITÉ PERMANENTE TOTALE (IPT)",
+      "texte": "Article 6.1 — Procédure d'évaluation du taux d'invalidité\nÉtape 1 — L'assuré transmet le formulaire de déclaration d'invalidité complété et signé\nÉtape 2 — Transmission du rapport du médecin traitant et des spécialistes impliqués\nÉtape 3 — Examen du dossier par le médecin conseil de l'assureur dans un délai de 45 jours ouvrés\nÉtape 4 — Notification de la décision par lettre recommandée avec accusé de réception\nÉtape 5 — En cas de contestation : expertise médicale contradictoire selon l'Article 6.3",
+      "tronque": false
+    },
+    {
+      "id": "upload_11_6.2",
+      "article": "6.2",
+      "chapitre_titre": "TITRE III — GARANTIES INVALIDITÉ PERMANENTE TOTALE (IPT)",
+      "texte": "Article 6.2 — Barème d'évaluation\nL'évaluation du taux d'invalidité est réalisée conformément au barème médical en vigueur, publié par le Comité\nConsultatif du Secteur Financier (CCSF) et adopté par ARESIA Assurances. Ce barème est disponible sur\nsimple demande au service médical de l'assureur.\nTaux d'invalidité fonctionnelle Statut Prestation\n< 33% Non couvert Aucune prestation IPT/IPP\n33% à 65% IPP — Invalidité Permanente Partielle Rente mensuelle IPP (voir Art. 8)\n66% à 99% IPT — Invalidité Permanente Totale Rente mensuelle IPT (voir Art. 7)\nRente IPT majorée + aide tierce\n100% Invalide absolu\npersonne",
+      "tronque": false
+    },
+    {
+      "id": "upload_12_7",
+      "article": "7",
+      "chapitre_titre": "TITRE III — GARANTIES INVALIDITÉ PERMANENTE TOTALE (IPT)",
+      "texte": "Article 7 — Montant de la rente invalidité IPT\nEn cas de reconnaissance de l'IPT, ARESIA Assurances verse à l'assuré une rente mensuelle viagère, dont le\nmontant est déterminé aux Conditions Particulières et indexé annuellement sur l'indice des prix à la\nconsommation (IPC) publié par l'INSEE.\nOption souscrite Rente mensuelle maximale Revalorisation annuelle\nEssentiel 1 500 €/mois IPC — plafonnée à +3%/an\nConfort 3 000 €/mois IPC — plafonnée à +4%/an\nPremium 6 000 €/mois IPC — plafonnée à +5%/an\nDirigeant 10 000 €/mois IPC sans plafond\nn Article 7.2 — La rente est suspendue en cas de reprise d'une activité professionnelle dont les revenus annuels\ndépassent 30% du revenu pré-sinistre pendant plus de 6 mois consécutifs. L'assuré doit déclarer toute reprise\nd'activité dans les 30 jours sous peine de remboursement des indemnités indûment perçues.",
+      "tronque": false
+    },
+    {
+      "id": "upload_13_12",
+      "article": "12",
+      "chapitre_titre": "TITRE VI — EXCLUSIONS ET LIMITATIONS DE GARANTIE",
+      "texte": "Article 12 — Exclusions générales applicables à toutes les garanties\nSont exclus de toutes les garanties du présent contrat, les sinistres ayant pour origine :\n(cid:127) Les faits volontaires de l'assuré, y compris les tentatives de suicide et automutilations\n(cid:127) La guerre civile ou étrangère, les actes de terrorisme (sauf garantie complémentaire optionnelle souscrite)\n(cid:127) Les catastrophes naturelles non reconnues par arrêté interministériel\n(cid:127) Les effets des radiations ionisantes ou de la radioactivité\n(cid:127) La pratique de sports dangereux tels que définis à l'Annexe 2 (parachutisme, base jump, sports de combat\nprofessionnels, etc.), sauf option \"Sports Extrêmes\" souscrite\n(cid:127) La conduite en état d'ivresse (alcoolémie > 0,8 g/l) ou sous l'emprise de stupéfiants non prescrits\n(cid:127) L'exercice d'une profession non déclarée ou différente de celle mentionnée aux Conditions Particulières",
+      "tronque": false
+    },
+    {
+      "id": "upload_14_13",
+      "article": "13",
+      "chapitre_titre": "TITRE VI — EXCLUSIONS ET LIMITATIONS DE GARANTIE",
+      "texte": "Article 13 — Exclusions spécifiques à la garantie ITT\n(cid:127) Les maternités et complications de grossesse (sauf souscription avant conception et option Maternité\nactivée)\n(cid:127) Les soins de confort ou d'esthétique non prescrits par un médecin pour raison thérapeutique\n(cid:127) Les arrêts de travail prescrits pendant les 12 premiers mois du contrat pour une affection préexistante non\ndéclarée\n(cid:127) Les rechutes consécutives à une affection exclue lors de la souscription, même si survenant après la\nlevée de l'exclusion temporaire\nn Article 13.5 — Les pathologies psychiatriques et le burn-out sont couverts sans exclusion temporaire pour les adhérents\nayant fourni un questionnaire médical de santé favorable et souscrit avant toute prescription médicale liée à ces\npathologies.",
+      "tronque": false
+    },
+    {
+      "id": "upload_15_15",
+      "article": "15",
+      "chapitre_titre": "TITRE VII — PROCÉDURE DE DÉCLARATION DE SINISTRE",
+      "texte": "Article 15 — Délais et modalités de déclaration\nL'assuré ou son représentant légal doit déclarer le sinistre à ARESIA Assurances dans les délais suivants :\nType de sinistre Délai de déclaration Sanction en cas de retard\n15 jours après expiration de la Déchéance des indemnités pour la période de\nITT (maladie)\nfranchise retard, sauf cas de force majeure\n5 jours ouvrés après le fait\nITT (accident) Déchéance partielle proportionnelle au retard\ngénérateur\n30 jours après notification Suspension du traitement du dossier jusqu'à\nIPT / IPP\nmédicale réception\nDécès 30 jours après le décès Pas de déchéance mais intérêts de retard",
+      "tronque": false
+    },
+    {
+      "id": "upload_16_16",
+      "article": "16",
+      "chapitre_titre": "TITRE VII — PROCÉDURE DE DÉCLARATION DE SINISTRE",
+      "texte": "Article 16 — Pièces justificatives à fournir\nLe dossier de déclaration de sinistre doit impérativement comprendre :\n(cid:127) Le formulaire de déclaration de sinistre dûment complété et signé (disponible sur l'espace assuré en ligne)\n(cid:127) Un certificat médical initial établi par le médecin traitant, précisant le diagnostic et la durée prévisionnelle\nd'arrêt\n(cid:127) Une copie de la prescription d'arrêt de travail ou du certificat d'hospitalisation\n(cid:127) Un justificatif de revenus professionnels (avis d'imposition, bulletins de salaire des 3 derniers mois ou\nbilans des 2 dernières années pour les TNS)\n(cid:127) Un relevé d'identité bancaire (RIB) à jour\n(cid:127) Pour les arrêts de plus de 90 jours : certificats médicaux de prolongation mensuels",
+      "tronque": false
+    },
+    {
+      "id": "upload_17_20",
+      "article": "20",
+      "chapitre_titre": "TITRE IX — DISPOSITIONS FISCALES ET SOCIALES",
+      "texte": "Article 20 — Traitement fiscal des cotisations\nLe traitement fiscal des cotisations dépend du statut de l'assuré et du mode de souscription :\nStatut assuré Cotisations Prestations reçues\nDéductibles des revenus imposables dans la Imposables comme revenus de\nSalarié — contrat collectif obligatoire\nlimite de 7% du PASS remplacement\nNon déductibles (cotisées sur revenus après\nSalarié — contrat individuel Exonérées d'impôt sur le revenu\nimpôt)\nDéductibles sous plafond Madelin (voir Imposables comme revenus de\nTravailleur Non Salarié (TNS)\nbarème Madelin annuel) remplacement\nGérant majoritaire Déductibles partiellement selon statut Régime TNS applicable\nn Article 20.3 — Les règles fiscales applicables sont susceptibles d'évoluer. ARESIA Assurances recommande de\nconsulter un expert-comptable ou un conseiller fiscal pour toute question relative au traitement fiscal de ce\ncontrat. Les informations ci-dessus sont fournies à titre indicatif et ne constituent pas un conseil fiscal.",
+      "tronque": false
+    },
+    {
+      "id": "upload_18_21",
+      "article": "21",
+      "chapitre_titre": "TITRE IX — DISPOSITIONS FISCALES ET SOCIALES",
+      "texte": "Article 21 — Régime social des prestations\nLes indemnités journalières versées au titre de la garantie ITT sont soumises aux cotisations sociales selon les\nrègles applicables aux revenus de remplacement, conformément aux dispositions du Code de la sécurité\nsociale en vigueur à la date de versement. L'assureur établit une attestation fiscale annuelle récapitulant les\nsommes versées, transmise avant le 31 janvier de l'année suivante.",
+      "tronque": false
+    },
+    {
+      "id": "upload_19_22",
+      "article": "22",
+      "chapitre_titre": "TITRE X — RÉCLAMATIONS ET MÉDIATION",
+      "texte": "Article 22 — Procédure de réclamation\nTout différend relatif à l'interprétation ou à l'exécution du contrat doit d'abord être soumis au Service\nRéclamations d'ARESIA Assurances, par courrier recommandé ou via l'espace assuré en ligne.\nARESIA Assurances s'engage à accuser réception de la réclamation dans un délai de 10 jours ouvrés et à\napporter une réponse définitive dans un délai de 60 jours ouvrés.",
+      "tronque": false
+    },
+    {
+      "id": "upload_20_23",
+      "article": "23",
+      "chapitre_titre": "TITRE X — RÉCLAMATIONS ET MÉDIATION",
+      "texte": "Article 23 — Médiation\nEn cas de désaccord persistant après épuisement de la procédure interne de réclamation, l'assuré peut saisir\ngratuitement le Médiateur de l'Assurance :\nMédiateur de l'Assurance — TSA 50110 — 75441 Paris Cedex 09 | www.mediation-assurance.org\nDocument fictif — ARESIA Assurances (société imaginaire) — Créé pour AssurConseil 365 / tkoidra.com — Juin 2026",
+      "tronque": false
+    }
+  ],
+  "controle": {
+    "reference": "upload_eval_20260925_104952.json",
+    "extraits": {
+      "obtenus": 21,
+      "25_09": 21
+    },
+    "extraits_tronques": {
+      "obtenus": 0,
+      "25_09": 0
+    },
+    "articles_chapitre_identiques": true,
+    "articles_definis_identiques": true,
+    "ecarts": []
+  }
+}

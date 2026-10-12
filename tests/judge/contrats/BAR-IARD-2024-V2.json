@@ -1,0 +1,87 @@
+{
+  "doc": "BAR-IARD-2024-V2",
+  "pdf": "bareme-garanties-iard.pdf",
+  "pdf_sha256": "dba62dd09c38fe38bcd5788e2e69812020b69dc13799ec71598302b88592f1f3",
+  "titre": "Barème Garanties IARD 2024",
+  "version": "2.0",
+  "methode": "upload_session.extract_and_chunk_pdf + apply_length_guard (aucun appel API)",
+  "extraits": [
+    {
+      "id": "upload_0_na",
+      "article": "",
+      "chapitre_titre": "",
+      "texte": "ARESIA Assurances\nBarème des Garanties IARD 2024\nRéf. : BAR-IARD-2024-V2 | Document tarifaire\nVersion 2.0 — Janvier 2024 — Document fictif à usage de démonstration\nCe barème présente les plafonds de garanties, franchises et primes indicatives applicables aux contrats\nd'assurances IARD (Incendie, Accidents, Risques Divers) commercialisés par ARESIA Assurances pour\nl'exercice 2024. Toutes les valeurs sont exprimées en euros TTC sauf mention contraire.",
+      "tronque": false
+    },
+    {
+      "id": "upload_1_1.1",
+      "article": "1.1",
+      "chapitre_titre": "SECTION 1 — MULTIRISQUE HABITATION",
+      "texte": "Article 1.1 — Garanties de base incluses\nGarantie Plafond de couverture Franchise standard\nIncendie, explosion, dégâts des eaux Valeur à neuf du bien immobilier 150 €\nCatastrophes naturelles Valeur à neuf — arrêté Cat Nat requis 380 € (légale)\nVol et actes de vandalisme 30 000 € (meubles) / 5 000 € (espèces) 300 €\nBris de glace 3 000 € par sinistre 0 €\nResponsabilité civile vie privée 3 000 000 € par sinistre 0 €\nDéfense pénale et recours 15 000 € par sinistre 0 €\nAssistance et hébergement d'urgence Hôtel 30 nuits | 80 €/nuit 0 €",
+      "tronque": false
+    },
+    {
+      "id": "upload_2_1.2",
+      "article": "1.2",
+      "chapitre_titre": "SECTION 1 — MULTIRISQUE HABITATION",
+      "texte": "Article 1.2 — Options et extensions disponibles\nPrime mensuelle\nOption Couverture supplémentaire\nadditionnelle\nÉquipements électroniques Jusqu'à 5 000 € (PC, TV, hi-fi, photo) +3,50 €/mois\nObjets de valeur identifiés Jusqu'à 15 000 € sur déclaration et photos +8,00 €/mois\nPiscine et dépendances Plafond aligné bâtiment principal +5,50 €/mois\nActivité libérale au domicile RC Pro incluse jusqu'à 500 k€ +12,00 €/mois\nProtection juridique renforcée 25 000 € / porté à 50 000 € en option +4,20 €/mois",
+      "tronque": false
+    },
+    {
+      "id": "upload_3_1.3",
+      "article": "1.3",
+      "chapitre_titre": "SECTION 1 — MULTIRISQUE HABITATION",
+      "texte": "Article 1.3 — Barème tarifaire MRH 2024\nPrimes annuelles indicatives selon la surface habitable et le type de logement (locataire ou propriétaire) :\nSurface Studio / T1 T2-T3 (locataire) T2-T3 (propriétaire) T4+ (propriétaire)\n< 35 m² 108 € /an — — —\n35 à 70 m² — 156 € /an 195 € /an —\nSurface Studio / T1 T2-T3 (locataire) T2-T3 (propriétaire) T4+ (propriétaire)\n71 à 120 m² — — 248 € /an 312 € /an\n121 à 180 m² — — — 398 € /an\n> 180 m² — — — Sur devis\nn Article 1.3.2 — Ces tarifs sont indicatifs et constituent le point de départ du calcul de prime. Des majorations peuvent\ns'appliquer selon la zone géographique, les antécédents sinistres, la nature des installations électriques et le type de\nchauffage.",
+      "tronque": false
+    },
+    {
+      "id": "upload_4_2.1",
+      "article": "2.1",
+      "chapitre_titre": "SECTION 2 — ASSURANCE AUTOMOBILE",
+      "texte": "Article 2.1 — Formules disponibles\nFormule Tiers Simple (obligatoire) : Responsabilité civile obligatoire uniquement — protection des tiers lésés\nFormule Tiers+ : Tiers Simple + incendie + vol + bris de glace + catastrophes naturelles\nFormule Intermédiaire : Tiers+ + dommages tous accidents tiers identifiés + assistance 0 km\nFormule Tous Risques : Couverture intégrale y compris accident responsable — recommandée pour\nvéhicules < 5 ans",
+      "tronque": false
+    },
+    {
+      "id": "upload_5_2.2",
+      "article": "2.2",
+      "chapitre_titre": "SECTION 2 — ASSURANCE AUTOMOBILE",
+      "texte": "Article 2.2 — Plafonds de garantie par formule\nGarantie Tiers Simple Tiers+ Intermédiaire Tous Risques\nResponsabilité civile dommages\nIllimitée Illimitée Illimitée Illimitée\nmatériels\nResponsabilité civile dommages\nIllimitée Illimitée Illimitée Illimitée\ncorporels\nIncendie / Explosion — Valeur Argus Valeur Argus Valeur expertise\nVol (tentative incluse) — Valeur Argus Valeur Argus Valeur expertise\nBris de glace — 2 000 € 2 000 € Sans limite\nDommages acc. responsable — — Tiers identifié seul Tous accidents\nAssistance 0 km — — 3 incluse 3 incluse\nProtection du conducteur — — Option 3 incluse",
+      "tronque": false
+    },
+    {
+      "id": "upload_6_2.3",
+      "article": "2.3",
+      "chapitre_titre": "SECTION 2 — ASSURANCE AUTOMOBILE",
+      "texte": "Article 2.3 — Franchises automobiles 2024\nFranchise avec option Zéro\nType de sinistre Franchise standard\nFranchise\nDommages collision (responsabilité partagée) 500 € 0 €\nDommages collision (responsable tiers) 0 € 0 €\nIncendie 300 € 0 €\nVol (véhicule entier) 500 € 0 €\n0 € après réparateur agréé | 75 €\nBris de glace (pare-brise) 0 €\nautre\nBris de glace (autres vitrages) 75 € 0 €\nCatastrophes naturelles 380 € (légale) 380 € (non rachetable)",
+      "tronque": false
+    },
+    {
+      "id": "upload_7_3.1",
+      "article": "3.1",
+      "chapitre_titre": "SECTION 3 — RESPONSABILITÉ CIVILE PROFESSIONNELLE",
+      "texte": "Article 3.1 — Professions couvertes et plafonds\nLa garantie RC Professionnelle couvre les dommages causés à des tiers dans le cadre de l'exercice de l'activité\nprofessionnelle déclarée. Les plafonds ci-dessous sont les maximums par sinistre et par an, tous sinistres\nconfondus.\nCatégorie professionnelle Plafond par sinistre Plafond annuel Franchise\nProfessions libérales (hors santé) 500 000 € 1 000 000 € 500 €\nProfessions médicales et paramédicales 3 000 000 € 5 000 000 € 1 000 €\nProfessions du bâtiment (hors décennale) 1 000 000 € 2 000 000 € 1 000 €\nProfessions financières (CGPI, CIF, CGP) 1 500 000 € 3 000 000 € 1 500 €\nProfessions informatiques / SSII 800 000 € 1 500 000 € 750 €\nCommerce (B2B) 500 000 € 1 000 000 € 500 €\nArtisans et commerçants (B2C) 300 000 € 600 000 € 300 €\nn Article 3.1.5 — Pour les Conseillers en Gestion de Patrimoine (CGP) et les Conseillers en Investissements Financiers\n(CIF), la garantie RC Pro est obligatoire en vertu des exigences de l'ORIAS et de l'AMF. La couverture minimale légale de\n1 500 000 € par sinistre est incluse dans la formule standard.",
+      "tronque": false
+    },
+    {
+      "id": "upload_8_4.1",
+      "article": "4.1",
+      "chapitre_titre": "SECTION 4 — PROCÉDURE DE GESTION DES SINISTRES IARD",
+      "texte": "Article 4.1 — Délais de déclaration par type de sinistre\nType de sinistre Délai de déclaration Modalités\nDégâts des eaux 5 jours ouvrés Déclaration en ligne ou par téléphone\nIncendie / Explosion 5 jours ouvrés Déclaration en ligne ou par téléphone\nVol / Cambriolage 48 heures après constat Dépôt de plainte obligatoire + déclaration\n5 jours ouvrés (+ constat\nAccident automobile Constat signé dans les 48h si possible\namiable)\n30 jours après arrêté\nCatastrophe naturelle Arrêté JORF requis pour ouverture dossier\nministériel\nDès connaissance de la\nRC Pro Jamais tarder — risque de déchéance\nréclamation\nDocument fictif — ARESIA Assurances (société imaginaire) — Créé pour AssurConseil 365 / tkoidra.com — Juin 2026",
+      "tronque": false
+    }
+  ],
+  "controle": {
+    "reference": "upload_eval_20260925_104952.json",
+    "extraits": {
+      "obtenus": 9,
+      "25_09": 9
+    },
+    "extraits_tronques": {
+      "obtenus": 0,
+      "25_09": 0
+    },
+    "articles_chapitre_identiques": true,
+    "articles_definis_identiques": true,
+    "ecarts": []
+  }
+}

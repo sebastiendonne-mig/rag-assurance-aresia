@@ -1,0 +1,87 @@
+{
+  "doc": "ACPR-REC-2024-12",
+  "pdf": "circulaire-acpr-conseil.pdf",
+  "pdf_sha256": "7be9cc08cbcb5c10b17b4af58e5fc55c93485d2d2cbb8f21e06f3f073e5dd650",
+  "titre": "Circulaire ACPR Devoir de Conseil",
+  "version": "1.0",
+  "methode": "upload_session.extract_and_chunk_pdf + apply_length_guard (aucun appel API)",
+  "extraits": [
+    {
+      "id": "upload_0_na",
+      "article": "",
+      "chapitre_titre": "SECTION I — EXIGENCES DE CONNAISSANCE CLIENT (KYC)",
+      "texte": "AUTORITÉ DE CONTRÔLE PRUDENTIEL ET DE RÉSOLUTION\nExtrait — Recommandation sur le Devoir de\nConseil en Assurance\nRéf. fictive : ACPR-REC-2024-12 | À usage de démonstration uniquement\nCe document est 100% fictif. Il ne représente pas une publication officielle de l'ACPR.\nPRÉAMBULE ET CHAMP D'APPLICATION\nLa présente recommandation s'inscrit dans le cadre de la directive sur la distribution d'assurances (DDA),\ntransposée en droit français par l'ordonnance n° 2018-361 du 16 mai 2018, et s'applique à l'ensemble des\nintermédiaires d'assurance et entreprises d'assurance soumis au contrôle de l'ACPR pour leurs activités de\ndistribution de produits d'assurance.\nCette recommandation vise à préciser les attentes du superviseur en matière de :\n(cid:127) Recueil des informations sur le client (Connaissance Client — KYC)\n(cid:127) Analyse des besoins et de la situation patrimoniale du client\n(cid:127) Formulation d'un conseil personnalisé et documenté\n(cid:127) Traçabilité des interactions et de la justification du conseil\n(cid:127) Formation continue des distributeurs\nSECTION I — EXIGENCES DE CONNAISSANCE CLIENT (KYC)",
+      "tronque": false
+    },
+    {
+      "id": "upload_1_1",
+      "article": "1",
+      "chapitre_titre": "SECTION I — EXIGENCES DE CONNAISSANCE CLIENT (KYC)",
+      "texte": "Article 1 — Recueil des informations obligatoires\nAvant toute recommandation ou distribution d'un produit d'assurance, le distributeur doit recueillir auprès du\nclient potentiel, au minimum, les informations suivantes :\nSituation personnelle : Âge, situation familiale, personnes à charge, régime matrimonial\nSituation professionnelle : Statut (salarié, TNS, fonctionnaire, retraité), secteur d'activité, ancienneté\nSituation patrimoniale : Revenus, épargne existante, patrimoine immobilier, dettes et engagements\nObjectifs et horizon : Objectif du contrat (prévoyance, capitalisation, transmission), horizon de placement,\nbesoin de liquidité\nProfil de risque : Tolérance aux pertes en capital, expérience financière, connaissance des produits\nSituation fiscale : Tranche marginale d'imposition, dispositifs fiscaux en cours (Madelin, PER, etc.)\nCouvertures existantes : Contrats d'assurance en cours, garanties sociales obligatoires",
+      "tronque": false
+    },
+    {
+      "id": "upload_2_2",
+      "article": "2",
+      "chapitre_titre": "SECTION II — CONTENU ET FORMALISATION DU DEVOIR DE CONSEIL",
+      "texte": "Article 2 — Mise à jour des informations client\nLes informations collectées doivent être mises à jour :\n(cid:127) À minima tous les 2 ans pour les contrats en cours\n(cid:127) À chaque modification substantielle de la situation du client déclarée par celui-ci\n(cid:127) À l'occasion de tout nouvel acte contractuel (versement complémentaire supérieur à 10 000 €, arbitrage\nsignificatif, modification de bénéficiaires)\n(cid:127) Systématiquement lors d'un changement de conseiller référent\nSECTION II — CONTENU ET FORMALISATION DU DEVOIR DE CONSEIL",
+      "tronque": false
+    },
+    {
+      "id": "upload_3_3",
+      "article": "3",
+      "chapitre_titre": "SECTION II — CONTENU ET FORMALISATION DU DEVOIR DE CONSEIL",
+      "texte": "Article 3 — Exigences relatives à la recommandation personnalisée\nLa recommandation formulée au client doit être :\n(cid:127) Personnalisée, c'est-à-dire fondée sur les informations spécifiques collectées sur ce client, et non\ngénérique\n(cid:127) Motivée, avec une explication claire du lien entre les besoins identifiés et le produit recommandé\n(cid:127) Comparative, lorsque plusieurs produits peuvent répondre aux besoins du client (justification du choix\nretenu)\n(cid:127) Honnête, notamment concernant les risques, les frais et les limitations de garantie\n(cid:127) Compréhensible par le client, en évitant le jargon technique non expliqué",
+      "tronque": false
+    },
+    {
+      "id": "upload_4_4",
+      "article": "4",
+      "chapitre_titre": "SECTION III — EXIGENCES DE TRAÇABILITÉ",
+      "texte": "Article 4 — Document de Recueil des Informations et des Besoins (DRIB)\nLe distributeur doit établir un Document de Recueil des Informations et des Besoins (DRIB) avant toute\nsouscription. Ce document doit contenir :\n(cid:127) L'identité complète du client et du distributeur\n(cid:127) La date du recueil\n(cid:127) La synthèse des informations collectées (situation, objectifs, profil de risque)\n(cid:127) L'analyse des besoins réalisée\n(cid:127) La ou les recommandations formulées avec leur justification\n(cid:127) La mention explicite des produits étudiés mais non recommandés, avec la raison de leur exclusion\n(cid:127) La signature du client attestant de la réception et de la compréhension du document\nn Article 4.3 — Le DRIB doit être remis au client avant la souscription, sous format papier ou électronique avec accusé de\nréception. L'assureur doit conserver ce document pendant toute la durée du contrat et 5 ans après sa résiliation.\nSECTION III — EXIGENCES DE TRAÇABILITÉ",
+      "tronque": false
+    },
+    {
+      "id": "upload_5_5",
+      "article": "5",
+      "chapitre_titre": "SECTION III — EXIGENCES DE TRAÇABILITÉ",
+      "texte": "Article 5 — Journalisation des interactions de conseil\nL'ACPR attend des distributeurs qu'ils maintiennent un journal horodaté de l'ensemble des interactions de\nconseil, incluant les échanges par tout canal (présentiel, téléphone, messagerie électronique, chat en ligne).\nCe journal doit permettre, lors d'un contrôle, de reconstituer intégralement :\n(cid:127) La chronologie des échanges avec le client\n(cid:127) Les informations sur lesquelles reposait la recommandation à chaque date\n(cid:127) La nature exacte du conseil fourni et les documents remis\n(cid:127) Les modifications éventuelles du conseil suite à une évolution de la situation client\n(cid:127) Les refus de conseil éventuels et les raisons de l'impossibilité de formuler une recommandation",
+      "tronque": false
+    },
+    {
+      "id": "upload_6_6",
+      "article": "6",
+      "chapitre_titre": "SECTION IV — EXIGENCES DE FORMATION CONTINUE",
+      "texte": "Article 6 — Durées de conservation\nDurée de conservation\nType de document Support recommandé\nminimale\nDRIB (Document de Recueil des Informations Système de gestion sécurisé, accès\nDurée contrat + 5 ans\net Besoins) auditable\nJournal des interactions de conseil Durée contrat + 5 ans Base de données horodatée et immuable\nArchivage électronique NF Z42-013\nCorrespondances contractuelles Durée contrat + 5 ans\nrecommandé\nDocuments d'identité KYC 5 ans après fin de la relation Stockage séparé et chiffré (RGPD)\n5 ans après clôture de la Système de gestion des réclamations\nRéclamations et réponses\nréclamation dédié\nn Article 6.3 — Les systèmes de stockage des données KYC doivent être conformes au Règlement Général sur la\nProtection des Données (RGPD — Règlement UE 2016/679). La conservation des pièces d'identité est encadrée :\ndurée maximale de 5 ans après la fin de la relation contractuelle, avec chiffrement des données au repos et en\ntransit.\nSECTION IV — EXIGENCES DE FORMATION CONTINUE",
+      "tronque": false
+    },
+    {
+      "id": "upload_7_7",
+      "article": "7",
+      "chapitre_titre": "SECTION IV — EXIGENCES DE FORMATION CONTINUE",
+      "texte": "Article 7 — Obligations de formation DDA\nConformément à la directive DDA et aux textes de transposition, tout distributeur d'assurance doit suivre au\nminimum 15 heures de formation continue par an. Cette obligation s'applique à toute personne physique\nintervenant dans la distribution, y compris les mandataires et sous-agents.\nDurée minimale\nDomaine de formation Exemples de sujets\nrecommandée\nÉvolutions réglementaires produits, nouveaux\nProduits et marchés d'assurance 5 heures/an\nrisques couverts\nRéglementation et conformité 4 heures/an DDA, RGPD, LAB-FT, Solvabilité II\nCompétences relationnelles 3 heures/an Gestion des réclamations, communication client\nPrévention des conflits d'intérêts 2 heures/an Identification, gestion et déclaration\nÉthique professionnelle 1 heure/an Code de conduite, intégrité du conseil",
+      "tronque": false
+    },
+    {
+      "id": "upload_8_8",
+      "article": "8",
+      "chapitre_titre": "SECTION IV — EXIGENCES DE FORMATION CONTINUE",
+      "texte": "Article 8 — Sanctions en cas de manquement\nL'ACPR peut, en cas de manquement constaté aux obligations de devoir de conseil, prononcer les sanctions\nsuivantes :\n(cid:127) Avertissement ou blâme publié au Journal Officiel\n(cid:127) Interdiction temporaire ou définitive d'exercer pour une ou plusieurs activités\n(cid:127) Sanction pécuniaire pouvant atteindre 100 millions d'euros ou 10% du chiffre d'affaires annuel\n(cid:127) Retrait total ou partiel de l'agrément\n(cid:127) Injonction de prendre toute mesure de nature à corriger les pratiques défaillantes\nn Article 8.2 — L'ACPR tient compte dans l'appréciation des sanctions de la coopération de l'établissement, de la réalité et\nde l'étendue du préjudice causé aux clients, et des mesures correctrices mises en place.\nDOCUMENT ENTIÈREMENT FICTIF — Créé à des fins de démonstration pour AssurConseil 365 | tkoidra.com — Juin 2026 Ce texte ne\nconstitue pas une publication officielle de l'ACPR. Il ne doit pas être utilisé comme référence réglementaire réelle.",
+      "tronque": false
+    }
+  ],
+  "controle": {
+    "reference": "upload_eval_20260925_104952.json",
+    "extraits": {
+      "obtenus": 9,
+      "25_09": 9
+    },
+    "extraits_tronques": {
+      "obtenus": 0,
+      "25_09": 0
+    },
+    "articles_chapitre_identiques": true,
+    "articles_definis_identiques": true,
+    "ecarts": []
+  }
+}
