@@ -1,0 +1,1821 @@
+{
+  "fichier_json": "/Users/migranche/Documents/dev/tkoidra/assur2/tests/results/upload_eval_20260925_104952.json",
+  "en_tete": {
+    "date_utc": "2026-09-25T10:49:52+00:00",
+    "mode": "complet",
+    "claude_model": "claude-sonnet-4-6",
+    "mistral_model": "mistral-large-2512",
+    "mistral_server": "eu",
+    "mistral_host": "api.eu.mistral.ai",
+    "mistral_tarifs_usd_par_mtok": [
+      0.55,
+      1.6500000000000001
+    ],
+    "cout_estime_borne_haute_usd": {
+      "par_moteur": {
+        "anthropic": 0.9299999999999999,
+        "mistral": 0.1375
+      },
+      "total": 1.0675
+    },
+    "versions": {
+      "python": "3.13.5",
+      "mistralai": "2.10.1",
+      "anthropic": "0.111.0"
+    }
+  },
+  "n_questions": 20,
+  "documents": {
+    "CG-PREV-INV-2024": {
+      "chunks": 21,
+      "chunks_tronques_512_tokens": 0,
+      "articles_chapitre": [
+        "1",
+        "12",
+        "13",
+        "15",
+        "16",
+        "2",
+        "20",
+        "21",
+        "22",
+        "23",
+        "3",
+        "4",
+        "4.1",
+        "4.2",
+        "4.3",
+        "5",
+        "6",
+        "6.1",
+        "6.2",
+        "7"
+      ],
+      "articles_definis": [
+        "1",
+        "12",
+        "13",
+        "13.5",
+        "15",
+        "16",
+        "2",
+        "20",
+        "20.3",
+        "21",
+        "22",
+        "23",
+        "3",
+        "4",
+        "4.1",
+        "4.2",
+        "4.3",
+        "5",
+        "5.1",
+        "6",
+        "6.1",
+        "6.2",
+        "7",
+        "7.2"
+      ]
+    },
+    "CG-AV-MULTI-2024": {
+      "chunks": 12,
+      "chunks_tronques_512_tokens": 0,
+      "articles_chapitre": [
+        "1",
+        "10",
+        "11",
+        "12",
+        "14",
+        "15",
+        "2",
+        "23",
+        "24",
+        "8",
+        "9"
+      ],
+      "articles_definis": [
+        "1",
+        "1.2",
+        "10",
+        "10.3",
+        "11",
+        "12",
+        "14",
+        "15",
+        "15.4",
+        "2",
+        "23",
+        "23.1",
+        "23.3",
+        "24",
+        "24.2",
+        "8",
+        "9",
+        "9.4"
+      ]
+    },
+    "BAR-IARD-2024-V2": {
+      "chunks": 9,
+      "chunks_tronques_512_tokens": 0,
+      "articles_chapitre": [
+        "1.1",
+        "1.2",
+        "1.3",
+        "2.1",
+        "2.2",
+        "2.3",
+        "3.1",
+        "4.1"
+      ],
+      "articles_definis": [
+        "1.1",
+        "1.2",
+        "1.3",
+        "1.3.2",
+        "2.1",
+        "2.2",
+        "2.3",
+        "3.1",
+        "3.1.5",
+        "4.1"
+      ]
+    },
+    "ACPR-REC-2024-12": {
+      "chunks": 9,
+      "chunks_tronques_512_tokens": 0,
+      "articles_chapitre": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8"
+      ],
+      "articles_definis": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "4.3",
+        "5",
+        "6",
+        "6.3",
+        "7",
+        "8",
+        "8.2"
+      ]
+    }
+  },
+  "resultats": [
+    {
+      "label": "Q01 — Franchise ITT",
+      "question": "Quelles sont les options de franchise disponibles sur le contrat prévoyance invalidité ?",
+      "doc": "CG-PREV-INV-2024",
+      "expected_article": "4.1",
+      "garde_fou": false,
+      "moteurs": {
+        "anthropic": {
+          "succes": true,
+          "reponse": "**Réponse directe**\n\nLe contrat prévoyance invalidité ARESIA Assurances propose **4 options de franchise**, correspondant chacune à un délai de carence et à un impact sur la cotisation :\n\n| Option franchise | Délai de carence | Multiplicateur de cotisation |\n|---|---|---|\n| Franchise 15 jours | 15 jours consécutifs | × 1,00 (cotisation de base) |\n| Franchise 30 jours | 30 jours consécutifs | × 0,82 |\n| Franchise 60 jours | 60 jours consécutifs | × 0,64 |\n| Franchise 90 jours | 90 jours consécutifs | × 0,51 |\n\n> 💡 *La franchise correspond au nombre de jours d'arrêt continu à partir duquel l'assureur commence à verser les indemnités journalières.*\n\nL'option retenue est celle définie aux **Conditions Particulières** de votre contrat.\n\n---\n\n**Source(s)**\n\n- [Article 4.1 des CG Prévoyance Invalidité — v4.2] : tableau des options de franchise et leurs impacts sur la cotisation\n- [Article 1 des CG Prévoyance Invalidité — v4.2] : définition de la notion de franchise\n- [Article 4 des CG Prévoyance Invalidité — v4.2] : conditions de déclenchement de la garantie ITT en lien avec la franchise choisie\n\n---\n\n**Point d'attention**\n\nDeux règles importantes à retenir concernant l'application de la franchise :\n\n1. **La franchise est calculée par sinistre**, et non par année civile — chaque nouvel arrêt de travail fait repartir le délai de carence.\n2. **Règle de rechute** : si l'assuré reprend son activité puis subit un nouvel arrêt **dans les 30 jours suivant la reprise**, cet arrêt est considéré comme la **continuité du sinistre initial** — aucune nouvelle franchise ne s'applique dans ce cas. [Article 4.1 des CG Prévoyance Invalidité — v4.2]\n\n⚠️ Par ailleurs, la franchise est **non rachetable**, sauf mention contraire expressément stipulée dans vos Conditions Particulières. [Article 1 des CG Prévoyance Invalidité — v4.2]",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 3251,
+          "tokens_out": 620,
+          "cout_usd": 0.019053,
+          "latence_s": 12.527,
+          "request_id": null,
+          "analyse": {
+            "articles_cites": [
+              "4.1",
+              "1",
+              "4"
+            ],
+            "classement": {
+              "4.1": "article",
+              "1": "article",
+              "4": "article"
+            },
+            "absents": [],
+            "plages": [],
+            "aucune_citation": false,
+            "citation_attendue": true,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "'Article 4.1' cité"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": null
+          }
+        },
+        "mistral": {
+          "succes": true,
+          "reponse": "**Réponse directe** :\nLes options de franchise disponibles sur le contrat prévoyance invalidité d'ARESIA Assurances sont les suivantes :\n- **15 jours** (cotisation de base × 1,00)\n- **30 jours** (cotisation de base × 0,82)\n- **60 jours** (cotisation de base × 0,64)\n- **90 jours** (cotisation de base × 0,51)\n\n**Source(s)** :\n[Article 4.1 des CG Prévoyance — v4.2]\n\n**Point d'attention** :\n- La franchise s'applique **par sinistre** et non par année civile.\n- En cas de rechute dans les **30 jours suivant la reprise d'activité**, l'arrêt est considéré comme la continuité du sinistre initial : **aucune nouvelle franchise ne s'applique**.\n- Le choix de la franchise impacte directement le montant de la cotisation (réduction pour les franchises longues). Vérifiez votre option souscrite dans vos **Conditions Particulières**.",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 2714,
+          "tokens_out": 232,
+          "cout_usd": 0.0018755,
+          "latence_s": 3.224,
+          "request_id": "059a9c55bde6419d87ad3b04c532aa17",
+          "analyse": {
+            "articles_cites": [
+              "4.1"
+            ],
+            "classement": {
+              "4.1": "article"
+            },
+            "absents": [],
+            "plages": [],
+            "aucune_citation": false,
+            "citation_attendue": true,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "'Article 4.1' cité"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": null
+          }
+        }
+      },
+      "erreur_globale": null
+    },
+    {
+      "label": "Q02 — Montant IJ",
+      "question": "Quel est le montant maximum d'indemnité journalière pour quelqu'un qui gagne 80 000 € par an ?",
+      "doc": "CG-PREV-INV-2024",
+      "expected_article": "4.2",
+      "garde_fou": false,
+      "moteurs": {
+        "anthropic": {
+          "succes": true,
+          "reponse": "**Réponse directe**\n\nPour un revenu annuel net de 80 000 € (qui se situe dans la tranche « De 60 001 € à 100 000 € »), les montants maximaux d'indemnité journalière sont les suivants :\n\n| Option | IJ maximale |\n|---|---|\n| **Option Standard** | **220 €/jour** |\n| **Option Premium** | **295 €/jour** |\n\n⚠️ Ces plafonds s'appliquent sous réserve que le montant souscrit soit bien défini dans vos **Conditions Particulières**, car c'est ce document qui fixe le montant retenu pour votre contrat spécifique.\n\n---\n\n**Source(s)**\n\n[Article 4.2 des CG Document visiteur — vupload] :\n> *« De 60 001 € à 100 000 € — IJ maximale (Option Standard) : 220 €/jour — IJ maximale (Option Premium) : 295 €/jour »*\n\nLe même article précise également une **règle de cumul** : les indemnités perçues au titre du contrat, additionnées aux prestations des régimes obligatoires (Sécurité sociale, etc.), **ne peuvent pas dépasser 100 % du revenu net journalier habituel** de l'assuré, calculé sur les 12 derniers mois précédant le sinistre.\n\n---\n\n**Point d'attention**\n\nDeux nuances importantes à retenir :\n\n1. **Le montant effectif** de votre IJ n'est pas automatiquement égal au plafond : il est celui qui a été **souscrit dans vos Conditions Particulières**. Le tableau de l'article 4.2 fixe uniquement un *maximum* autorisé selon la tranche de revenu et l'option choisie.\n2. **La règle des 100 %** peut conduire à une réduction des indemnités versées si, combinées aux prestations de la Sécurité sociale, elles dépassent votre revenu net journalier réel. Je vous recommande de vérifier ce point avec votre **référent produit ARESIA Assurances** pour simuler votre situation précise.",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 3692,
+          "tokens_out": 553,
+          "cout_usd": 0.019371,
+          "latence_s": 11.864,
+          "request_id": null,
+          "analyse": {
+            "articles_cites": [
+              "4.2"
+            ],
+            "classement": {
+              "4.2": "article"
+            },
+            "absents": [],
+            "plages": [],
+            "aucune_citation": false,
+            "citation_attendue": true,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "'Article 4.2' cité"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": null
+          }
+        },
+        "mistral": {
+          "succes": true,
+          "reponse": "**Réponse directe** :\nPour un revenu annuel net de **80 000 €**, le montant maximum d'indemnité journalière (IJ) est de :\n- **220 €/jour** en *Option Standard*,\n- **295 €/jour** en *Option Premium*.\n\n**Source(s)** :\n[Article 4.2 des CG — Document visiteur (UPLOAD-eval-2b5) — v{vupload}]\n\n**Point d'attention** :\n1. **Plafond de cumul** : Le total des indemnités (contrat + régimes obligatoires) ne peut dépasser **100% du revenu net journalier habituel** de l'assuré (calculé sur les 12 derniers mois avant le sinistre). [Article 4.2]\n2. **Option souscrite** : Le montant exact dépend de l'option choisie aux *Conditions Particulières* (non précisée dans votre question). Vérifiez votre contrat pour confirmer l'option applicable.\n3. **Exclusions** : Aucune indemnité n'est versée pendant la *franchise* (délai de carence défini à l'Article 4.1).",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 3038,
+          "tokens_out": 263,
+          "cout_usd": 0.00210485,
+          "latence_s": 3.589,
+          "request_id": "2730387fb393408b8765bbb8bd52eb47",
+          "analyse": {
+            "articles_cites": [
+              "4.2",
+              "4.1"
+            ],
+            "classement": {
+              "4.2": "article",
+              "4.1": "article"
+            },
+            "absents": [],
+            "plages": [],
+            "aucune_citation": false,
+            "citation_attendue": true,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "'Article 4.2' cité"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": null
+          }
+        }
+      },
+      "erreur_globale": null
+    },
+    {
+      "label": "Q03 — Durée ITT",
+      "question": "Combien de temps peut-on être indemnisé en arrêt de travail avant de basculer en invalidité ?",
+      "doc": "CG-PREV-INV-2024",
+      "expected_article": "4.3",
+      "garde_fou": false,
+      "moteurs": {
+        "anthropic": {
+          "succes": true,
+          "reponse": "**Réponse directe**\n\nL'indemnisation au titre de l'arrêt de travail (ITT — Incapacité Temporaire de Travail) peut durer **au maximum 1 095 jours, soit 3 ans**, par sinistre et par assuré. Une fois ce plafond atteint, si l'assuré n'est toujours pas en mesure de reprendre son activité professionnelle, son dossier est **automatiquement orienté vers l'évaluation de la garantie Invalidité Permanente**, conformément aux articles 5 à 7 du contrat. Cette évaluation implique notamment un examen par le médecin conseil de l'assureur dans un délai de 45 jours ouvrés.\n\n---\n\n**Source(s)**\n\n- [Article 4.3 des CG Prévoyance Invalidité — v4.2] : *\"La durée maximale d'indemnisation au titre de la garantie ITT est de 1 095 jours (soit 3 ans) par sinistre et par assuré, tous sinistres confondus sur la durée du contrat. Au-delà de cette durée, si l'assuré ne peut reprendre son activité professionnelle, le dossier est automatiquement orienté vers l'évaluation de la garantie Invalidité Permanente (Articles 5 à 7 des présentes).\"*\n- [Article 6.1 des CG Prévoyance Invalidité — v4.2] : procédure d'évaluation du taux d'invalidité en 5 étapes, avec un délai d'examen de 45 jours ouvrés par le médecin conseil.\n\n---\n\n**Point d'attention**\n\n⚠️ La durée de 1 095 jours s'entend **tous sinistres confondus sur la durée du contrat**, et non par événement isolé. Par ailleurs, le basculement vers la garantie Invalidité Permanente n'est pas automatiquement synonyme d'indemnisation : l'assuré doit atteindre un **taux d'invalidité fonctionnelle d'au moins 33%** pour ouvrir droit à une prestation (IPP à partir de 33%, IPT à partir de 66%). En dessous de ce seuil, aucune prestation n'est versée au titre de l'invalidité. [Article 6.2 des CG Prévoyance Invalidité — v4.2]",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 3288,
+          "tokens_out": 621,
+          "cout_usd": 0.019179,
+          "latence_s": 12.702,
+          "request_id": null,
+          "analyse": {
+            "articles_cites": [
+              "5",
+              "7",
+              "4.3",
+              "6.1",
+              "6.2"
+            ],
+            "classement": {
+              "5": "article",
+              "7": "article",
+              "4.3": "article",
+              "6.1": "article",
+              "6.2": "article"
+            },
+            "absents": [],
+            "plages": [
+              "5 à 7",
+              "5 à 7"
+            ],
+            "aucune_citation": false,
+            "citation_attendue": true,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "'Article 4.3' cité"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": null
+          }
+        },
+        "mistral": {
+          "succes": true,
+          "reponse": "**Réponse directe** :\nLa durée maximale d'indemnisation en arrêt de travail (ITT) est de **1 095 jours (soit 3 ans)** par sinistre et par assuré. Au-delà de cette période, si l'assuré ne peut reprendre son activité professionnelle, son dossier est automatiquement orienté vers l'évaluation de la garantie **Invalidité Permanente** (IPT ou IPP).\n\n---\n\n**Source(s)** :\n- [Article 4.3 des CG Prévoyance Invalidité — v4.2] : *\"La durée maximale d'indemnisation au titre de la garantie ITT est de 1 095 jours (soit 3 ans) par sinistre et par assuré, tous sinistres confondus sur la durée du contrat. Au-delà de cette durée, si l'assuré ne peut reprendre son activité professionnelle, le dossier est automatiquement orienté vers l'évaluation de la garantie Invalidité Permanente (Articles 5 à 7 des présentes).\"*\n\n---\n\n**Point d'attention** :\n1. **Cumul des sinistres** : La durée de 3 ans s’applique *tous sinistres confondus* sur la durée du contrat (ex. : un nouvel arrêt pour une cause différente ne rouvre pas un nouveau délai de 3 ans).\n2. **Transition vers l’invalidité** : Le basculement en invalidité n’est pas automatique. Il nécessite une **évaluation médicale** par le médecin conseil d’ARESIA (Article 6.1) pour déterminer le taux d’invalidité (IPT ≥ 66% ou IPP entre 33% et 65%).\n3. **Franchise** : La période d’indemnisation ne commence qu’après la franchise contractuelle (délai non rachetable sauf mention contraire aux Conditions Particulières). Vérifiez sa durée dans votre contrat.",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 2737,
+          "tokens_out": 410,
+          "cout_usd": 0.00218185,
+          "latence_s": 5.821,
+          "request_id": "1c3acebb35ae4e618848ed84b67043ce",
+          "analyse": {
+            "articles_cites": [
+              "4.3",
+              "5",
+              "7",
+              "6.1"
+            ],
+            "classement": {
+              "4.3": "article",
+              "5": "article",
+              "7": "article",
+              "6.1": "article"
+            },
+            "absents": [],
+            "plages": [
+              "5 à 7"
+            ],
+            "aucune_citation": false,
+            "citation_attendue": true,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "'Article 4.3' cité"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": null
+          }
+        }
+      },
+      "erreur_globale": null
+    },
+    {
+      "label": "Q04 — Conditions IPT",
+      "question": "À partir de quel taux d'invalidité est-on reconnu en Invalidité Permanente Totale ?",
+      "doc": "CG-PREV-INV-2024",
+      "expected_article": "6",
+      "garde_fou": false,
+      "moteurs": {
+        "anthropic": {
+          "succes": true,
+          "reponse": "**Réponse directe**\n\nL'Invalidité Permanente Totale (IPT) est reconnue à partir d'un taux d'invalidité fonctionnelle **supérieur ou égal à 66%**. Concrètement, le barème prévoit trois seuils distincts :\n\n- **En dessous de 33%** : aucune prestation n'est versée\n- **Entre 33% et 65%** : l'assuré relève de l'IPP (Invalidité Permanente Partielle)\n- **Entre 66% et 99%** : l'assuré est reconnu en **IPT**, ouvrant droit à une rente mensuelle\n- **À 100%** : statut d'invalide absolu, avec une rente IPT majorée et une aide tierce personne\n\nCette reconnaissance est prononcée par le **médecin conseil de l'assureur**, après examen du dossier médical complet et, si nécessaire, expertise médicale contradictoire.\n\n---\n\n**Source(s)**\n\n- [Article 6 des CG Prévoyance Invalidité — v4.2] : seuil de 66% pour la reconnaissance IPT\n- [Article 6.2 des CG Prévoyance Invalidité — v4.2] : tableau complet du barème d'évaluation par tranches\n- [Article 1 des CG Prévoyance Invalidité — v4.2] : définition contractuelle de l'IPT\n\n---\n\n**Point d'attention**\n\nLe taux d'invalidité est évalué selon le **barème médical du CCSF** adopté par ARESIA Assurances, et non selon d'autres référentiels (Sécurité sociale, etc.). Ce barème est disponible sur simple demande au service médical de l'assureur. Par ailleurs, la reconnaissance de l'IPT intervient **après la date de consolidation** de l'état de santé de l'assuré, c'est-à-dire une fois que son état est stabilisé — ce critère est indispensable pour déclencher l'évaluation.",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 3117,
+          "tokens_out": 526,
+          "cout_usd": 0.017241,
+          "latence_s": 10.972,
+          "request_id": null,
+          "analyse": {
+            "articles_cites": [
+              "6",
+              "6.2",
+              "1"
+            ],
+            "classement": {
+              "6": "article",
+              "6.2": "article",
+              "1": "article"
+            },
+            "absents": [],
+            "plages": [],
+            "aucune_citation": false,
+            "citation_attendue": true,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "'Article 6' cité"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": null
+          }
+        },
+        "mistral": {
+          "succes": true,
+          "reponse": "**Réponse directe** :\nL’Invalidité Permanente Totale (IPT) est reconnue à partir d’un **taux d’invalidité fonctionnelle supérieur ou égal à 66%**, évalué par le médecin conseil d’ARESIA Assurances après consolidation de l’état de santé.\n\n---\n\n**Source(s)** :\n- [Article 6.2 des CG Prévoyance Invalidité — v4.2] : *« 66% à 99% IPT — Invalidité Permanente Totale »*.\n- [Article 6 des CG Prévoyance Invalidité — v4.2] : *« La garantie IPT est acquise lorsque [...] le médecin conseil [...] reconnaît un taux d'invalidité fonctionnelle supérieur ou égal à 66% »*.\n- [Article 1 des CG Prévoyance Invalidité — v4.2] : *« Invalidité Permanente Totale (IPT) : État de l'assuré dont le taux d'invalidité fonctionnelle est supérieur ou égal à 66% »*.\n\n---\n\n**Point d'attention** :\n- Le taux d’invalidité est déterminé **uniquement** selon le barème médical du CCSF (Comité Consultatif du Secteur Financier), et non par le médecin traitant seul. Une expertise contradictoire est possible en cas de désaccord ([Article 6.1 et 6.3]).\n- La reconnaissance de l’IPT est **définitive** après consolidation, sauf amélioration significative justifiant une réévaluation ([Article 6]).\n- Aucune prestation n’est versée pour un taux **inférieur à 66%** (seule l’IPP, entre 33% et 65%, est couverte).",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 2593,
+          "tokens_out": 377,
+          "cout_usd": 0.0020482,
+          "latence_s": 5.058,
+          "request_id": "7883ff768c4241178a8cddb3893a1fee",
+          "analyse": {
+            "articles_cites": [
+              "6.2",
+              "6",
+              "1",
+              "6.1",
+              "6.3"
+            ],
+            "classement": {
+              "6.2": "article",
+              "6": "article",
+              "1": "article",
+              "6.1": "article",
+              "6.3": "absent"
+            },
+            "absents": [
+              "6.3"
+            ],
+            "plages": [],
+            "aucune_citation": false,
+            "citation_attendue": true,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "'Article 6' cité"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": null
+          }
+        }
+      },
+      "erreur_globale": null
+    },
+    {
+      "label": "Q05 — Exclusions burn-out",
+      "question": "Le burn-out est-il couvert par le contrat prévoyance invalidité ?",
+      "doc": "CG-PREV-INV-2024",
+      "expected_article": "13",
+      "garde_fou": false,
+      "moteurs": {
+        "anthropic": {
+          "succes": true,
+          "reponse": "**Réponse directe**\n\nOui, le burn-out est couvert par le contrat prévoyance invalidité ARESIA, mais cette couverture est soumise à des **conditions précises qui varient selon la garantie concernée** :\n\n- **Au titre de la garantie ITT** (Incapacité Temporaire de Travail — c'est-à-dire l'impossibilité totale et médicalement constatée d'exercer son activité professionnelle) : le burn-out est couvert **sans exclusion temporaire**, à condition que l'assuré ait fourni un **questionnaire médical de santé favorable** ET ait souscrit le contrat **avant toute prescription médicale liée à cette pathologie**.\n\n- **Au titre des affections psychiatriques en général** : le burn-out est couvert **sans limitation de durée spécifique**, mais uniquement pour les assurés ayant souscrit l'**option Premium**, et sous réserve d'un **suivi psychiatrique régulier attesté**.\n\n- **Attention au questionnaire médical** : pour les affections psychiatriques en général, une surprime ou une exclusion spécifique peut être appliquée sur la base du questionnaire médical, après avis du médecin conseil de l'assureur.\n\n---\n\n**Source(s)**\n\n- [Article 13.5 des CG Prévoyance Invalidité — v4.2] : couverture du burn-out sans exclusion temporaire pour la garantie ITT, sous conditions de questionnaire médical favorable et de souscription avant prescription.\n- [Article 5.1 des CG Prévoyance Invalidité — v4.2] : couverture des affections psychiatriques (dont le burn-out) sans limitation de durée pour les assurés ayant souscrit l'option Premium, sous réserve de suivi psychiatrique attesté.\n- [Article 5 des CG Prévoyance Invalidité — v4.2] : possibilité de surprime ou d'exclusion spécifique pour les affections psychiatriques sur la base du questionnaire médical.\n\n---\n\n**Point d'attention**\n\n⚠️ Deux conditions cumulatives sont particulièrement critiques et doivent être vérifiées avec soin :\n\n1. **La date de souscription** : si l'assuré avait déjà reçu une prescription médicale liée au burn-out **avant** la souscription du contrat, la couverture ITT peut être remise en cause.\n2. **L'option souscrite** : la couverture sans limitation de durée des pathologies psychiatriques est **réservée à l'option Premium**. Les assurés ayant souscrit les options Essentiel, Confort ou Dirigeant doivent se référer aux conditions qui leur ont été notifiées lors de la souscription.\n\nEn cas de doute sur l'éligibilité d'un dossier, je vous recommande de **contacter votre référent produit ou le service technique de ARESIA Assurances** afin d'examiner les Conditions Particulières du contrat concerné.",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 3028,
+          "tokens_out": 768,
+          "cout_usd": 0.020604,
+          "latence_s": 14.72,
+          "request_id": null,
+          "analyse": {
+            "articles_cites": [
+              "13.5",
+              "5.1",
+              "5"
+            ],
+            "classement": {
+              "13.5": "sous-clause",
+              "5.1": "sous-clause",
+              "5": "article"
+            },
+            "absents": [],
+            "plages": [],
+            "aucune_citation": false,
+            "citation_attendue": false,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "'Article 13' cité"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": null
+          }
+        },
+        "mistral": {
+          "succes": true,
+          "reponse": "**Réponse directe** :\nOui, le burn-out est couvert par le contrat prévoyance invalidité d’ARESIA Assurances **sous certaines conditions** :\n- Pour la garantie **Incapacité Temporaire de Travail (ITT)** : le burn-out est couvert sans exclusion temporaire si l’adhérent a fourni un questionnaire médical favorable **et** souscrit avant toute prescription médicale liée à cette pathologie.\n- Pour la garantie **Invalidité Permanente Totale (IPT)** : le burn-out (affection psychiatrique) est couvert sans limitation de durée **uniquement si l’assuré a souscrit l’option Premium**, sous réserve d’un suivi psychiatrique régulier et d’un taux d’invalidité ≥ 66 % reconnu par le médecin conseil.\n\n---\n\n**Source(s)** :\n- [Article 13.5 des CG Prévoyance — v4.2] : *« Les pathologies psychiatriques et le burn-out sont couverts sans exclusion temporaire pour les adhérents ayant fourni un questionnaire médical de santé favorable et souscrit avant toute prescription médicale liée à ces pathologies. »*\n- [Article 5.1 des CG Prévoyance — v4.2] : *« Les affections psychiatriques (dépression, burn-out, troubles anxieux) sont couvertes sans limitation de durée spécifique pour les assurés ayant souscrit l'option Premium, sous réserve d'un suivi psychiatrique régulier attesté. »*\n- [Article 6 des CG Prévoyance — v4.2] : *« La garantie IPT est acquise lorsque le médecin conseil de l'assureur reconnaît un taux d'invalidité fonctionnelle supérieur ou égal à 66%. »*\n\n---\n\n**Point d'attention** :\n1. **Questionnaire médical obligatoire** : La couverture du burn-out en ITT dépend de la déclaration préalable d’un état de santé favorable (sans symptômes ni diagnostic antérieur). Une omission ou une fausse déclaration peut entraîner un refus de prise en charge [Article 13.5].\n2. **Option Premium requise pour l’IPT** : Sans cette option, le burn-out peut être soumis à une surprime ou une exclusion spécifique après avis du médecin conseil [Article 5.1].\n3. **Suivi psychiatrique** : Pour l’option Premium, la continuité des soins est une condition sine qua non pour le maintien des prestations [Article 5.1].\n4. **Délai d’évaluation** : La reconnaissance de l’IPT (taux ≥ 66 %) peut prendre jusqu’à 45 jours ouvrés après transmission du dossier complet [Article 6.1]. En cas de contestation, une expertise contradictoire est possible [Article 6.3].\n5. **Reprise d’activité** : La rente IPT est suspendue si l’assuré reprend une activité générant plus de 30 % de son revenu pré-sinistre pendant 6 mois consécutifs [Article 7.2].",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 2461,
+          "tokens_out": 636,
+          "cout_usd": 0.00240295,
+          "latence_s": 9.251,
+          "request_id": "fc96c76dcdf14f6cb2e9a7fed8349270",
+          "analyse": {
+            "articles_cites": [
+              "13.5",
+              "5.1",
+              "6",
+              "6.1",
+              "6.3",
+              "7.2"
+            ],
+            "classement": {
+              "13.5": "sous-clause",
+              "5.1": "sous-clause",
+              "6": "article",
+              "6.1": "article",
+              "6.3": "absent",
+              "7.2": "sous-clause"
+            },
+            "absents": [
+              "6.3"
+            ],
+            "plages": [],
+            "aucune_citation": false,
+            "citation_attendue": false,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "'Article 13' cité"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": null
+          }
+        }
+      },
+      "erreur_globale": null
+    },
+    {
+      "label": "Q06 — Rechute ITT",
+      "question": "Si un assuré reprend le travail pendant 3 semaines puis retombe en arrêt, doit-il resubir une franchise ?",
+      "doc": "CG-PREV-INV-2024",
+      "expected_article": "4.1",
+      "garde_fou": false,
+      "moteurs": {
+        "anthropic": {
+          "succes": true,
+          "reponse": "**Réponse directe**\n\nDans le cas décrit — reprise du travail pendant 3 semaines (21 jours) puis nouvel arrêt — **une nouvelle franchise s'applique**.\n\nEn effet, le contrat prévoit que l'arrêt est considéré comme la continuité du sinistre initial (et donc sans nouvelle franchise) **uniquement si la rechute survient dans les 30 jours suivant la reprise d'activité**.\n\nOr, une reprise de 3 semaines (21 jours) reste bien dans cette fenêtre de 30 jours. **Aucune nouvelle franchise ne s'appliquerait donc dans ce cas précis** : le nouvel arrêt serait traité comme la suite du sinistre initial.\n\n> 💡 Pour être clair : 21 jours < 30 jours → la rechute est dans le délai → **pas de nouvelle franchise**.\n\n---\n\n**Source(s)**\n\n> *\"En cas de rechute survenant dans les 30 jours suivant la reprise d'activité, l'arrêt est considéré comme la continuité du sinistre initial et aucune nouvelle franchise ne s'applique.\"*\n> **[Article 4.1 des CG Document visiteur — vupload]**\n\n> *\"La franchise est calculée par sinistre et non par année civile.\"*\n> **[Article 4.1 des CG Document visiteur — vupload]**\n\n---\n\n**Point d'attention**\n\n⚠️ Le seuil de **30 jours est strictement encadré** : si la reprise d'activité avait duré **31 jours ou plus**, le nouvel arrêt constituerait un **nouveau sinistre** et la franchise contractuelle (15, 30, 60 ou 90 jours selon les Conditions Particulières de l'assuré) s'appliquerait à nouveau depuis le premier jour du nouvel arrêt. Il convient donc de vérifier précisément la date de reprise et la date du nouvel arrêt pour qualifier correctement la situation.",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 3471,
+          "tokens_out": 510,
+          "cout_usd": 0.018063000000000003,
+          "latence_s": 11.566,
+          "request_id": null,
+          "analyse": {
+            "articles_cites": [
+              "4.1"
+            ],
+            "classement": {
+              "4.1": "article"
+            },
+            "absents": [],
+            "plages": [],
+            "aucune_citation": false,
+            "citation_attendue": true,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "'Article 4.1' cité"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": null
+          }
+        },
+        "mistral": {
+          "succes": true,
+          "reponse": "**Réponse directe** :\nNon, l'assuré n'a pas à subir une nouvelle franchise si la rechute survient dans les **30 jours suivant la reprise d'activité**. Cet arrêt est considéré comme la continuité du sinistre initial.\n\n**Source(s)** :\n[Article 4.1 des CG — Document visiteur (UPLOAD-eval-2b5) — v{vupload}]\n*\"En cas de rechute survenant dans les 30 jours suivant la reprise d'activité, l'arrêt est considéré comme la continuité du sinistre initial et aucune nouvelle franchise ne s'applique.\"*\n\n**Point d'attention** :\n- La règle s'applique **uniquement** si la rechute intervient dans les **30 jours** après la reprise. Au-delà, une nouvelle franchise sera appliquée.\n- Vérifiez que la reprise d'activité a bien été **totale et effective** (pas de mi-temps thérapeutique ou activité partielle), car cela pourrait impacter l'appréciation du sinistre par l'assureur.\n- En cas de doute sur la durée exacte entre la reprise et la rechute, conservez les justificatifs médicaux et la date de reprise officielle (certificat de reprise du médecin traitant).",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 2802,
+          "tokens_out": 261,
+          "cout_usd": 0.00197175,
+          "latence_s": 4.131,
+          "request_id": "6ae5840c42814bb1b3f2440617f7beaf",
+          "analyse": {
+            "articles_cites": [
+              "4.1"
+            ],
+            "classement": {
+              "4.1": "article"
+            },
+            "absents": [],
+            "plages": [],
+            "aucune_citation": false,
+            "citation_attendue": true,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "'Article 4.1' cité"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": null
+          }
+        }
+      },
+      "erreur_globale": null
+    },
+    {
+      "label": "Q20 — Hors base (garde-fou)",
+      "question": "Quelle est la garantie obsèques incluse dans le contrat prévoyance ?",
+      "doc": "CG-PREV-INV-2024",
+      "expected_article": null,
+      "garde_fou": true,
+      "moteurs": {
+        "anthropic": {
+          "succes": true,
+          "reponse": "**Réponse directe**\n\nJe ne trouve pas cette information dans les documents disponibles. Les chunks fournis portent exclusivement sur les garanties ITT (Incapacité Temporaire de Travail), IPT/IPP (Invalidité Permanente), les conditions d'adhésion, les exclusions générales et le champ d'application territorial. Aucune mention d'une garantie obsèques n'y figure.\n\nJe vous recommande de contacter votre référent produit ou le service technique de ARESIA Assurances.\n\n---\n\n**Source(s)**\n\nLes documents consultés couvrent les articles 1 à 21 des Conditions Générales — Prévoyance Invalidité (Réf. : CG-PREV-INV-2024, Version 4.2 — Janvier 2024). Aucun de ces articles ne traite d'une garantie obsèques.\n\n---\n\n**Point d'attention**\n\nIl est possible que la garantie obsèques :\n- **ne soit pas incluse** dans ce contrat prévoyance (elle fait souvent l'objet d'un contrat dédié séparé),\n- **figure dans un autre document contractuel** non disponible dans les chunks fournis (conditions particulières, tableau des garanties, avenant spécifique).\n\nAvant toute conclusion, vérifiez l'ensemble des documents remis lors de la souscription ou contactez directement **ARESIA Assurances** pour obtenir une réponse précise et opposable.",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 3382,
+          "tokens_out": 369,
+          "cout_usd": 0.015681,
+          "latence_s": 8.568,
+          "request_id": null,
+          "analyse": {
+            "articles_cites": [
+              "1",
+              "21"
+            ],
+            "classement": {
+              "1": "article",
+              "21": "article"
+            },
+            "absents": [],
+            "plages": [
+              "1 à 21"
+            ],
+            "aucune_citation": false,
+            "citation_attendue": null,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "phrase 'non trouvé' présente"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": "confirme"
+          }
+        },
+        "mistral": {
+          "succes": true,
+          "reponse": "**Réponse directe** :\nLes documents disponibles ne mentionnent pas explicitement une \"garantie obsèques\" incluse dans le contrat prévoyance ARESIA Assurances. Aucune référence à cette garantie, à son montant ou à ses conditions n'est présente dans les chunks fournis.\n\n**Source(s)** :\nAucune source pertinente identifiée dans les chunks fournis (Articles 1 à 21, CG Prévoyance v4.2).\n\n**Point d'attention** :\nJe ne trouve pas cette information dans les documents disponibles. Je vous recommande de contacter votre référent produit ou le service technique de ARESIA Assurances pour obtenir des précisions sur l'existence et les modalités d'une garantie obsèques éventuelle. Les garanties évoquées dans les chunks se limitent à l'**ITT** (Incapacité Temporaire de Travail), l'**IPT/IPP** (Invalidité Permanente) et des exclusions générales, sans mention des frais d'obsèques.",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 2784,
+          "tokens_out": 219,
+          "cout_usd": 0.0018925500000000002,
+          "latence_s": 4.945,
+          "request_id": "f3723442188f430e8b85f55d10695959",
+          "analyse": {
+            "articles_cites": [
+              "1",
+              "21"
+            ],
+            "classement": {
+              "1": "article",
+              "21": "article"
+            },
+            "absents": [],
+            "plages": [
+              "1 à 21"
+            ],
+            "aucune_citation": false,
+            "citation_attendue": null,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "phrase 'non trouvé' présente"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": "confirme"
+          }
+        }
+      },
+      "erreur_globale": null
+    },
+    {
+      "label": "Q07 — Fiscalité rachat AV",
+      "question": "Quelle est la fiscalité d'un rachat partiel sur une assurance vie ouverte il y a 10 ans ?",
+      "doc": "CG-AV-MULTI-2024",
+      "expected_article": "23",
+      "garde_fou": false,
+      "moteurs": {
+        "anthropic": {
+          "succes": true,
+          "reponse": "**Réponse directe**\n\nPour un contrat ouvert il y a 10 ans (donc **de plus de 8 ans**), la fiscalité d'un rachat partiel s'applique comme suit — seule la part des **plus-values** (intérêts et gains) est imposable, jamais le capital versé :\n\n**Selon la date de versement des primes :**\n\n| Primes versées **avant septembre 2017** | Primes versées **après septembre 2017** |\n|---|---|\n| 7,5% d'IR après abattement + 17,2% de prélèvements sociaux | 7,5% d'IR après abattement (si encours < 150 000 €) + 17,2% PS |\n| Au-delà de 150 000 € : 7,5% jusqu'au seuil + **12,8% au-delà** + PS | Même règle — seuil de 150 000 € tous contrats confondus |\n\n**Les abattements applicables après 8 ans :**\n- **4 600 €/an** pour une personne seule\n- **9 200 €/an** pour un couple soumis à imposition commune\n*(tous contrats d'assurance vie confondus)*\n\n---\n\n**Source(s)**\n\n- [Article 23 des CG ARESIA Patrimoine+ — v3.1] : tableau de fiscalité des rachats selon la durée et la date des versements\n- [Article 23.1 des CG ARESIA Patrimoine+ — v3.1] : montants des abattements après 8 ans (4 600 € / 9 200 €), précisés comme susceptibles d'évoluer selon la législation fiscale en vigueur\n- [Article 2 des CG ARESIA Patrimoine+ — v3.1] : définition des prélèvements sociaux (CSG, CRDS et prélèvements annexes)\n\n---\n\n**Point d'attention**\n\n⚠️ Trois nuances importantes à ne pas négliger :\n\n1. **Seuil des 150 000 €** : il s'apprécie **tous contrats d'assurance vie confondus**, pas uniquement sur ce contrat.\n2. **Date des versements** : si le contrat mélange des primes versées avant et après septembre 2017, les deux régimes fiscaux s'appliquent **en proportion**, ce qui peut complexifier le calcul.\n3. **Conseil fiscal fortement recommandé** : comme le précise [Article 23.3 des CG ARESIA Patrimoine+ — v3.1], *\"la fiscalité de l'assurance vie est complexe et personnelle\"*. ARESIA Assurances recommande vivement de consulter **un conseiller fiscal ou un notaire** avant toute décision de rachat ayant un impact fiscal significatif. Les informations ci-dessus sont données **à titre indicatif** et ne constituent pas un conseil fiscal personnalisé.",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 3528,
+          "tokens_out": 746,
+          "cout_usd": 0.021774,
+          "latence_s": 15.17,
+          "request_id": null,
+          "analyse": {
+            "articles_cites": [
+              "23",
+              "23.1",
+              "2",
+              "23.3"
+            ],
+            "classement": {
+              "23": "article",
+              "23.1": "sous-clause",
+              "2": "article",
+              "23.3": "sous-clause"
+            },
+            "absents": [],
+            "plages": [],
+            "aucune_citation": false,
+            "citation_attendue": true,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "'Article 23' cité"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": null
+          }
+        },
+        "mistral": {
+          "succes": true,
+          "reponse": "**Réponse directe** :\nPour un rachat partiel sur un contrat d’assurance vie ouvert il y a **10 ans** (donc détenu depuis plus de 8 ans), la fiscalité applicable aux **plus-values** (intérêts et gains) dépend de la date de versement des primes :\n- **Primes versées avant septembre 2017** :\n  - **7,5 %** d’impôt sur le revenu (IR) **après abattement** (4 600 € pour une personne seule / 9 200 € pour un couple) + **17,2 %** de prélèvements sociaux (PS).\n  - Si le contrat dépasse **150 000 €** (tous contrats confondus), la part des plus-values au-delà de ce seuil est taxée à **12,8 %** (au lieu de 7,5 %) + PS.\n- **Primes versées après septembre 2017** :\n  - **7,5 %** d’IR après abattement (mêmes seuils) + **17,2 %** de PS, **uniquement si le contrat est < 150 000 €**.\n  - Au-delà de 150 000 €, **12,8 %** d’IR sur la fraction excédentaire + PS.\n\n**Source(s)** :\n- [Article 23 des CG ARESIA Patrimoine+ — v3.1] : *\"Durée contrat > 8 ans : 7,5% IR après abattement + 17,2% PS (contrat < 150 k€) / 7,5% IR sur 150 k€ + 12,8% au-delà + PS (contrat > 150 k€).\"*\n- [Article 23.1 des CG ARESIA Patrimoine+ — v3.1] : *\"Abattements après 8 ans : 4 600 € (personne seule) ou 9 200 € (couple), par an et tous contrats confondus.\"*\n- [Article 23 des CG ARESIA Patrimoine+ — v3.1] : *\"Primes versées avant 09/2017 : 35% IR ou barème progressif + PS si < 4 ans ; 15% IR ou barème + PS si 4-8 ans ; 7,5% IR après abattement + PS si > 8 ans.\"*\n\n**Point d'attention** :\n1. **Abattement annuel** : Les seuils de 4 600 €/9 200 € s’appliquent **par an et tous contrats confondus** (pas par contrat). Un rachat en décembre et un autre en janvier peuvent optimiser l’usage de l’abattement.\n2. **Seuil de 150 000 €** : Ce plafond concerne **l’ensemble des contrats d’assurance vie** du souscripteur (pas seulement ARESIA). Vérifiez le montant total de vos encours avant un rachat.\n3. **Complexité fiscale** : La fiscalité dépend de la date des versements, du montant du contrat, et de votre situation personnelle. [Article 23.3 des CG ARESIA Patrimoine+ — v3.1] recommande de **consulter un conseiller fiscal ou un notaire** pour une simulation précise.\n4. **Prélèvements sociaux** : Les 17,2 % de PS s’appliquent **même en cas d’abattement non utilisé** (ils ne sont pas réduits par l’abattement IR).",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 3045,
+          "tokens_out": 814,
+          "cout_usd": 0.0030178500000000003,
+          "latence_s": 9.664,
+          "request_id": "d73b6263a4894cc9af7bae750369d08e",
+          "analyse": {
+            "articles_cites": [
+              "23",
+              "23.1",
+              "23.3"
+            ],
+            "classement": {
+              "23": "article",
+              "23.1": "sous-clause",
+              "23.3": "sous-clause"
+            },
+            "absents": [],
+            "plages": [],
+            "aucune_citation": false,
+            "citation_attendue": true,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "'Article 23' cité"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": null
+          }
+        }
+      },
+      "erreur_globale": null
+    },
+    {
+      "label": "Q08 — Versement minimum",
+      "question": "Quel est le montant minimum pour un versement complémentaire sur ARESIA Patrimoine+ ?",
+      "doc": "CG-AV-MULTI-2024",
+      "expected_article": "8",
+      "garde_fou": false,
+      "moteurs": {
+        "anthropic": {
+          "succes": true,
+          "reponse": "**Réponse directe**\n\nLe montant minimum pour un versement complémentaire libre sur le contrat ARESIA Patrimoine+ est de **300 €**, effectuable à tout moment et sans préavis. Si vous optez pour des versements programmés, les minimums diffèrent selon la périodicité choisie : 100 €/mois, 250 €/trimestre ou 1 000 €/an.\n\n---\n\n**Source(s)**\n\n[Article 8 des CG ARESIA Patrimoine+ — v3.1, Mars 2024] — Tableau récapitulatif des versements :\n- Versement complémentaire libre : **300 €** minimum, à tout moment, sans préavis\n- Versement programmé mensuel : **100 €/mois**\n- Versement programmé trimestriel : **250 €/trimestre**\n- Versement programmé annuel : **1 000 €/an**\n\n---\n\n**Point d'attention**\n\nPour rappel, le versement initial à l'ouverture du contrat est soumis à un minimum distinct de **1 000 €** [Article 8 des CG ARESIA Patrimoine+ — v3.1]. Par ailleurs, des frais sur versements peuvent s'appliquer (de 0% à 4,5% selon le réseau), **sauf pour les versements programmés en tarif partenaire conseiller, qui en sont exonérés** [Article 9 des CG ARESIA Patrimoine+ — v3.1]. Pensez à vérifier les conditions tarifaires applicables à votre situation avec votre conseiller.",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 3629,
+          "tokens_out": 403,
+          "cout_usd": 0.016932,
+          "latence_s": 8.297,
+          "request_id": null,
+          "analyse": {
+            "articles_cites": [
+              "8",
+              "9"
+            ],
+            "classement": {
+              "8": "article",
+              "9": "article"
+            },
+            "absents": [],
+            "plages": [],
+            "aucune_citation": false,
+            "citation_attendue": true,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "'Article 8' cité"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": null
+          }
+        },
+        "mistral": {
+          "succes": true,
+          "reponse": "**Réponse directe** :\nLe montant minimum pour un versement complémentaire libre sur le contrat **ARESIA Patrimoine+** est de **300 €**.\n\n**Source(s)** :\n[Article 8 des CG ARESIA Patrimoine+ — v3.1]\n\n**Point d'attention** :\n- Ce montant s'applique aux versements complémentaires **libres** (effectués à tout moment sans préavis).\n- Les versements programmés (mensuels, trimestriels ou annuels) ont des montants minimums différents (ex. : 100 €/mois pour un versement programmé mensuel).\n- Aucun frais n'est appliqué sur les versements complémentaires libres, mais des frais de gestion annuels (0,60 % pour le fonds euros, 0,80 % pour les unités de compte) impactent la performance nette [Article 9 des CG — v3.1].",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 3112,
+          "tokens_out": 201,
+          "cout_usd": 0.0020432500000000004,
+          "latence_s": 4.243,
+          "request_id": "e4c3a58c47e54ab6b383882f0ea74580",
+          "analyse": {
+            "articles_cites": [
+              "8",
+              "9"
+            ],
+            "classement": {
+              "8": "article",
+              "9": "article"
+            },
+            "absents": [],
+            "plages": [],
+            "aucune_citation": false,
+            "citation_attendue": true,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "'Article 8' cité"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": null
+          }
+        }
+      },
+      "erreur_globale": null
+    },
+    {
+      "label": "Q09 — Avance contrat AV",
+      "question": "Peut-on faire une avance sur son contrat d'assurance vie et jusqu'à quel montant ?",
+      "doc": "CG-AV-MULTI-2024",
+      "expected_article": "15",
+      "garde_fou": false,
+      "moteurs": {
+        "anthropic": {
+          "succes": true,
+          "reponse": "**Réponse directe**\n\nOui, le souscripteur peut demander une avance sur son contrat ARESIA Patrimoine+ à tout moment. Les plafonds sont les suivants :\n\n- **Fonds euros** : jusqu'à **80% de la valeur de rachat** (c'est-à-dire 80% de ce que vous pourriez récupérer si vous clôturiez le contrat)\n- **Unités de compte** : jusqu'à **60% de la valeur de rachat**\n\nUn montant **minimum de 1 500 €** est requis par avance.\n\nConcernant les taux d'intérêt appliqués à l'avance :\n\n| Durée | Taux annuel | Renouvellement |\n|-------|-------------|----------------|\n| 1 an | Taux OAT 10 ans + 1,5% | Renouvelable 2 fois |\n| 2 ans | Taux OAT 10 ans + 2% | Non renouvelable |\n| 3 ans (maximum) | Taux OAT 10 ans + 2,5% | Non renouvelable |\n\n> 💡 **Bon à savoir** : L'avance n'est **pas un rachat**. Elle ne génère donc **aucune fiscalité** et ne remet pas à zéro l'ancienneté fiscale du contrat.\n\n---\n\n**Source(s)**\n\n[Article 15 et Article 15.4 des CG ARESIA Patrimoine+ — CG-AV-MULTI-2024 v3.1 — Mars 2024]\n\n---\n\n**Point d'attention**\n\n⚠️ En cas de **non-remboursement à l'échéance**, l'avance est automatiquement **transformée en rachat partiel et devient fiscalisée** selon les règles applicables aux rachats (durée de détention, date des versements). Cela peut avoir un impact fiscal significatif. Pour toute question sur les conséquences fiscales d'un tel scénario, ARESIA Assurances recommande de consulter un **conseiller fiscal ou un notaire** [Article 23.3 des CG ARESIA Patrimoine+ — v3.1].",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 3523,
+          "tokens_out": 564,
+          "cout_usd": 0.019029,
+          "latence_s": 11.453,
+          "request_id": null,
+          "analyse": {
+            "articles_cites": [
+              "15",
+              "15.4",
+              "23.3"
+            ],
+            "classement": {
+              "15": "article",
+              "15.4": "sous-clause",
+              "23.3": "sous-clause"
+            },
+            "absents": [],
+            "plages": [],
+            "aucune_citation": false,
+            "citation_attendue": true,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "'Article 15' cité"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": null
+          }
+        },
+        "mistral": {
+          "succes": true,
+          "reponse": "**Réponse directe** :\nOui, vous pouvez demander une avance sur votre contrat d’assurance vie ARESIA Patrimoine+. Le montant maximal de l’avance est de **80 % de la valeur de rachat pour le fonds en euros** et de **60 % pour les unités de compte**, avec un **minimum de 1 500 € par avance**. L’avance n’est pas fiscalisée et n’interrompt pas l’antériorité fiscale du contrat.\n\n---\n\n**Source(s)** :\n- [Article 15 des CG *ARESIA Patrimoine+* — v3.1] : *\"Le souscripteur peut demander une avance sur son contrat à tout moment, dans la limite de 80% de la valeur de rachat pour le fonds euros et 60% pour les unités de compte, avec un minimum de 1 500 € par avance.\"*\n- [Article 15.4 des CG *ARESIA Patrimoine+* — v3.1] : *\"L'avance ne constitue pas un rachat et n'est pas fiscalisée. Elle n'interrompt pas l'antériorité fiscale du contrat. En cas de non-remboursement à l'échéance, l'avance est transformée en rachat partiel et fiscalisée en conséquence.\"*\n\n---\n\n**Point d'attention** :\n1. **Non-remboursement** : Si l’avance n’est pas remboursée à l’échéance, elle est automatiquement transformée en **rachat partiel**, ce qui peut entraîner une **fiscalité** sur les plus-values (selon la durée du contrat et la date des primes). Consultez un conseiller fiscal pour évaluer l’impact.\n2. **Taux d’intérêt** : L’avance est soumise à un taux d’intérêt annuel (ex. : OAT 10 ans + 1,5 % pour 1 an), qui peut varier selon la durée choisie. Vérifiez les conditions avant de souscrire.\n3. **Limite de renouvellement** : Une avance de 1 an est renouvelable **2 fois maximum**, tandis que les avances de 2 ou 3 ans ne sont pas renouvelables.\n4. **Valeur des UC** : Pour les unités de compte, le montant de l’avance dépend de leur valeur à la date de demande, qui peut fluctuer (risque de perte en capital). [Article 1.2 des CG — v3.1].",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 3040,
+          "tokens_out": 529,
+          "cout_usd": 0.0025448500000000004,
+          "latence_s": 8.847,
+          "request_id": "d8241e60ea7147a592a0300154997fce",
+          "analyse": {
+            "articles_cites": [
+              "15",
+              "15.4",
+              "1.2"
+            ],
+            "classement": {
+              "15": "article",
+              "15.4": "sous-clause",
+              "1.2": "sous-clause"
+            },
+            "absents": [],
+            "plages": [],
+            "aucune_citation": false,
+            "citation_attendue": true,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "'Article 15' cité"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": null
+          }
+        }
+      },
+      "erreur_globale": null
+    },
+    {
+      "label": "Q10 — Garantie fonds euros",
+      "question": "Le fonds en euros ARESIA Sécurité garantit-il le capital investi ?",
+      "doc": "CG-AV-MULTI-2024",
+      "expected_article": "10",
+      "garde_fou": false,
+      "moteurs": {
+        "anthropic": {
+          "succes": true,
+          "reponse": "**Réponse directe**\n\nOui, le fonds en euros ARESIA Sécurité garantit le capital investi. La garantie en capital est fixée à **100% du capital versé, net de frais sur versements**. Concrètement, cela signifie que le montant que vous avez effectivement placé sur ce fonds (après déduction des éventuels frais d'entrée) est intégralement protégé. Par ailleurs, les intérêts crédités chaque année sont **définitivement acquis** et s'ajoutent au capital garanti (effet cliquet).\n\nÀ titre d'information, le taux de rendement servi en 2023 était de **2,80% net de frais de gestion**, avec une participation aux bénéfices minimale de **85%** des bénéfices techniques et financiers.\n\n---\n\n**Source(s)**\n\n- [Article 10 des CG ARESIA Patrimoine+ — v3.1] : *\"Garantie en capital : 100% du capital versé net de frais sur versements\"*\n- [Article 2 des CG ARESIA Patrimoine+ — v3.1] : *\"Support en euros : Fonds général de l'assureur offrant une garantie en capital. Les intérêts crédités sont définitivement acquis.\"*\n\n---\n\n**Point d'attention**\n\nDeux nuances importantes à garder en tête :\n\n1. **La garantie porte sur le capital net de frais sur versements** : si des frais d'entrée s'appliquent (jusqu'à 4,5% selon le réseau, cf. Article 9), le montant garanti est calculé *après* déduction de ces frais, et non sur la totalité de votre versement brut.\n\n2. **Le taux de rendement n'est pas garanti d'une année sur l'autre** : le taux 2023 (2,80%) ne préjuge pas des taux futurs. De plus, ARESIA Assurances se réserve le droit de **limiter les versements sur le fonds euros** ou d'**imposer une diversification minimale en unités de compte** (supports non garantis, à risque de perte en capital). [Article 10.3 des CG ARESIA Patrimoine+ — v3.1]",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 3637,
+          "tokens_out": 577,
+          "cout_usd": 0.019566,
+          "latence_s": 12.929,
+          "request_id": null,
+          "analyse": {
+            "articles_cites": [
+              "10",
+              "2",
+              "9",
+              "10.3"
+            ],
+            "classement": {
+              "10": "article",
+              "2": "article",
+              "9": "article",
+              "10.3": "sous-clause"
+            },
+            "absents": [],
+            "plages": [],
+            "aucune_citation": false,
+            "citation_attendue": true,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "'Article 10' cité"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": null
+          }
+        },
+        "mistral": {
+          "succes": true,
+          "reponse": "**Réponse directe** :\nOui, le fonds en euros **ARESIA Sécurité** garantit **100 % du capital versé**, net de frais sur versements.\n\n---\n\n**Source(s)** :\n- [Article 10 des CG *ARESIA Patrimoine+* — v3.1] : *\"Garantie en capital : 100% du capital versé net de frais sur versements\"*.\n- [Article 2 des CG *ARESIA Patrimoine+* — v3.1] : *\"Support en euros : Fonds général de l'assureur offrant une garantie en capital. Les intérêts crédités sont définitivement acquis.\"*\n\n---\n\n**Point d'attention** :\n1. **Frais sur versements** : La garantie s’applique sur le capital *net* de ces frais (ex. : jusqu’à 4,5 % selon le réseau de distribution). Le montant effectivement garanti peut donc être inférieur au montant brut versé.\n2. **Variabilité du rendement** : Le taux de rendement (ex. : 2,80 % en 2023) n’est pas garanti pour les années futures et peut être ajusté par l’assureur [Article 10.3].\n3. **Limitations possibles** : ARESIA Assurances se réserve le droit de limiter les versements sur ce fonds ou d’imposer une diversification minimale en unités de compte [Article 10.3].",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 3141,
+          "tokens_out": 314,
+          "cout_usd": 0.00224565,
+          "latence_s": 4.943,
+          "request_id": "3b6bc0443be54295a3d635be36b5af31",
+          "analyse": {
+            "articles_cites": [
+              "10",
+              "2",
+              "10.3"
+            ],
+            "classement": {
+              "10": "article",
+              "2": "article",
+              "10.3": "sous-clause"
+            },
+            "absents": [],
+            "plages": [],
+            "aucune_citation": false,
+            "citation_attendue": true,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "'Article 10' cité"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": null
+          }
+        }
+      },
+      "erreur_globale": null
+    },
+    {
+      "label": "Q11 — Fiscalité décès conjoint",
+      "question": "Un conjoint bénéficiaire d'une assurance vie est-il exonéré de droits de succession ?",
+      "doc": "CG-AV-MULTI-2024",
+      "expected_article": "24",
+      "garde_fou": false,
+      "moteurs": {
+        "anthropic": {
+          "succes": true,
+          "reponse": "**Réponse directe**\n\nOui. Selon les conditions générales du contrat ARESIA Patrimoine+, le conjoint ou le partenaire de PACS désigné comme bénéficiaire en cas de décès est **totalement exonéré de toute taxation** sur les capitaux décès d'assurance vie, et ce **quel que soit le montant transmis et la date des versements** (qu'ils aient été effectués avant ou après 70 ans).\n\n---\n\n**Source(s)**\n\n> [Article 24.2 des CG ARESIA Patrimoine+ — v3.1 Mars 2024] :\n> *« Le conjoint ou partenaire de PACS bénéficiaire est totalement exonéré de toute taxation sur les capitaux décès d'assurance vie, quel que soit le montant et la date des versements. »*\n\nÀ titre de contexte, le même article rappelle que pour les autres bénéficiaires, la fiscalité applicable dépend de l'âge auquel les versements ont été effectués :\n- **Primes versées avant 70 ans** : abattement de 152 500 € par bénéficiaire, puis taxation à 20 % jusqu'à 852 500 €, et 31,25 % au-delà.\n- **Primes versées après 70 ans** : abattement global de 30 500 € (tous bénéficiaires confondus), puis droits de succession ordinaires sur le surplus.\n\n> [Article 24 des CG ARESIA Patrimoine+ — v3.1 Mars 2024]\n\n---\n\n**Point d'attention**\n\n⚠️ Cette exonération concerne uniquement la **fiscalité assurance vie** (hors droits de succession). Les règles successorales (réserve héréditaire, primes manifestement exagérées, etc.) relèvent d'un cadre juridique distinct et peuvent avoir des implications spécifiques selon votre situation familiale et patrimoniale. Conformément à l'Article 23.3 des CG, **ARESIA Assurances recommande vivement de consulter un notaire ou un conseiller fiscal** avant toute décision ayant un impact fiscal ou successoral significatif.",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 3643,
+          "tokens_out": 559,
+          "cout_usd": 0.019313999999999998,
+          "latence_s": 11.943,
+          "request_id": null,
+          "analyse": {
+            "articles_cites": [
+              "24.2",
+              "24",
+              "23.3"
+            ],
+            "classement": {
+              "24.2": "sous-clause",
+              "24": "article",
+              "23.3": "sous-clause"
+            },
+            "absents": [],
+            "plages": [],
+            "aucune_citation": false,
+            "citation_attendue": true,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "'Article 24' cité"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": null
+          }
+        },
+        "mistral": {
+          "succes": true,
+          "reponse": "**Réponse directe** :\nOui, le conjoint (ou partenaire de PACS) bénéficiaire d'un contrat d'assurance vie ARESIA Patrimoine+ est **totalement exonéré de toute taxation** sur les capitaux décès, **quel que soit le montant ou la date des versements**.\n\n---\n\n**Source(s)** :\n[Article 24.2 des CG *ARESIA Patrimoine+* — v3.1]\n\n---\n\n**Point d'attention** :\n- Cette exonération s'applique **uniquement** au conjoint ou partenaire de PACS, **pas aux autres bénéficiaires** (enfants, tiers, etc.), qui restent soumis aux règles d'abattement et de taxation précisées à l'Article 24.\n- L'exonération concerne **uniquement la fiscalité** des capitaux décès. Les règles successorales (réserve héréditaire, etc.) ou les éventuelles dettes de l'assuré ne sont pas couvertes par cette disposition. Pour une analyse complète, consultez un notaire ou un conseiller fiscal.",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 3141,
+          "tokens_out": 224,
+          "cout_usd": 0.0020971500000000003,
+          "latence_s": 3.467,
+          "request_id": "9f446cd3f5dd43df82dc613b0a04d25e",
+          "analyse": {
+            "articles_cites": [
+              "24.2",
+              "24"
+            ],
+            "classement": {
+              "24.2": "sous-clause",
+              "24": "article"
+            },
+            "absents": [],
+            "plages": [],
+            "aucune_citation": false,
+            "citation_attendue": true,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "'Article 24' cité"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": null
+          }
+        }
+      },
+      "erreur_globale": null
+    },
+    {
+      "label": "Q12 — Frais arbitrage",
+      "question": "Combien coûte un arbitrage entre supports sur ARESIA Patrimoine+ ?",
+      "doc": "CG-AV-MULTI-2024",
+      "expected_article": "9",
+      "garde_fou": false,
+      "moteurs": {
+        "anthropic": {
+          "succes": true,
+          "reponse": "**Réponse directe**\n\nLes frais d'arbitrage entre supports sur ARESIA Patrimoine+ s'élèvent à **0,50% du montant arbitré, avec un minimum de 15 €** par opération d'arbitrage.\n\nToutefois, une exception importante existe : en mode **gestion libre**, les **4 premiers arbitrages par an sont gratuits** pour les souscripteurs bénéficiant du tarif partenaire conseiller.\n\n---\n\n**Source(s)**\n\n[Article 9 des CG ARESIA Patrimoine+ — v3.1 Mars 2024]\n> *\"Frais d'arbitrage : 0,50% du montant arbitré (min. 15 €) — Gratuit pour 4 arbitrages/an en gestion libre\"*\n\n---\n\n**Point d'attention**\n\n⚠️ Au-delà des 4 arbitrages gratuits annuels (en gestion libre), le tarif standard de **0,50% du montant arbitré** s'applique, avec un **plancher de 15 €** minimum par opération, même pour de petits montants. Si vous envisagez des arbitrages fréquents, il peut être judicieux d'en tenir compte dans votre stratégie de gestion.",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 3624,
+          "tokens_out": 318,
+          "cout_usd": 0.015642,
+          "latence_s": 7.404,
+          "request_id": null,
+          "analyse": {
+            "articles_cites": [
+              "9"
+            ],
+            "classement": {
+              "9": "article"
+            },
+            "absents": [],
+            "plages": [],
+            "aucune_citation": false,
+            "citation_attendue": true,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "'Article 9' cité"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": null
+          }
+        },
+        "mistral": {
+          "succes": true,
+          "reponse": "**Réponse directe** :\nLes frais d'arbitrage entre supports sur le contrat **ARESIA Patrimoine+** s'élèvent à **0,50 % du montant arbitré**, avec un **minimum de 15 € par arbitrage**. En gestion libre, **4 arbitrages par an sont gratuits**.\n\n---\n\n**Source(s)** :\n- [Article 9.4 des CG *ARESIA Patrimoine+* — v3.1] : *\"Frais d'arbitrage : 0,50 % du montant arbitré (min. 15 €). Gratuit pour 4 arbitrages/an en gestion libre.\"*\n\n---\n\n**Point d'attention** :\n- Les frais d'arbitrage sont prélevés **automatiquement sur le montant arbitré** et réduisent donc le capital réinvesti.\n- Au-delà de 4 arbitrages annuels en gestion libre, chaque opération supplémentaire est facturée.\n- Les arbitrages entre supports en unités de compte (UC) et fonds euros peuvent être soumis à des **délais de valorisation** (ex. : 6 mois pour les SCPI) ou à des **frais spécifiques** non détaillés ici. Vérifiez l'Annexe 4 des CG pour les supports concernés.",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 3109,
+          "tokens_out": 270,
+          "cout_usd": 0.00215545,
+          "latence_s": 3.88,
+          "request_id": "3680800f01b44019b15a19ed5b594d57",
+          "analyse": {
+            "articles_cites": [
+              "9.4"
+            ],
+            "classement": {
+              "9.4": "sous-clause"
+            },
+            "absents": [],
+            "plages": [],
+            "aucune_citation": false,
+            "citation_attendue": false,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "'Article 9' cité"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": null
+          }
+        }
+      },
+      "erreur_globale": null
+    },
+    {
+      "label": "Q13 — Franchise bris de glace",
+      "question": "Quelle est la franchise en cas de bris de pare-brise avec un réparateur agréé ?",
+      "doc": "BAR-IARD-2024-V2",
+      "expected_article": "2.3",
+      "garde_fou": false,
+      "moteurs": {
+        "anthropic": {
+          "succes": true,
+          "reponse": "**Réponse directe**\n\nEn cas de bris de pare-brise (bris de glace) avec passage par un **réparateur agréé**, la franchise applicable est de **0 €**. En revanche, si vous choisissez un réparateur non agréé, une franchise de **75 €** sera retenue.\n\n---\n\n**Source(s)**\n\n[Article 2.3 des CG Barème IARD — v2.0] :\n> *\"Bris de glace (pare-brise) : 0 € après réparateur agréé | 75 € autre\"*\n\n---\n\n**Point d'attention**\n\n⚠️ Cette franchise à 0 € avec réparateur agréé s'applique à la **franchise standard**. Si vous souscrivez l'**option Zéro**, la franchise est également de 0 € quel que soit le réparateur choisi. Notez également que le bris de glace n'est pas disponible dans toutes les formules : il est inclus à partir de la **formule Tiers+** [Article 2.1 des CG Barème IARD — v2.0]. Pensez à vérifier votre formule souscrite avant d'engager des réparations, et à contacter votre référent ARESIA Assurances pour confirmer la liste des réparateurs agréés dans votre secteur.",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 2893,
+          "tokens_out": 345,
+          "cout_usd": 0.013854000000000002,
+          "latence_s": 8.093,
+          "request_id": null,
+          "analyse": {
+            "articles_cites": [
+              "2.3",
+              "2.1"
+            ],
+            "classement": {
+              "2.3": "article",
+              "2.1": "article"
+            },
+            "absents": [],
+            "plages": [],
+            "aucune_citation": false,
+            "citation_attendue": true,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "'Article 2.3' cité"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": null
+          }
+        },
+        "mistral": {
+          "succes": true,
+          "reponse": "**Réponse directe** :\nLa franchise en cas de bris de pare-brise avec un réparateur agréé est de **0 €**.\n\n**Source(s)** :\n- [Article 2.3 des CG Automobiles 2024 — v2024] : *\"Bris de glace (pare-brise) : 0 € après réparateur agréé | 75 €\"*.\n\n**Point d'attention** :\n- La franchise de **0 €** s'applique **uniquement** si la réparation est effectuée par un réparateur agréé par ARESIA. Dans le cas contraire, une franchise de **75 €** reste applicable pour les autres vitrages (hors pare-brise).\n- Vérifiez que le réparateur choisi figure bien dans le réseau agréé pour éviter toute surprise.",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 2497,
+          "tokens_out": 172,
+          "cout_usd": 0.0016571500000000002,
+          "latence_s": 3.055,
+          "request_id": "ebda8bb345694adaaf1b280652dad21d",
+          "analyse": {
+            "articles_cites": [
+              "2.3"
+            ],
+            "classement": {
+              "2.3": "article"
+            },
+            "absents": [],
+            "plages": [],
+            "aucune_citation": false,
+            "citation_attendue": true,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "'Article 2.3' cité"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": null
+          }
+        }
+      },
+      "erreur_globale": null
+    },
+    {
+      "label": "Q14 — RC Pro CGP",
+      "question": "Quel est le plafond de RC Professionnelle pour un conseiller en gestion de patrimoine ?",
+      "doc": "BAR-IARD-2024-V2",
+      "expected_article": "3.1",
+      "garde_fou": false,
+      "moteurs": {
+        "anthropic": {
+          "succes": true,
+          "reponse": "**Réponse directe**\n\nPour un Conseiller en Gestion de Patrimoine (CGP), les plafonds de RC Professionnelle sont les suivants :\n\n- **Plafond par sinistre : 1 500 000 €**\n- **Plafond annuel : 3 000 000 €**\n- **Franchise : 1 500 €**\n\nCes plafonds s'appliquent à la catégorie \"Professions financières (CGPI, CIF, CGP)\". Il est également précisé que la couverture minimale de **1 500 000 € par sinistre** correspond à l'exigence légale imposée par l'ORIAS et l'AMF, et qu'elle est **incluse dans la formule standard**.\n\n---\n\n**Source(s)**\n\n- [Article 3.1 des CG Barème IARD — v2.0] — Tableau des plafonds par catégorie professionnelle, ligne \"Professions financières (CGPI, CIF, CGP)\"\n- [Article 3.1.5 des CG Barème IARD — v2.0] — Obligation de RC Pro pour les CGP et CIF en vertu des exigences ORIAS et AMF, couverture minimale légale de 1 500 000 € par sinistre incluse en formule standard\n\n---\n\n**Point d'attention**\n\nCes plafonds sont des **maximums contractuels** : le plafond annuel de 3 000 000 € s'entend **tous sinistres confondus** sur l'année. Si plusieurs sinistres surviennent, leur cumul est limité à ce plafond annuel. Par ailleurs, la franchise de 1 500 € reste à la charge du professionnel à chaque sinistre. Si vous souhaitez des garanties supérieures à ces plafonds, il convient de vous rapprocher de votre référent produit ARESIA Assurances pour étudier d'éventuelles options de surplafonnement.",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 2893,
+          "tokens_out": 504,
+          "cout_usd": 0.016239,
+          "latence_s": 10.957,
+          "request_id": null,
+          "analyse": {
+            "articles_cites": [
+              "3.1",
+              "3.1.5"
+            ],
+            "classement": {
+              "3.1": "article",
+              "3.1.5": "sous-clause"
+            },
+            "absents": [],
+            "plages": [],
+            "aucune_citation": false,
+            "citation_attendue": true,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "'Article 3.1' cité"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": null
+          }
+        },
+        "mistral": {
+          "succes": true,
+          "reponse": "**Réponse directe** :\nLe plafond de garantie Responsabilité Civile Professionnelle (RC Pro) pour un conseiller en gestion de patrimoine (CGP) est de **1 500 000 € par sinistre** et de **3 000 000 € par an**, avec une franchise de **1 500 €**.\n\n**Source(s)** :\n- [Article 3.1 des CG — Document visiteur (UPLOAD-eval-f32) — v2.0] : *\"Professions financières (CGPI, CIF, CGP) : Plafond par sinistre 1 500 000 €, Plafond annuel 3 000 000 €, Franchise 1 500 €\"*.\n- [Article 3.1.5 des CG — Document visiteur (UPLOAD-eval-f32) — v2.0] : *\"Pour les Conseillers en Gestion de Patrimoine (CGP) [...] la couverture minimale légale de 1 500 000 € par sinistre est incluse dans la formule standard\"*.\n\n**Point d'attention** :\n- Ces plafonds sont des **maximums** par sinistre et par an, tous sinistres confondus. En cas de dépassement, la garantie ne s’appliquera plus pour les sinistres supplémentaires sur la même période.\n- La franchise de 1 500 € reste à la charge de l’assuré pour chaque sinistre couvert.\n- Vérifiez si votre activité nécessite une **extension de garantie** (ex. : couverture des préjudices financiers spécifiques), non incluse dans la formule standard. Contactez votre référent ARESIA pour adapter votre contrat.",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 2493,
+          "tokens_out": 378,
+          "cout_usd": 0.0019948500000000003,
+          "latence_s": 4.939,
+          "request_id": "aab2101e7adb47c39140808d6c1c1a6d",
+          "analyse": {
+            "articles_cites": [
+              "3.1",
+              "3.1.5"
+            ],
+            "classement": {
+              "3.1": "article",
+              "3.1.5": "sous-clause"
+            },
+            "absents": [],
+            "plages": [],
+            "aucune_citation": false,
+            "citation_attendue": true,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "'Article 3.1' cité"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": null
+          }
+        }
+      },
+      "erreur_globale": null
+    },
+    {
+      "label": "Q15 — Délai déclaration vol",
+      "question": "Dans quel délai doit-on déclarer un cambriolage à son assureur ?",
+      "doc": "BAR-IARD-2024-V2",
+      "expected_article": "4.1",
+      "garde_fou": false,
+      "moteurs": {
+        "anthropic": {
+          "succes": true,
+          "reponse": "**Réponse directe**\n\nEn cas de cambriolage (vol), vous disposez de **48 heures après constat** pour déclarer le sinistre à votre assureur. Cette déclaration doit obligatoirement être accompagnée d'un **dépôt de plainte** préalable auprès des autorités compétentes (police ou gendarmerie).\n\n---\n\n**Source(s)**\n\n[Article 4.1 des CG Document visiteur (UPLOAD-eval-f32) — vupload]\n> *\"Vol / Cambriolage : 48 heures après constat — Dépôt de plainte obligatoire + déclaration\"*\n\n---\n\n**Point d'attention**\n\nLe dépôt de plainte n'est pas une simple formalité : il constitue une **condition obligatoire** pour l'ouverture de votre dossier sinistre. Sans ce document, votre déclaration pourrait être irrecevable. Par ailleurs, le délai de 48 heures est particulièrement court — pensez à agir rapidement dès la constatation du vol, même si l'inventaire complet des biens dérobés n'est pas encore finalisé. Vous pourrez compléter votre déclaration ultérieurement.",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 2891,
+          "tokens_out": 315,
+          "cout_usd": 0.013398,
+          "latence_s": 7.414,
+          "request_id": null,
+          "analyse": {
+            "articles_cites": [
+              "4.1"
+            ],
+            "classement": {
+              "4.1": "article"
+            },
+            "absents": [],
+            "plages": [],
+            "aucune_citation": false,
+            "citation_attendue": true,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "'Article 4.1' cité"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": null
+          }
+        },
+        "mistral": {
+          "succes": true,
+          "reponse": "**Réponse directe** :\nUn cambriolage doit être déclaré à votre assureur **dans un délai de 48 heures après le constat du sinistre**, avec l'obligation de déposer une plainte.\n\n**Source(s)** :\n[Article 4.1 des CG — Document visiteur (UPLOAD-eval-f32) — v2.0]\n\n**Point d'attention** :\n- Le dépôt de plainte est **obligatoire** pour valider la déclaration. Sans ce document, la garantie pourrait être refusée.\n- Le délai de 48 heures court à partir du **constat du vol**, et non de la découverte du sinistre si celui-ci est différé (ex. : retour de vacances). En cas de dépassement, vérifiez les conséquences avec votre assureur, car un retard peut entraîner une réduction ou un refus d'indemnisation.",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 2495,
+          "tokens_out": 191,
+          "cout_usd": 0.0016874,
+          "latence_s": 3.712,
+          "request_id": "ddf12ea1a7d040369046d506d01149be",
+          "analyse": {
+            "articles_cites": [
+              "4.1"
+            ],
+            "classement": {
+              "4.1": "article"
+            },
+            "absents": [],
+            "plages": [],
+            "aucune_citation": false,
+            "citation_attendue": true,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "'Article 4.1' cité"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": null
+          }
+        }
+      },
+      "erreur_globale": null
+    },
+    {
+      "label": "Q16 — MRH vol espèces",
+      "question": "La multirisque habitation couvre-t-elle le vol d'espèces au domicile et jusqu'à quel montant ?",
+      "doc": "BAR-IARD-2024-V2",
+      "expected_article": "1.1",
+      "garde_fou": false,
+      "moteurs": {
+        "anthropic": {
+          "succes": true,
+          "reponse": "**Réponse directe**\n\nOui, la multirisque habitation (MRH) ARESIA Assurances couvre bien le vol d'espèces au domicile. Le plafond de remboursement pour les espèces est fixé à **5 000 €**, avec une franchise standard de **300 €** applicable au sinistre. À titre de comparaison, le plafond pour le vol de mobilier est distinct et s'élève à 30 000 €.\n\n---\n\n**Source(s)**\n\n> [Article 1.1 des CG Barème des Garanties IARD 2024 — v2.0] — Tableau des garanties de base :\n> *\"Vol et actes de vandalisme — 30 000 € (meubles) / **5 000 € (espèces)** — Franchise : 300 €\"*\n\n---\n\n**Point d'attention**\n\nDeux éléments importants à garder en tête :\n\n- ⚠️ **Dépôt de plainte obligatoire** : en cas de vol ou cambriolage, le dépôt de plainte est une condition nécessaire à l'ouverture du dossier, et la déclaration doit être effectuée **dans les 48 heures après constat** [Article 4.1 — v2.0]. Tout retard peut compromettre la prise en charge.\n- 💡 **Plafond non extensible pour les espèces** : contrairement aux objets de valeur identifiés (couverts jusqu'à 15 000 € via l'option dédiée), aucune extension spécifique aux espèces n'est mentionnée dans les documents disponibles. Le plafond de 5 000 € semble donc être le maximum applicable en l'état.\n\nSi vous souhaitez vérifier l'existence d'une éventuelle option d'extension pour les espèces, je vous recommande de contacter votre référent produit ou le service technique de ARESIA Assurances.",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 2900,
+          "tokens_out": 504,
+          "cout_usd": 0.01626,
+          "latence_s": 10.918,
+          "request_id": null,
+          "analyse": {
+            "articles_cites": [
+              "1.1",
+              "4.1"
+            ],
+            "classement": {
+              "1.1": "article",
+              "4.1": "article"
+            },
+            "absents": [],
+            "plages": [],
+            "aucune_citation": false,
+            "citation_attendue": true,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "'Article 1.1' cité"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": null
+          }
+        },
+        "mistral": {
+          "succes": true,
+          "reponse": "**Réponse directe** :\nOui, la multirisque habitation ARESIA couvre le vol d'espèces au domicile, dans la limite d'un plafond de **5 000 €** par sinistre.\n\n**Source(s)** :\n- [Article 1.1 des CG Multirisque Habitation — v2.0] : *\"Vol et actes de vandalisme 30 000 € (meubles) / 5 000 € (espèces) 300 € [franchise]\"*.\n\n**Point d'attention** :\n- La franchise de **300 €** s'applique à ce sinistre (montant déduit de l'indemnisation).\n- Le vol doit être **constaté par dépôt de plainte** dans les **48 heures** suivant sa découverte, sous peine de déchéance de garantie [Article 4.1 des CG — v2.0].\n- Aucune extension de plafond n'est prévue pour les espèces dans les options listées (ex. : objets de valeur identifiés ne concernent que les biens matériels).",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 2499,
+          "tokens_out": 235,
+          "cout_usd": 0.0017622000000000002,
+          "latence_s": 3.829,
+          "request_id": "4cae5666b33b49a5981fee5772584a13",
+          "analyse": {
+            "articles_cites": [
+              "1.1",
+              "4.1"
+            ],
+            "classement": {
+              "1.1": "article",
+              "4.1": "article"
+            },
+            "absents": [],
+            "plages": [],
+            "aucune_citation": false,
+            "citation_attendue": true,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "'Article 1.1' cité"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": null
+          }
+        }
+      },
+      "erreur_globale": null
+    },
+    {
+      "label": "Q17 — Contenu DRIB",
+      "question": "Quels éléments doit obligatoirement contenir le Document de Recueil des Informations et des Besoins ?",
+      "doc": "ACPR-REC-2024-12",
+      "expected_article": "4",
+      "garde_fou": false,
+      "moteurs": {
+        "anthropic": {
+          "succes": true,
+          "reponse": "**Réponse directe**\n\nLe Document de Recueil des Informations et des Besoins (DRIB) doit obligatoirement contenir les éléments suivants :\n\n1. **L'identité complète** du client et du distributeur\n2. **La date du recueil**\n3. **La synthèse des informations collectées** : situation personnelle, objectifs et profil de risque du client\n4. **L'analyse des besoins** réalisée\n5. **La ou les recommandations formulées**, accompagnées de leur justification\n6. **La mention explicite des produits étudiés mais non recommandés**, avec la raison de leur exclusion\n7. **La signature du client**, attestant de la réception et de la compréhension du document\n\nPar ailleurs, ce document doit être **remis au client avant la souscription**, sous format papier ou électronique avec accusé de réception.\n\n---\n\n**Source(s)**\n\n[Article 4 des CG Document visiteur — vupload]\n[Article 4.3 des CG Document visiteur — vupload]\n\n---\n\n**Point d'attention**\n\nL'assureur a une obligation de conservation stricte : le DRIB doit être archivé **pendant toute la durée du contrat et 5 ans après sa résiliation**, dans un système de gestion sécurisé et auditable. [Article 4.3 & Article 6 — Document visiteur — vupload]\n\nDe plus, les informations contenues dans ce document doivent être **mises à jour régulièrement** (au minimum tous les 2 ans, ou lors de tout événement contractuel significatif). [Article 2 — Document visiteur — vupload]",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 3199,
+          "tokens_out": 424,
+          "cout_usd": 0.015957,
+          "latence_s": 9.798,
+          "request_id": null,
+          "analyse": {
+            "articles_cites": [
+              "4",
+              "4.3",
+              "6",
+              "2"
+            ],
+            "classement": {
+              "4": "article",
+              "4.3": "sous-clause",
+              "6": "article",
+              "2": "article"
+            },
+            "absents": [],
+            "plages": [],
+            "aucune_citation": false,
+            "citation_attendue": true,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "'Article 4' cité"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": null
+          }
+        },
+        "mistral": {
+          "succes": true,
+          "reponse": "**Réponse directe** :\nLe Document de Recueil des Informations et des Besoins (DRIB) doit obligatoirement contenir les éléments suivants :\n1. Identité complète du client et du distributeur.\n2. Date du recueil.\n3. Synthèse des informations collectées (situation personnelle, professionnelle, patrimoniale, objectifs, profil de risque, situation fiscale et couvertures existantes).\n4. Analyse des besoins réalisée.\n5. Recommandation(s) formulée(s) avec leur justification.\n6. Mention explicite des produits étudiés mais non recommandés, avec la raison de leur exclusion.\n7. Signature du client attestant de la réception et de la compréhension du document.\n\n**Source(s)** :\n- [Article 4 des CG (Document visiteur — UPLOAD-eval-08f) — v non précisée]\n- [Article 1 des CG (Document visiteur — UPLOAD-eval-08f) — v non précisée]\n\n**Point d'attention** :\nLe DRIB doit être remis au client **avant la souscription**, sous format papier ou électronique avec accusé de réception. L'absence de signature du client ou l'omission d'un élément obligatoire (comme la justification des produits non recommandés) peut entraîner un manquement aux obligations de conseil, exposant le distributeur à des sanctions (ex. : avertissement, sanction pécuniaire) [Article 8 des CG]. Une mise à jour régulière des informations est également requise (tous les 2 ans ou en cas de changement significatif) [Article 2 des CG].",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 2690,
+          "tokens_out": 338,
+          "cout_usd": 0.0020372000000000003,
+          "latence_s": 5.498,
+          "request_id": "86ee72cf17aa4d0b91f0ebac9471c1b9",
+          "analyse": {
+            "articles_cites": [
+              "4",
+              "1",
+              "8",
+              "2"
+            ],
+            "classement": {
+              "4": "article",
+              "1": "article",
+              "8": "article",
+              "2": "article"
+            },
+            "absents": [],
+            "plages": [],
+            "aucune_citation": false,
+            "citation_attendue": true,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "'Article 4' cité"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": null
+          }
+        }
+      },
+      "erreur_globale": null
+    },
+    {
+      "label": "Q18 — Conservation documents",
+      "question": "Pendant combien de temps dois-je conserver le DRIB et le journal des interactions de conseil ?",
+      "doc": "ACPR-REC-2024-12",
+      "expected_article": "6",
+      "garde_fou": false,
+      "moteurs": {
+        "anthropic": {
+          "succes": true,
+          "reponse": "**Réponse directe**\n\nLe DRIB et le journal des interactions de conseil doivent tous deux être conservés pendant **la durée du contrat + 5 ans après sa résiliation/fin**. Concernant le support, les recommandations sont les suivantes :\n- **DRIB** : système de gestion sécurisé avec accès auditable\n- **Journal des interactions de conseil** : base de données horodatée et immuable (archivage électronique NF Z42-013 recommandé)\n\n---\n\n**Source(s)**\n\n- [Article 6 — Durées de conservation — Document visiteur (UPLOAD-eval-08f) vupload] : *\"DRIB — Durée contrat + 5 ans — Système de gestion sécurisé, accès auditable\"* et *\"Journal des interactions de conseil — Durée contrat + 5 ans — Base de données horodatée et immuable\"*\n- [Article 4.3 — Document visiteur (UPLOAD-eval-08f) vupload] : *\"L'assureur doit conserver ce document pendant toute la durée du contrat et 5 ans après sa résiliation.\"*\n\n---\n\n**Point d'attention**\n\nLe non-respect des durées de conservation peut être considéré comme un manquement aux obligations de traçabilité et exposer le distributeur à des sanctions de l'ACPR, potentiellement très lourdes [Article 8 — Document visiteur (UPLOAD-eval-08f) vupload]. Veillez également à ce que les systèmes de stockage utilisés respectent les exigences techniques mentionnées (horodatage, immuabilité, auditabilité) pour être conformes en cas de contrôle.",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 3190,
+          "tokens_out": 429,
+          "cout_usd": 0.016005000000000002,
+          "latence_s": 10.213,
+          "request_id": null,
+          "analyse": {
+            "articles_cites": [
+              "6",
+              "4.3",
+              "8"
+            ],
+            "classement": {
+              "6": "article",
+              "4.3": "sous-clause",
+              "8": "article"
+            },
+            "absents": [],
+            "plages": [],
+            "aucune_citation": false,
+            "citation_attendue": true,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "'Article 6' cité"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": null
+          }
+        },
+        "mistral": {
+          "succes": true,
+          "reponse": "**Réponse directe** :\nVous devez conserver le **DRIB (Document de Recueil des Informations et Besoins)** et le **journal des interactions de conseil** pendant **la durée du contrat + 5 ans**, sur un support sécurisé et traçable.\n\n---\n\n**Source(s)** :\n- [Article 6 des CG *Document visiteur (UPLOAD-eval-08f)* — v1] : *\"DRIB [...] Durée contrat + 5 ans\"* et *\"Journal des interactions de conseil [...] Durée contrat + 5 ans\"*.\n- [Article 4.3 des CG *Document visiteur (UPLOAD-eval-08f)* — v1] : *\"L'assureur doit conserver ce document [DRIB] pendant toute la durée du contrat et 5 ans après sa résiliation\"*.\n\n---\n\n**Point d'attention** :\n- Les supports de conservation doivent être **auditables** (pour le DRIB) et **horodatés/immuables** (pour le journal des interactions), conformément aux exigences de l'ACPR.\n- En cas de contrôle, l'absence de ces documents ou leur conservation insuffisante peut entraîner des sanctions (cf. [Article 8 des CG — v1]).\n- Les durées s'appliquent à partir de la **résiliation du contrat**, et non de la dernière interaction.",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 2687,
+          "tokens_out": 293,
+          "cout_usd": 0.0019613,
+          "latence_s": 7.299,
+          "request_id": "e6a00a4644aa4d6188dbd326e25a3fce",
+          "analyse": {
+            "articles_cites": [
+              "6",
+              "4.3",
+              "8"
+            ],
+            "classement": {
+              "6": "article",
+              "4.3": "sous-clause",
+              "8": "article"
+            },
+            "absents": [],
+            "plages": [],
+            "aucune_citation": false,
+            "citation_attendue": true,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "'Article 6' cité"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": null
+          }
+        }
+      },
+      "erreur_globale": null
+    },
+    {
+      "label": "Q19 — Formation DDA",
+      "question": "Combien d'heures de formation continue un conseiller doit-il suivre par an au titre de la DDA ?",
+      "doc": "ACPR-REC-2024-12",
+      "expected_article": "7",
+      "garde_fou": false,
+      "moteurs": {
+        "anthropic": {
+          "succes": true,
+          "reponse": "**Réponse directe**\n\nUn conseiller (ou tout distributeur d'assurance) doit suivre un minimum de **15 heures de formation continue par an** au titre de la DDA. Cette obligation s'applique à toute personne physique intervenant dans la distribution, y compris les mandataires et sous-agents.\n\nCes 15 heures se répartissent indicativement comme suit :\n- **Produits et marchés d'assurance** : 5 heures/an\n- **Réglementation et conformité** (DDA, RGPD, LAB-FT, Solvabilité II) : 4 heures/an\n- **Compétences relationnelles** (gestion des réclamations, communication client) : 3 heures/an\n- **Prévention des conflits d'intérêts** : 2 heures/an\n- **Éthique professionnelle** : 1 heure/an\n\n---\n\n**Source(s)**\n\n[Article 7 — Document visiteur (UPLOAD-eval-08f) — vupload]\n\n---\n\n**Point d'attention**\n\n⚠️ Le document source utilisé est explicitement identifié comme **entièrement fictif**, créé à des fins de démonstration (mention visible en Article 8 du même document). Ces informations **ne constituent pas une référence réglementaire officielle**. Pour connaître les obligations exactes et actuellement en vigueur au titre de la DDA, je vous recommande de consulter directement la réglementation française en vigueur (ordonnance n° 2018-361 du 16 mai 2018 et ses textes d'application) ou de contacter **votre référent produit ou le service technique de ARESIA Assurances**.",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 3195,
+          "tokens_out": 434,
+          "cout_usd": 0.016094999999999998,
+          "latence_s": 9.403,
+          "request_id": null,
+          "analyse": {
+            "articles_cites": [
+              "7",
+              "8"
+            ],
+            "classement": {
+              "7": "article",
+              "8": "article"
+            },
+            "absents": [],
+            "plages": [],
+            "aucune_citation": false,
+            "citation_attendue": true,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "'Article 7' cité"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": null
+          }
+        },
+        "mistral": {
+          "succes": true,
+          "reponse": "**Réponse directe** :\nUn conseiller doit suivre **15 heures minimum de formation continue par an** au titre de la Directive sur la Distribution d'Assurances (DDA).\n\n**Source(s)** :\n- [Article 7 des CG — Document visiteur (UPLOAD-eval-08f) — v1]\n\n**Point d'attention** :\nCes 15 heures sont réparties par domaines obligatoires (ex. : 5h sur les produits/marchés, 4h sur la réglementation). Le non-respect de cette obligation expose à des sanctions de l'ACPR, incluant des amendes ou des interdictions d'exercer [Article 8 des CG — Document visiteur (UPLOAD-eval-08f) — v1]. Vérifiez que les formations suivies couvrent bien les thèmes imposés.",
+          "erreur": null,
+          "erreur_type": null,
+          "erreur_status_code": null,
+          "tokens_in": 2691,
+          "tokens_out": 180,
+          "cout_usd": 0.00177705,
+          "latence_s": 3.389,
+          "request_id": "9fea5bc93e9e4af9b1f897bb8b225311",
+          "analyse": {
+            "articles_cites": [
+              "7",
+              "8"
+            ],
+            "classement": {
+              "7": "article",
+              "8": "article"
+            },
+            "absents": [],
+            "plages": [],
+            "aucune_citation": false,
+            "citation_attendue": true,
+            "verdict_historique": {
+              "ok": true,
+              "detail": "'Article 7' cité"
+            },
+            "blocs_manquants": [],
+            "faux_negatif": false,
+            "garde_fou": null
+          }
+        }
+      },
+      "erreur_globale": null
+    }
+  ],
+  "interrompu": false,
+  "resume": {
+    "anthropic": {
+      "plancher": {
+        "technique": "atteint",
+        "pannes": [],
+        "garde_fou": "confirme",
+        "citations": "a_relire",
+        "citations_absentes": [],
+        "plages_a_relire": [
+          {
+            "question": "Q03 — Durée ITT",
+            "plage": "5 à 7"
+          },
+          {
+            "question": "Q03 — Durée ITT",
+            "plage": "5 à 7"
+          },
+          {
+            "question": "Q20 — Hors base (garde-fou)",
+            "plage": "1 à 21"
+          }
+        ],
+        "reponses_sans_citation": []
+      },
+      "mesures": {
+        "appels_reussis": 20,
+        "latence_mediane_s": 10.965,
+        "latence_max_s": 15.17,
+        "tokens_in": 65974,
+        "tokens_out": 10089,
+        "cout_usd": 0.3493
+      }
+    },
+    "mistral": {
+      "plancher": {
+        "technique": "atteint",
+        "pannes": [],
+        "garde_fou": "confirme",
+        "citations": "a_relire",
+        "citations_absentes": [
+          {
+            "question": "Q04 — Conditions IPT",
+            "article": "6.3"
+          },
+          {
+            "question": "Q05 — Exclusions burn-out",
+            "article": "6.3"
+          }
+        ],
+        "plages_a_relire": [
+          {
+            "question": "Q03 — Durée ITT",
+            "plage": "5 à 7"
+          },
+          {
+            "question": "Q20 — Hors base (garde-fou)",
+            "plage": "1 à 21"
+          }
+        ],
+        "reponses_sans_citation": []
+      },
+      "mesures": {
+        "appels_reussis": 20,
+        "latence_mediane_s": 4.591,
+        "latence_max_s": 9.664,
+        "tokens_in": 55769,
+        "tokens_out": 6537,
+        "cout_usd": 0.0415
+      }
+    }
+  }
+}

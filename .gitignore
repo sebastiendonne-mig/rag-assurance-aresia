@@ -18,10 +18,13 @@ __pycache__/
 # Logs de debug Streamlit
 data/*.log
 
-# Résultats des évaluations Claude/Mistral sur le chemin upload (sous-lot 3.2).
-# Ligne ciblée : les résultats du golden set de juillet
-# (tests/results/golden_set_results_*.json) restent visibles pour git.
-tests/results/upload_eval_*
+# Résultats d'évaluation : tout tests/results/ est ignoré (golden set, caches,
+# runs de fumée…), sauf les résultats de référence du sous-lot 3.2 (run complet
+# du 25/09/2026, base du juge LLM) et les résultats du juge LLM.
+tests/results/*
+!tests/results/upload_eval_20260925_104952.json
+!tests/results/upload_eval_20260925_104952.md
+!tests/results/judge_upload_*
 
 # Artefacts macOS
 .DS_Store
