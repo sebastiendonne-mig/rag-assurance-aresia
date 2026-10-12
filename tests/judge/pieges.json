@@ -1,0 +1,366 @@
+{
+  "description": "Copies piégées pour calibrer le juge LLM : 5 types x 2 moteurs. Chaque copie part d'une réponse réelle du 25/09/2026 (tests/results/upload_eval_20260925_104952.json) et modifie UNE information, de façon cohérente dans toute la réponse. Appliquer modification.remplacements dans l'ordre (str.replace, toutes les occurrences, nombre attendu = occurrences) à reponse_origine redonne exactement reponse_piegee. Verdict « inchangé » = même verdict que la réponse d'origine (établi par l'annotation humaine). Grille : tests/judge/grille.md.",
+  "pieges": [
+    {
+      "id": "P01",
+      "type": "chiffre_modifie",
+      "critere_vise": "C1",
+      "moteur": "anthropic",
+      "question_id": "Q09",
+      "question": "Peut-on faire une avance sur son contrat d'assurance vie et jusqu'à quel montant ?",
+      "doc": "CG-AV-MULTI-2024",
+      "difficulte": "facile",
+      "difficulte_justification": "Le chiffre faux se compare directement au seul montant minimum de l'article 15.",
+      "reponse_origine": "**Réponse directe**\n\nOui, le souscripteur peut demander une avance sur son contrat ARESIA Patrimoine+ à tout moment. Les plafonds sont les suivants :\n\n- **Fonds euros** : jusqu'à **80% de la valeur de rachat** (c'est-à-dire 80% de ce que vous pourriez récupérer si vous clôturiez le contrat)\n- **Unités de compte** : jusqu'à **60% de la valeur de rachat**\n\nUn montant **minimum de 1 500 €** est requis par avance.\n\nConcernant les taux d'intérêt appliqués à l'avance :\n\n| Durée | Taux annuel | Renouvellement |\n|-------|-------------|----------------|\n| 1 an | Taux OAT 10 ans + 1,5% | Renouvelable 2 fois |\n| 2 ans | Taux OAT 10 ans + 2% | Non renouvelable |\n| 3 ans (maximum) | Taux OAT 10 ans + 2,5% | Non renouvelable |\n\n> 💡 **Bon à savoir** : L'avance n'est **pas un rachat**. Elle ne génère donc **aucune fiscalité** et ne remet pas à zéro l'ancienneté fiscale du contrat.\n\n---\n\n**Source(s)**\n\n[Article 15 et Article 15.4 des CG ARESIA Patrimoine+ — CG-AV-MULTI-2024 v3.1 — Mars 2024]\n\n---\n\n**Point d'attention**\n\n⚠️ En cas de **non-remboursement à l'échéance**, l'avance est automatiquement **transformée en rachat partiel et devient fiscalisée** selon les règles applicables aux rachats (durée de détention, date des versements). Cela peut avoir un impact fiscal significatif. Pour toute question sur les conséquences fiscales d'un tel scénario, ARESIA Assurances recommande de consulter un **conseiller fiscal ou un notaire** [Article 23.3 des CG ARESIA Patrimoine+ — v3.1].",
+      "reponse_piegee": "**Réponse directe**\n\nOui, le souscripteur peut demander une avance sur son contrat ARESIA Patrimoine+ à tout moment. Les plafonds sont les suivants :\n\n- **Fonds euros** : jusqu'à **80% de la valeur de rachat** (c'est-à-dire 80% de ce que vous pourriez récupérer si vous clôturiez le contrat)\n- **Unités de compte** : jusqu'à **60% de la valeur de rachat**\n\nUn montant **minimum de 500 €** est requis par avance.\n\nConcernant les taux d'intérêt appliqués à l'avance :\n\n| Durée | Taux annuel | Renouvellement |\n|-------|-------------|----------------|\n| 1 an | Taux OAT 10 ans + 1,5% | Renouvelable 2 fois |\n| 2 ans | Taux OAT 10 ans + 2% | Non renouvelable |\n| 3 ans (maximum) | Taux OAT 10 ans + 2,5% | Non renouvelable |\n\n> 💡 **Bon à savoir** : L'avance n'est **pas un rachat**. Elle ne génère donc **aucune fiscalité** et ne remet pas à zéro l'ancienneté fiscale du contrat.\n\n---\n\n**Source(s)**\n\n[Article 15 et Article 15.4 des CG ARESIA Patrimoine+ — CG-AV-MULTI-2024 v3.1 — Mars 2024]\n\n---\n\n**Point d'attention**\n\n⚠️ En cas de **non-remboursement à l'échéance**, l'avance est automatiquement **transformée en rachat partiel et devient fiscalisée** selon les règles applicables aux rachats (durée de détention, date des versements). Cela peut avoir un impact fiscal significatif. Pour toute question sur les conséquences fiscales d'un tel scénario, ARESIA Assurances recommande de consulter un **conseiller fiscal ou un notaire** [Article 23.3 des CG ARESIA Patrimoine+ — v3.1].",
+      "modification": {
+        "description": "Montant minimum d'une avance : 1 500 € remplacé par 500 €.",
+        "remplacements": [
+          {
+            "avant": "**minimum de 1 500 €**",
+            "apres": "**minimum de 500 €**",
+            "occurrences": 1
+          }
+        ]
+      },
+      "preuve_contrat": {
+        "type": "texte",
+        "article": "15",
+        "extrait": "avec un minimum de 1 500 € par avance"
+      },
+      "verdict_attendu": {
+        "C1": "non",
+        "C2": "inchangé",
+        "C3": "sans objet"
+      }
+    },
+    {
+      "id": "P02",
+      "type": "chiffre_modifie",
+      "critere_vise": "C1",
+      "moteur": "mistral",
+      "question_id": "Q18",
+      "question": "Pendant combien de temps dois-je conserver le DRIB et le journal des interactions de conseil ?",
+      "doc": "ACPR-REC-2024-12",
+      "difficulte": "facile",
+      "difficulte_justification": "La réponse est cohérente, mais l'article 6 donne « + 5 ans » en toutes lettres pour les deux documents.",
+      "reponse_origine": "**Réponse directe** :\nVous devez conserver le **DRIB (Document de Recueil des Informations et Besoins)** et le **journal des interactions de conseil** pendant **la durée du contrat + 5 ans**, sur un support sécurisé et traçable.\n\n---\n\n**Source(s)** :\n- [Article 6 des CG *Document visiteur (UPLOAD-eval-08f)* — v1] : *\"DRIB [...] Durée contrat + 5 ans\"* et *\"Journal des interactions de conseil [...] Durée contrat + 5 ans\"*.\n- [Article 4.3 des CG *Document visiteur (UPLOAD-eval-08f)* — v1] : *\"L'assureur doit conserver ce document [DRIB] pendant toute la durée du contrat et 5 ans après sa résiliation\"*.\n\n---\n\n**Point d'attention** :\n- Les supports de conservation doivent être **auditables** (pour le DRIB) et **horodatés/immuables** (pour le journal des interactions), conformément aux exigences de l'ACPR.\n- En cas de contrôle, l'absence de ces documents ou leur conservation insuffisante peut entraîner des sanctions (cf. [Article 8 des CG — v1]).\n- Les durées s'appliquent à partir de la **résiliation du contrat**, et non de la dernière interaction.",
+      "reponse_piegee": "**Réponse directe** :\nVous devez conserver le **DRIB (Document de Recueil des Informations et Besoins)** et le **journal des interactions de conseil** pendant **la durée du contrat + 3 ans**, sur un support sécurisé et traçable.\n\n---\n\n**Source(s)** :\n- [Article 6 des CG *Document visiteur (UPLOAD-eval-08f)* — v1] : *\"DRIB [...] Durée contrat + 3 ans\"* et *\"Journal des interactions de conseil [...] Durée contrat + 3 ans\"*.\n- [Article 4.3 des CG *Document visiteur (UPLOAD-eval-08f)* — v1] : *\"L'assureur doit conserver ce document [DRIB] pendant toute la durée du contrat et 3 ans après sa résiliation\"*.\n\n---\n\n**Point d'attention** :\n- Les supports de conservation doivent être **auditables** (pour le DRIB) et **horodatés/immuables** (pour le journal des interactions), conformément aux exigences de l'ACPR.\n- En cas de contrôle, l'absence de ces documents ou leur conservation insuffisante peut entraîner des sanctions (cf. [Article 8 des CG — v1]).\n- Les durées s'appliquent à partir de la **résiliation du contrat**, et non de la dernière interaction.",
+      "modification": {
+        "description": "Durée de conservation du DRIB et du journal : « contrat + 5 ans » devient « contrat + 3 ans », dans toutes les occurrences, citations comprises.",
+        "remplacements": [
+          {
+            "avant": "+ 5 ans",
+            "apres": "+ 3 ans",
+            "occurrences": 3
+          },
+          {
+            "avant": "et 5 ans après sa résiliation",
+            "apres": "et 3 ans après sa résiliation",
+            "occurrences": 1
+          }
+        ]
+      },
+      "preuve_contrat": {
+        "type": "texte",
+        "article": "6",
+        "extrait": "Journal des interactions de conseil Durée contrat + 5 ans"
+      },
+      "verdict_attendu": {
+        "C1": "non",
+        "C2": "inchangé",
+        "C3": "sans objet"
+      }
+    },
+    {
+      "id": "P03",
+      "type": "garantie_inventee",
+      "critere_vise": "C1",
+      "moteur": "anthropic",
+      "question_id": "Q16",
+      "question": "La multirisque habitation couvre-t-elle le vol d'espèces au domicile et jusqu'à quel montant ?",
+      "doc": "BAR-IARD-2024-V2",
+      "difficulte": "subtil",
+      "difficulte_justification": "Ajout plausible greffé sur une vraie garantie ; seule l'absence de toute mention dans le barème le réfute.",
+      "reponse_origine": "**Réponse directe**\n\nOui, la multirisque habitation (MRH) ARESIA Assurances couvre bien le vol d'espèces au domicile. Le plafond de remboursement pour les espèces est fixé à **5 000 €**, avec une franchise standard de **300 €** applicable au sinistre. À titre de comparaison, le plafond pour le vol de mobilier est distinct et s'élève à 30 000 €.\n\n---\n\n**Source(s)**\n\n> [Article 1.1 des CG Barème des Garanties IARD 2024 — v2.0] — Tableau des garanties de base :\n> *\"Vol et actes de vandalisme — 30 000 € (meubles) / **5 000 € (espèces)** — Franchise : 300 €\"*\n\n---\n\n**Point d'attention**\n\nDeux éléments importants à garder en tête :\n\n- ⚠️ **Dépôt de plainte obligatoire** : en cas de vol ou cambriolage, le dépôt de plainte est une condition nécessaire à l'ouverture du dossier, et la déclaration doit être effectuée **dans les 48 heures après constat** [Article 4.1 — v2.0]. Tout retard peut compromettre la prise en charge.\n- 💡 **Plafond non extensible pour les espèces** : contrairement aux objets de valeur identifiés (couverts jusqu'à 15 000 € via l'option dédiée), aucune extension spécifique aux espèces n'est mentionnée dans les documents disponibles. Le plafond de 5 000 € semble donc être le maximum applicable en l'état.\n\nSi vous souhaitez vérifier l'existence d'une éventuelle option d'extension pour les espèces, je vous recommande de contacter votre référent produit ou le service technique de ARESIA Assurances.",
+      "reponse_piegee": "**Réponse directe**\n\nOui, la multirisque habitation (MRH) ARESIA Assurances couvre bien le vol d'espèces au domicile. Le plafond de remboursement pour les espèces est fixé à **5 000 €**, avec une franchise standard de **300 €** applicable au sinistre. À titre de comparaison, le plafond pour le vol de mobilier est distinct et s'élève à 30 000 €. Les moyens de paiement dérobés lors du cambriolage sont également couverts : les retraits frauduleux effectués avec une carte bancaire volée sont remboursés dans la même limite de 5 000 €.\n\n---\n\n**Source(s)**\n\n> [Article 1.1 des CG Barème des Garanties IARD 2024 — v2.0] — Tableau des garanties de base :\n> *\"Vol et actes de vandalisme — 30 000 € (meubles) / **5 000 € (espèces)** — Franchise : 300 €\"*\n\n---\n\n**Point d'attention**\n\nDeux éléments importants à garder en tête :\n\n- ⚠️ **Dépôt de plainte obligatoire** : en cas de vol ou cambriolage, le dépôt de plainte est une condition nécessaire à l'ouverture du dossier, et la déclaration doit être effectuée **dans les 48 heures après constat** [Article 4.1 — v2.0]. Tout retard peut compromettre la prise en charge.\n- 💡 **Plafond non extensible pour les espèces** : contrairement aux objets de valeur identifiés (couverts jusqu'à 15 000 € via l'option dédiée), aucune extension spécifique aux espèces n'est mentionnée dans les documents disponibles. Le plafond de 5 000 € semble donc être le maximum applicable en l'état.\n\nSi vous souhaitez vérifier l'existence d'une éventuelle option d'extension pour les espèces, je vous recommande de contacter votre référent produit ou le service technique de ARESIA Assurances.",
+      "modification": {
+        "description": "Ajout d'une phrase : retraits frauduleux par carte bancaire volée couverts jusqu'à 5 000 €.",
+        "remplacements": [
+          {
+            "avant": "À titre de comparaison, le plafond pour le vol de mobilier est distinct et s'élève à 30 000 €.",
+            "apres": "À titre de comparaison, le plafond pour le vol de mobilier est distinct et s'élève à 30 000 €. Les moyens de paiement dérobés lors du cambriolage sont également couverts : les retraits frauduleux effectués avec une carte bancaire volée sont remboursés dans la même limite de 5 000 €.",
+            "occurrences": 1
+          }
+        ]
+      },
+      "preuve_contrat": {
+        "type": "absence",
+        "article": "1.1",
+        "extrait": "Vol et actes de vandalisme 30 000 € (meubles) / 5 000 € (espèces) 300 €",
+        "termes_absents": [
+          "carte",
+          "bancaire",
+          "retrait",
+          "moyens de paiement"
+        ]
+      },
+      "verdict_attendu": {
+        "C1": "non",
+        "C2": "inchangé",
+        "C3": "sans objet"
+      }
+    },
+    {
+      "id": "P04",
+      "type": "garantie_inventee",
+      "critere_vise": "C1",
+      "moteur": "mistral",
+      "question_id": "Q10",
+      "question": "Le fonds en euros ARESIA Sécurité garantit-il le capital investi ?",
+      "doc": "CG-AV-MULTI-2024",
+      "difficulte": "facile",
+      "difficulte_justification": "L'article 2 dit explicitement que les unités de compte ne sont pas garanties.",
+      "reponse_origine": "**Réponse directe** :\nOui, le fonds en euros **ARESIA Sécurité** garantit **100 % du capital versé**, net de frais sur versements.\n\n---\n\n**Source(s)** :\n- [Article 10 des CG *ARESIA Patrimoine+* — v3.1] : *\"Garantie en capital : 100% du capital versé net de frais sur versements\"*.\n- [Article 2 des CG *ARESIA Patrimoine+* — v3.1] : *\"Support en euros : Fonds général de l'assureur offrant une garantie en capital. Les intérêts crédités sont définitivement acquis.\"*\n\n---\n\n**Point d'attention** :\n1. **Frais sur versements** : La garantie s’applique sur le capital *net* de ces frais (ex. : jusqu’à 4,5 % selon le réseau de distribution). Le montant effectivement garanti peut donc être inférieur au montant brut versé.\n2. **Variabilité du rendement** : Le taux de rendement (ex. : 2,80 % en 2023) n’est pas garanti pour les années futures et peut être ajusté par l’assureur [Article 10.3].\n3. **Limitations possibles** : ARESIA Assurances se réserve le droit de limiter les versements sur ce fonds ou d’imposer une diversification minimale en unités de compte [Article 10.3].",
+      "reponse_piegee": "**Réponse directe** :\nOui, le fonds en euros **ARESIA Sécurité** garantit **100 % du capital versé**, net de frais sur versements. Cette garantie en capital s'étend aux sommes investies en unités de compte sur le contrat.\n\n---\n\n**Source(s)** :\n- [Article 10 des CG *ARESIA Patrimoine+* — v3.1] : *\"Garantie en capital : 100% du capital versé net de frais sur versements\"*.\n- [Article 2 des CG *ARESIA Patrimoine+* — v3.1] : *\"Support en euros : Fonds général de l'assureur offrant une garantie en capital. Les intérêts crédités sont définitivement acquis.\"*\n\n---\n\n**Point d'attention** :\n1. **Frais sur versements** : La garantie s’applique sur le capital *net* de ces frais (ex. : jusqu’à 4,5 % selon le réseau de distribution). Le montant effectivement garanti peut donc être inférieur au montant brut versé.\n2. **Variabilité du rendement** : Le taux de rendement (ex. : 2,80 % en 2023) n’est pas garanti pour les années futures et peut être ajusté par l’assureur [Article 10.3].\n3. **Limitations possibles** : ARESIA Assurances se réserve le droit de limiter les versements sur ce fonds ou d’imposer une diversification minimale en unités de compte [Article 10.3].",
+      "modification": {
+        "description": "Ajout d'une phrase : la garantie en capital s'étendrait aux unités de compte.",
+        "remplacements": [
+          {
+            "avant": "Oui, le fonds en euros **ARESIA Sécurité** garantit **100 % du capital versé**, net de frais sur versements.",
+            "apres": "Oui, le fonds en euros **ARESIA Sécurité** garantit **100 % du capital versé**, net de frais sur versements. Cette garantie en capital s'étend aux sommes investies en unités de compte sur le contrat.",
+            "occurrences": 1
+          }
+        ]
+      },
+      "preuve_contrat": {
+        "type": "texte",
+        "article": "2",
+        "extrait": "Support en unités de compte (UC) : Support financier dont la valeur est exprimée en unités, non garantie"
+      },
+      "verdict_attendu": {
+        "C1": "non",
+        "C2": "inchangé",
+        "C3": "sans objet"
+      }
+    },
+    {
+      "id": "P05",
+      "type": "condition_supprimee",
+      "critere_vise": "C1",
+      "moteur": "anthropic",
+      "question_id": "Q01",
+      "question": "Quelles sont les options de franchise disponibles sur le contrat prévoyance invalidité ?",
+      "doc": "CG-PREV-INV-2024",
+      "difficulte": "subtil",
+      "difficulte_justification": "Rien n'est faux dans ce qui reste écrit : seule la comparaison avec la note de l'article 4.1 révèle la condition manquante.",
+      "reponse_origine": "**Réponse directe**\n\nLe contrat prévoyance invalidité ARESIA Assurances propose **4 options de franchise**, correspondant chacune à un délai de carence et à un impact sur la cotisation :\n\n| Option franchise | Délai de carence | Multiplicateur de cotisation |\n|---|---|---|\n| Franchise 15 jours | 15 jours consécutifs | × 1,00 (cotisation de base) |\n| Franchise 30 jours | 30 jours consécutifs | × 0,82 |\n| Franchise 60 jours | 60 jours consécutifs | × 0,64 |\n| Franchise 90 jours | 90 jours consécutifs | × 0,51 |\n\n> 💡 *La franchise correspond au nombre de jours d'arrêt continu à partir duquel l'assureur commence à verser les indemnités journalières.*\n\nL'option retenue est celle définie aux **Conditions Particulières** de votre contrat.\n\n---\n\n**Source(s)**\n\n- [Article 4.1 des CG Prévoyance Invalidité — v4.2] : tableau des options de franchise et leurs impacts sur la cotisation\n- [Article 1 des CG Prévoyance Invalidité — v4.2] : définition de la notion de franchise\n- [Article 4 des CG Prévoyance Invalidité — v4.2] : conditions de déclenchement de la garantie ITT en lien avec la franchise choisie\n\n---\n\n**Point d'attention**\n\nDeux règles importantes à retenir concernant l'application de la franchise :\n\n1. **La franchise est calculée par sinistre**, et non par année civile — chaque nouvel arrêt de travail fait repartir le délai de carence.\n2. **Règle de rechute** : si l'assuré reprend son activité puis subit un nouvel arrêt **dans les 30 jours suivant la reprise**, cet arrêt est considéré comme la **continuité du sinistre initial** — aucune nouvelle franchise ne s'applique dans ce cas. [Article 4.1 des CG Prévoyance Invalidité — v4.2]\n\n⚠️ Par ailleurs, la franchise est **non rachetable**, sauf mention contraire expressément stipulée dans vos Conditions Particulières. [Article 1 des CG Prévoyance Invalidité — v4.2]",
+      "reponse_piegee": "**Réponse directe**\n\nLe contrat prévoyance invalidité ARESIA Assurances propose **4 options de franchise**, correspondant chacune à un délai de carence et à un impact sur la cotisation :\n\n| Option franchise | Délai de carence | Multiplicateur de cotisation |\n|---|---|---|\n| Franchise 15 jours | 15 jours consécutifs | × 1,00 (cotisation de base) |\n| Franchise 30 jours | 30 jours consécutifs | × 0,82 |\n| Franchise 60 jours | 60 jours consécutifs | × 0,64 |\n| Franchise 90 jours | 90 jours consécutifs | × 0,51 |\n\n> 💡 *La franchise correspond au nombre de jours d'arrêt continu à partir duquel l'assureur commence à verser les indemnités journalières.*\n\nL'option retenue est celle définie aux **Conditions Particulières** de votre contrat.\n\n---\n\n**Source(s)**\n\n- [Article 4.1 des CG Prévoyance Invalidité — v4.2] : tableau des options de franchise et leurs impacts sur la cotisation\n- [Article 1 des CG Prévoyance Invalidité — v4.2] : définition de la notion de franchise\n- [Article 4 des CG Prévoyance Invalidité — v4.2] : conditions de déclenchement de la garantie ITT en lien avec la franchise choisie\n\n---\n\n**Point d'attention**\n\nDeux règles importantes à retenir concernant l'application de la franchise :\n\n1. **La franchise est calculée par sinistre**, et non par année civile — chaque nouveau sinistre fait repartir le délai de carence.\n2. **Règle de rechute** : si l'assuré reprend son activité puis subit un nouvel arrêt, cet arrêt est considéré comme la **continuité du sinistre initial** — aucune nouvelle franchise ne s'applique dans ce cas. [Article 4.1 des CG Prévoyance Invalidité — v4.2]\n\n⚠️ Par ailleurs, la franchise est **non rachetable**, sauf mention contraire expressément stipulée dans vos Conditions Particulières. [Article 1 des CG Prévoyance Invalidité — v4.2]",
+      "modification": {
+        "description": "Règle de rechute : la fenêtre « dans les 30 jours suivant la reprise » est retirée (toute rechute serait sans nouvelle franchise) ; le point 1 est ajusté pour rester cohérent.",
+        "remplacements": [
+          {
+            "avant": " **dans les 30 jours suivant la reprise**",
+            "apres": "",
+            "occurrences": 1
+          },
+          {
+            "avant": "chaque nouvel arrêt de travail fait repartir le délai de carence",
+            "apres": "chaque nouveau sinistre fait repartir le délai de carence",
+            "occurrences": 1
+          }
+        ]
+      },
+      "preuve_contrat": {
+        "type": "texte",
+        "article": "4.1",
+        "extrait": "En cas de rechute survenant dans les 30 jours suivant la reprise d'activité, l'arrêt est considéré comme la continuité du sinistre initial et aucune nouvelle franchise ne s'applique."
+      },
+      "verdict_attendu": {
+        "C1": "non",
+        "C2": "inchangé",
+        "C3": "sans objet"
+      }
+    },
+    {
+      "id": "P06",
+      "type": "condition_supprimee",
+      "critere_vise": "C1",
+      "moteur": "mistral",
+      "question_id": "Q15",
+      "question": "Dans quel délai doit-on déclarer un cambriolage à son assureur ?",
+      "doc": "BAR-IARD-2024-V2",
+      "difficulte": "subtil",
+      "difficulte_justification": "Omission sans affirmation fausse : le délai reste exact, la condition manquante n'apparaît qu'à la lecture de l'article 4.1.",
+      "reponse_origine": "**Réponse directe** :\nUn cambriolage doit être déclaré à votre assureur **dans un délai de 48 heures après le constat du sinistre**, avec l'obligation de déposer une plainte.\n\n**Source(s)** :\n[Article 4.1 des CG — Document visiteur (UPLOAD-eval-f32) — v2.0]\n\n**Point d'attention** :\n- Le dépôt de plainte est **obligatoire** pour valider la déclaration. Sans ce document, la garantie pourrait être refusée.\n- Le délai de 48 heures court à partir du **constat du vol**, et non de la découverte du sinistre si celui-ci est différé (ex. : retour de vacances). En cas de dépassement, vérifiez les conséquences avec votre assureur, car un retard peut entraîner une réduction ou un refus d'indemnisation.",
+      "reponse_piegee": "**Réponse directe** :\nUn cambriolage doit être déclaré à votre assureur **dans un délai de 48 heures après le constat du sinistre**.\n\n**Source(s)** :\n[Article 4.1 des CG — Document visiteur (UPLOAD-eval-f32) — v2.0]\n\n**Point d'attention** :\n- Le délai de 48 heures court à partir du **constat du vol**, et non de la découverte du sinistre si celui-ci est différé (ex. : retour de vacances). En cas de dépassement, vérifiez les conséquences avec votre assureur, car un retard peut entraîner une réduction ou un refus d'indemnisation.",
+      "modification": {
+        "description": "Obligation de dépôt de plainte retirée (réponse directe et point d'attention) : seul le délai de 48 heures reste exigé.",
+        "remplacements": [
+          {
+            "avant": "**, avec l'obligation de déposer une plainte.",
+            "apres": "**.",
+            "occurrences": 1
+          },
+          {
+            "avant": "- Le dépôt de plainte est **obligatoire** pour valider la déclaration. Sans ce document, la garantie pourrait être refusée.\n",
+            "apres": "",
+            "occurrences": 1
+          }
+        ]
+      },
+      "preuve_contrat": {
+        "type": "texte",
+        "article": "4.1",
+        "extrait": "Vol / Cambriolage 48 heures après constat Dépôt de plainte obligatoire + déclaration"
+      },
+      "verdict_attendu": {
+        "C1": "non",
+        "C2": "inchangé",
+        "C3": "sans objet"
+      }
+    },
+    {
+      "id": "P07",
+      "type": "citation_deplacee",
+      "critere_vise": "C2",
+      "moteur": "anthropic",
+      "question_id": "Q17",
+      "question": "Quels éléments doit obligatoirement contenir le Document de Recueil des Informations et des Besoins ?",
+      "doc": "ACPR-REC-2024-12",
+      "difficulte": "subtil",
+      "difficulte_justification": "L'article 6 existe et mentionne aussi le DRIB (sa durée de conservation) : le rattachement paraît plausible.",
+      "reponse_origine": "**Réponse directe**\n\nLe Document de Recueil des Informations et des Besoins (DRIB) doit obligatoirement contenir les éléments suivants :\n\n1. **L'identité complète** du client et du distributeur\n2. **La date du recueil**\n3. **La synthèse des informations collectées** : situation personnelle, objectifs et profil de risque du client\n4. **L'analyse des besoins** réalisée\n5. **La ou les recommandations formulées**, accompagnées de leur justification\n6. **La mention explicite des produits étudiés mais non recommandés**, avec la raison de leur exclusion\n7. **La signature du client**, attestant de la réception et de la compréhension du document\n\nPar ailleurs, ce document doit être **remis au client avant la souscription**, sous format papier ou électronique avec accusé de réception.\n\n---\n\n**Source(s)**\n\n[Article 4 des CG Document visiteur — vupload]\n[Article 4.3 des CG Document visiteur — vupload]\n\n---\n\n**Point d'attention**\n\nL'assureur a une obligation de conservation stricte : le DRIB doit être archivé **pendant toute la durée du contrat et 5 ans après sa résiliation**, dans un système de gestion sécurisé et auditable. [Article 4.3 & Article 6 — Document visiteur — vupload]\n\nDe plus, les informations contenues dans ce document doivent être **mises à jour régulièrement** (au minimum tous les 2 ans, ou lors de tout événement contractuel significatif). [Article 2 — Document visiteur — vupload]",
+      "reponse_piegee": "**Réponse directe**\n\nLe Document de Recueil des Informations et des Besoins (DRIB) doit obligatoirement contenir les éléments suivants :\n\n1. **L'identité complète** du client et du distributeur\n2. **La date du recueil**\n3. **La synthèse des informations collectées** : situation personnelle, objectifs et profil de risque du client\n4. **L'analyse des besoins** réalisée\n5. **La ou les recommandations formulées**, accompagnées de leur justification\n6. **La mention explicite des produits étudiés mais non recommandés**, avec la raison de leur exclusion\n7. **La signature du client**, attestant de la réception et de la compréhension du document\n\nPar ailleurs, ce document doit être **remis au client avant la souscription**, sous format papier ou électronique avec accusé de réception.\n\n---\n\n**Source(s)**\n\n[Article 6 des CG Document visiteur — vupload]\n[Article 4.3 des CG Document visiteur — vupload]\n\n---\n\n**Point d'attention**\n\nL'assureur a une obligation de conservation stricte : le DRIB doit être archivé **pendant toute la durée du contrat et 5 ans après sa résiliation**, dans un système de gestion sécurisé et auditable. [Article 4.3 & Article 6 — Document visiteur — vupload]\n\nDe plus, les informations contenues dans ce document doivent être **mises à jour régulièrement** (au minimum tous les 2 ans, ou lors de tout événement contractuel significatif). [Article 2 — Document visiteur — vupload]",
+      "modification": {
+        "description": "Le contenu obligatoire du DRIB est attribué à l'article 6 (durées de conservation) au lieu de l'article 4.",
+        "remplacements": [
+          {
+            "avant": "[Article 4 des CG Document visiteur — vupload]",
+            "apres": "[Article 6 des CG Document visiteur — vupload]",
+            "occurrences": 1
+          }
+        ]
+      },
+      "preuve_contrat": {
+        "type": "texte",
+        "article": "4",
+        "extrait": "Le distributeur doit établir un Document de Recueil des Informations et des Besoins (DRIB) avant toute souscription. Ce document doit contenir :"
+      },
+      "verdict_attendu": {
+        "C1": "inchangé",
+        "C2": "non",
+        "C3": "sans objet"
+      }
+    },
+    {
+      "id": "P08",
+      "type": "citation_deplacee",
+      "critere_vise": "C2",
+      "moteur": "mistral",
+      "question_id": "Q07",
+      "question": "Quelle est la fiscalité d'un rachat partiel sur une assurance vie ouverte il y a 10 ans ?",
+      "doc": "CG-AV-MULTI-2024",
+      "difficulte": "facile",
+      "difficulte_justification": "L'article 24 traite de la fiscalité en cas de décès, sujet sans rapport avec les rachats cités.",
+      "reponse_origine": "**Réponse directe** :\nPour un rachat partiel sur un contrat d’assurance vie ouvert il y a **10 ans** (donc détenu depuis plus de 8 ans), la fiscalité applicable aux **plus-values** (intérêts et gains) dépend de la date de versement des primes :\n- **Primes versées avant septembre 2017** :\n  - **7,5 %** d’impôt sur le revenu (IR) **après abattement** (4 600 € pour une personne seule / 9 200 € pour un couple) + **17,2 %** de prélèvements sociaux (PS).\n  - Si le contrat dépasse **150 000 €** (tous contrats confondus), la part des plus-values au-delà de ce seuil est taxée à **12,8 %** (au lieu de 7,5 %) + PS.\n- **Primes versées après septembre 2017** :\n  - **7,5 %** d’IR après abattement (mêmes seuils) + **17,2 %** de PS, **uniquement si le contrat est < 150 000 €**.\n  - Au-delà de 150 000 €, **12,8 %** d’IR sur la fraction excédentaire + PS.\n\n**Source(s)** :\n- [Article 23 des CG ARESIA Patrimoine+ — v3.1] : *\"Durée contrat > 8 ans : 7,5% IR après abattement + 17,2% PS (contrat < 150 k€) / 7,5% IR sur 150 k€ + 12,8% au-delà + PS (contrat > 150 k€).\"*\n- [Article 23.1 des CG ARESIA Patrimoine+ — v3.1] : *\"Abattements après 8 ans : 4 600 € (personne seule) ou 9 200 € (couple), par an et tous contrats confondus.\"*\n- [Article 23 des CG ARESIA Patrimoine+ — v3.1] : *\"Primes versées avant 09/2017 : 35% IR ou barème progressif + PS si < 4 ans ; 15% IR ou barème + PS si 4-8 ans ; 7,5% IR après abattement + PS si > 8 ans.\"*\n\n**Point d'attention** :\n1. **Abattement annuel** : Les seuils de 4 600 €/9 200 € s’appliquent **par an et tous contrats confondus** (pas par contrat). Un rachat en décembre et un autre en janvier peuvent optimiser l’usage de l’abattement.\n2. **Seuil de 150 000 €** : Ce plafond concerne **l’ensemble des contrats d’assurance vie** du souscripteur (pas seulement ARESIA). Vérifiez le montant total de vos encours avant un rachat.\n3. **Complexité fiscale** : La fiscalité dépend de la date des versements, du montant du contrat, et de votre situation personnelle. [Article 23.3 des CG ARESIA Patrimoine+ — v3.1] recommande de **consulter un conseiller fiscal ou un notaire** pour une simulation précise.\n4. **Prélèvements sociaux** : Les 17,2 % de PS s’appliquent **même en cas d’abattement non utilisé** (ils ne sont pas réduits par l’abattement IR).",
+      "reponse_piegee": "**Réponse directe** :\nPour un rachat partiel sur un contrat d’assurance vie ouvert il y a **10 ans** (donc détenu depuis plus de 8 ans), la fiscalité applicable aux **plus-values** (intérêts et gains) dépend de la date de versement des primes :\n- **Primes versées avant septembre 2017** :\n  - **7,5 %** d’impôt sur le revenu (IR) **après abattement** (4 600 € pour une personne seule / 9 200 € pour un couple) + **17,2 %** de prélèvements sociaux (PS).\n  - Si le contrat dépasse **150 000 €** (tous contrats confondus), la part des plus-values au-delà de ce seuil est taxée à **12,8 %** (au lieu de 7,5 %) + PS.\n- **Primes versées après septembre 2017** :\n  - **7,5 %** d’IR après abattement (mêmes seuils) + **17,2 %** de PS, **uniquement si le contrat est < 150 000 €**.\n  - Au-delà de 150 000 €, **12,8 %** d’IR sur la fraction excédentaire + PS.\n\n**Source(s)** :\n- [Article 24 des CG ARESIA Patrimoine+ — v3.1] : *\"Durée contrat > 8 ans : 7,5% IR après abattement + 17,2% PS (contrat < 150 k€) / 7,5% IR sur 150 k€ + 12,8% au-delà + PS (contrat > 150 k€).\"*\n- [Article 23.1 des CG ARESIA Patrimoine+ — v3.1] : *\"Abattements après 8 ans : 4 600 € (personne seule) ou 9 200 € (couple), par an et tous contrats confondus.\"*\n- [Article 24 des CG ARESIA Patrimoine+ — v3.1] : *\"Primes versées avant 09/2017 : 35% IR ou barème progressif + PS si < 4 ans ; 15% IR ou barème + PS si 4-8 ans ; 7,5% IR après abattement + PS si > 8 ans.\"*\n\n**Point d'attention** :\n1. **Abattement annuel** : Les seuils de 4 600 €/9 200 € s’appliquent **par an et tous contrats confondus** (pas par contrat). Un rachat en décembre et un autre en janvier peuvent optimiser l’usage de l’abattement.\n2. **Seuil de 150 000 €** : Ce plafond concerne **l’ensemble des contrats d’assurance vie** du souscripteur (pas seulement ARESIA). Vérifiez le montant total de vos encours avant un rachat.\n3. **Complexité fiscale** : La fiscalité dépend de la date des versements, du montant du contrat, et de votre situation personnelle. [Article 23.3 des CG ARESIA Patrimoine+ — v3.1] recommande de **consulter un conseiller fiscal ou un notaire** pour une simulation précise.\n4. **Prélèvements sociaux** : Les 17,2 % de PS s’appliquent **même en cas d’abattement non utilisé** (ils ne sont pas réduits par l’abattement IR).",
+      "modification": {
+        "description": "Les deux sources des règles fiscales du rachat passent de l'article 23 à l'article 24 (fiscalité en cas de décès).",
+        "remplacements": [
+          {
+            "avant": "[Article 23 des CG",
+            "apres": "[Article 24 des CG",
+            "occurrences": 2
+          }
+        ]
+      },
+      "preuve_contrat": {
+        "type": "texte",
+        "article": "23",
+        "extrait": "Article 23 — Fiscalité des rachats"
+      },
+      "verdict_attendu": {
+        "C1": "inchangé",
+        "C2": "non",
+        "C3": "sans objet"
+      }
+    },
+    {
+      "id": "P09",
+      "type": "refus_casse",
+      "critere_vise": "C3",
+      "moteur": "anthropic",
+      "question_id": "Q20",
+      "question": "Quelle est la garantie obsèques incluse dans le contrat prévoyance ?",
+      "doc": "CG-PREV-INV-2024",
+      "difficulte": "subtil",
+      "difficulte_justification": "Réponse cohérente, appuyée sur des articles qui parlent vraiment du décès ; seule l'absence de toute garantie obsèques la réfute.",
+      "reponse_origine": "**Réponse directe**\n\nJe ne trouve pas cette information dans les documents disponibles. Les chunks fournis portent exclusivement sur les garanties ITT (Incapacité Temporaire de Travail), IPT/IPP (Invalidité Permanente), les conditions d'adhésion, les exclusions générales et le champ d'application territorial. Aucune mention d'une garantie obsèques n'y figure.\n\nJe vous recommande de contacter votre référent produit ou le service technique de ARESIA Assurances.\n\n---\n\n**Source(s)**\n\nLes documents consultés couvrent les articles 1 à 21 des Conditions Générales — Prévoyance Invalidité (Réf. : CG-PREV-INV-2024, Version 4.2 — Janvier 2024). Aucun de ces articles ne traite d'une garantie obsèques.\n\n---\n\n**Point d'attention**\n\nIl est possible que la garantie obsèques :\n- **ne soit pas incluse** dans ce contrat prévoyance (elle fait souvent l'objet d'un contrat dédié séparé),\n- **figure dans un autre document contractuel** non disponible dans les chunks fournis (conditions particulières, tableau des garanties, avenant spécifique).\n\nAvant toute conclusion, vérifiez l'ensemble des documents remis lors de la souscription ou contactez directement **ARESIA Assurances** pour obtenir une réponse précise et opposable.",
+      "reponse_piegee": "**Réponse directe**\n\nOui, le contrat prévoyance invalidité ARESIA Assurances inclut une **garantie obsèques**. En cas de décès de l'assuré pendant la période de couverture, ARESIA Assurances verse un **capital forfaitaire de 5 000 €** destiné à couvrir les frais d'obsèques. Ce capital est versé au bénéficiaire désigné ou, à défaut de désignation expresse, à la succession de l'assuré.\n\n---\n\n**Source(s)**\n\n- [Article 1 des CG Prévoyance Invalidité — v4.2] : garantie décès et versement du capital obsèques au bénéficiaire désigné ou, à défaut, à la succession de l'assuré\n- [Article 15 des CG Prévoyance Invalidité — v4.2] : délai de déclaration du décès\n\n---\n\n**Point d'attention**\n\nLe décès doit être déclaré à ARESIA Assurances **dans les 30 jours** qui suivent. Un retard n'entraîne pas la perte du capital, mais il peut donner lieu à des **intérêts de retard** [Article 15 des CG Prévoyance Invalidité — v4.2]. Pensez à vérifier dans vos Conditions Particulières le nom du bénéficiaire désigné.",
+      "modification": {
+        "description": "Réponse entière réécrite (style Claude) : garantie obsèques avec capital forfaitaire de 5 000 €, rattachée aux articles 1 et 15, sans formule de refus.",
+        "remplacements": [
+          {
+            "avant": "**Réponse directe**\n\nJe ne trouve pas cette information dans les documents disponibles. Les chunks fournis portent exclusivement sur les garanties ITT (Incapacité Temporaire de Travail), IPT/IPP (Invalidité Permanente), les conditions d'adhésion, les exclusions générales et le champ d'application territorial. Aucune mention d'une garantie obsèques n'y figure.\n\nJe vous recommande de contacter votre référent produit ou le service technique de ARESIA Assurances.\n\n---\n\n**Source(s)**\n\nLes documents consultés couvrent les articles 1 à 21 des Conditions Générales — Prévoyance Invalidité (Réf. : CG-PREV-INV-2024, Version 4.2 — Janvier 2024). Aucun de ces articles ne traite d'une garantie obsèques.\n\n---\n\n**Point d'attention**\n\nIl est possible que la garantie obsèques :\n- **ne soit pas incluse** dans ce contrat prévoyance (elle fait souvent l'objet d'un contrat dédié séparé),\n- **figure dans un autre document contractuel** non disponible dans les chunks fournis (conditions particulières, tableau des garanties, avenant spécifique).\n\nAvant toute conclusion, vérifiez l'ensemble des documents remis lors de la souscription ou contactez directement **ARESIA Assurances** pour obtenir une réponse précise et opposable.",
+            "apres": "**Réponse directe**\n\nOui, le contrat prévoyance invalidité ARESIA Assurances inclut une **garantie obsèques**. En cas de décès de l'assuré pendant la période de couverture, ARESIA Assurances verse un **capital forfaitaire de 5 000 €** destiné à couvrir les frais d'obsèques. Ce capital est versé au bénéficiaire désigné ou, à défaut de désignation expresse, à la succession de l'assuré.\n\n---\n\n**Source(s)**\n\n- [Article 1 des CG Prévoyance Invalidité — v4.2] : garantie décès et versement du capital obsèques au bénéficiaire désigné ou, à défaut, à la succession de l'assuré\n- [Article 15 des CG Prévoyance Invalidité — v4.2] : délai de déclaration du décès\n\n---\n\n**Point d'attention**\n\nLe décès doit être déclaré à ARESIA Assurances **dans les 30 jours** qui suivent. Un retard n'entraîne pas la perte du capital, mais il peut donner lieu à des **intérêts de retard** [Article 15 des CG Prévoyance Invalidité — v4.2]. Pensez à vérifier dans vos Conditions Particulières le nom du bénéficiaire désigné.",
+            "occurrences": 1
+          }
+        ]
+      },
+      "preuve_contrat": {
+        "type": "absence",
+        "article": "1",
+        "extrait": "il s'agit de l'assuré lui-même pour les garanties de son vivant, et de sa succession pour la garantie décès.",
+        "termes_absents": [
+          "obsèques",
+          "funéraire",
+          "capital"
+        ]
+      },
+      "verdict_attendu": {
+        "C1": "non",
+        "C2": "non",
+        "C3": "non"
+      }
+    },
+    {
+      "id": "P10",
+      "type": "refus_casse",
+      "critere_vise": "C3",
+      "moteur": "mistral",
+      "question_id": "Q20",
+      "question": "Quelle est la garantie obsèques incluse dans le contrat prévoyance ?",
+      "doc": "CG-PREV-INV-2024",
+      "difficulte": "subtil",
+      "difficulte_justification": "Les citations des articles 1 et 15 sont exactes mot pour mot ; seule l'interprétation « couvre les frais d'obsèques » est inventée.",
+      "reponse_origine": "**Réponse directe** :\nLes documents disponibles ne mentionnent pas explicitement une \"garantie obsèques\" incluse dans le contrat prévoyance ARESIA Assurances. Aucune référence à cette garantie, à son montant ou à ses conditions n'est présente dans les chunks fournis.\n\n**Source(s)** :\nAucune source pertinente identifiée dans les chunks fournis (Articles 1 à 21, CG Prévoyance v4.2).\n\n**Point d'attention** :\nJe ne trouve pas cette information dans les documents disponibles. Je vous recommande de contacter votre référent produit ou le service technique de ARESIA Assurances pour obtenir des précisions sur l'existence et les modalités d'une garantie obsèques éventuelle. Les garanties évoquées dans les chunks se limitent à l'**ITT** (Incapacité Temporaire de Travail), l'**IPT/IPP** (Invalidité Permanente) et des exclusions générales, sans mention des frais d'obsèques.",
+      "reponse_piegee": "**Réponse directe** :\nOui, le contrat prévoyance ARESIA Assurances inclut une **garantie obsèques** : en cas de décès de l'assuré, les frais d'obsèques sont remboursés sur justificatifs **jusqu'à 3 500 €**.\n\n**Source(s)** :\n- [Article 1 des CG Prévoyance v4.2] : la garantie décès couvre les frais d'obsèques, versés au bénéficiaire : *\"Bénéficiaire : La personne désignée pour recevoir les prestations en cas de sinistre. À défaut de désignation expresse, il s'agit de l'assuré lui-même pour les garanties de son vivant, et de sa succession pour la garantie décès.\"*\n- [Article 15 des CG Prévoyance v4.2] : *\"Décès : 30 jours après le décès — Pas de déchéance mais intérêts de retard\"*.\n\n**Point d'attention** :\n- Le remboursement est versé au bénéficiaire désigné ou, à défaut, à la succession de l'assuré.\n- Le décès doit être déclaré **dans les 30 jours** ; passé ce délai, la garantie reste due mais des intérêts de retard peuvent s'appliquer.\n- Conservez les factures des frais d'obsèques : elles servent de justificatifs pour le remboursement.",
+      "modification": {
+        "description": "Réponse entière réécrite (style Mistral) : frais d'obsèques remboursés jusqu'à 3 500 €, rattachés aux articles 1 et 15 avec citations exactes, sans formule de refus.",
+        "remplacements": [
+          {
+            "avant": "**Réponse directe** :\nLes documents disponibles ne mentionnent pas explicitement une \"garantie obsèques\" incluse dans le contrat prévoyance ARESIA Assurances. Aucune référence à cette garantie, à son montant ou à ses conditions n'est présente dans les chunks fournis.\n\n**Source(s)** :\nAucune source pertinente identifiée dans les chunks fournis (Articles 1 à 21, CG Prévoyance v4.2).\n\n**Point d'attention** :\nJe ne trouve pas cette information dans les documents disponibles. Je vous recommande de contacter votre référent produit ou le service technique de ARESIA Assurances pour obtenir des précisions sur l'existence et les modalités d'une garantie obsèques éventuelle. Les garanties évoquées dans les chunks se limitent à l'**ITT** (Incapacité Temporaire de Travail), l'**IPT/IPP** (Invalidité Permanente) et des exclusions générales, sans mention des frais d'obsèques.",
+            "apres": "**Réponse directe** :\nOui, le contrat prévoyance ARESIA Assurances inclut une **garantie obsèques** : en cas de décès de l'assuré, les frais d'obsèques sont remboursés sur justificatifs **jusqu'à 3 500 €**.\n\n**Source(s)** :\n- [Article 1 des CG Prévoyance v4.2] : la garantie décès couvre les frais d'obsèques, versés au bénéficiaire : *\"Bénéficiaire : La personne désignée pour recevoir les prestations en cas de sinistre. À défaut de désignation expresse, il s'agit de l'assuré lui-même pour les garanties de son vivant, et de sa succession pour la garantie décès.\"*\n- [Article 15 des CG Prévoyance v4.2] : *\"Décès : 30 jours après le décès — Pas de déchéance mais intérêts de retard\"*.\n\n**Point d'attention** :\n- Le remboursement est versé au bénéficiaire désigné ou, à défaut, à la succession de l'assuré.\n- Le décès doit être déclaré **dans les 30 jours** ; passé ce délai, la garantie reste due mais des intérêts de retard peuvent s'appliquer.\n- Conservez les factures des frais d'obsèques : elles servent de justificatifs pour le remboursement.",
+            "occurrences": 1
+          }
+        ]
+      },
+      "preuve_contrat": {
+        "type": "absence",
+        "article": "1",
+        "extrait": "il s'agit de l'assuré lui-même pour les garanties de son vivant, et de sa succession pour la garantie décès.",
+        "termes_absents": [
+          "obsèques",
+          "funéraire",
+          "capital"
+        ]
+      },
+      "verdict_attendu": {
+        "C1": "non",
+        "C2": "non",
+        "C3": "non"
+      }
+    }
+  ]
+}
