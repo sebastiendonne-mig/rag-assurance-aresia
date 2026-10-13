@@ -411,9 +411,11 @@ class ResultsWriter:
         self._secrets = secrets
 
     @classmethod
-    def reserve(cls, directory: Path, stamp: str, smoke: bool, secrets: list[str]) -> "ResultsWriter":
+    def reserve(
+        cls, directory: Path, stamp: str, smoke: bool, secrets: list[str], prefix: str = "upload_eval"
+    ) -> "ResultsWriter":
         directory.mkdir(parents=True, exist_ok=True)
-        base = f"upload_eval_{stamp}{'_smoke' if smoke else ''}"
+        base = f"{prefix}_{stamp}{'_smoke' if smoke else ''}"
         for suffixe in [""] + [f"_{i}" for i in range(2, 20)]:
             json_path = directory / f"{base}{suffixe}.json"
             md_path = directory / f"{base}{suffixe}.md"
