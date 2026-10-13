@@ -20,11 +20,13 @@ data/*.log
 
 # Résultats d'évaluation : tout tests/results/ est ignoré (golden set, caches,
 # runs de fumée…), sauf les résultats de référence du sous-lot 3.2 (run complet
-# du 25/09/2026, base du juge LLM) et les résultats du juge LLM.
+# du 25/09/2026, base du juge LLM) et les résultats du juge LLM (jugements,
+# comparaison juge / humain).
 tests/results/*
 !tests/results/upload_eval_20260925_104952.json
 !tests/results/upload_eval_20260925_104952.md
 !tests/results/judge_upload_*
+!tests/results/judge_compare_*
 
 # Artefacts macOS
 .DS_Store
