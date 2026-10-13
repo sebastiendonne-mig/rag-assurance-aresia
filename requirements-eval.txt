@@ -1,0 +1,18 @@
+# Dépendances d'ÉVALUATION — juge LLM hors ligne (tests/judge/judge_upload_answers.py).
+#
+# Jamais dans requirements.txt, pyproject.toml, uv.lock ni l'image Docker :
+# le Dockerfile n'installe que requirements.txt, et l'app n'importe pas ces paquets.
+#
+# Installation dans le .venv du projet (créé par uv, sans pip) :
+#     uv pip install --python .venv/bin/python -r requirements-eval.txt
+# Un `uv sync` aligne .venv sur uv.lock et retire ces paquets : relancer alors
+# la même commande.
+#
+# Versions figées. Simulation du 13/10/2026 (uv pip install --dry-run) : ajoute
+# ces 4 paquets et ne modifie aucun paquet déjà installé (httpx 0.28.1,
+# pydantic 2.13.4, tenacity 9.1.4 compatibles).
+
+google-genai==2.25.0
+google-auth==2.62.0
+pyasn1==0.6.4
+pyasn1-modules==0.4.2
