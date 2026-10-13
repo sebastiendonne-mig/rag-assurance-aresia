@@ -175,3 +175,10 @@ def test_fiche_a_l_aveugle():
 def citation(texte: str) -> str:
     """Même rendu que build_annotation.citation()."""
     return "> " + texte.replace("\n", "\n> ")
+
+
+def test_build_pieges_regenere_exactement_pieges_json():
+    """Le générateur versionné redonne pieges.json octet pour octet."""
+    import build_pieges
+
+    assert build_pieges.rendu(build_pieges.construire()) == (HERE / "pieges.json").read_text(encoding="utf-8")
