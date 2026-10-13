@@ -25,6 +25,18 @@ Juger chaque réponse contre le **contrat entier** du document interrogé.
   clairement sans rien inventer. « sans objet » si l'information est dans le
   contrat.
 
+## Comment cocher (lu automatiquement par `tests/judge/compare_juge_humain.py`)
+
+- Pour chaque critère, remplacer **☐ par ☒** devant l'option choisie, et
+  devant **une seule**. Exemple : `- **C1 Fidélité** : ☒ oui ☐ non`
+- Écrire la justification à la suite de `- **Commentaire** :` (une ou
+  plusieurs lignes, jusqu'au trait `---`), avant de cocher.
+- Ne rien modifier d'autre : titres, réponses, ordre des fiches, libellés des
+  options.
+- Une fiche sans case cochée pour un critère est signalée « incomplète » ; plus
+  d'une case cochée, ou une case autre que ☐ / ☒, est signalée « ambiguë ».
+  Rien n'est deviné : la comparaison s'arrête tant qu'il en reste.
+
 ## A01 — Claude · Q02
 
 - **Moteur** : Claude

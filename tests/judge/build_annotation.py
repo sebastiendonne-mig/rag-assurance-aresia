@@ -53,6 +53,18 @@ Juger chaque réponse contre le **contrat entier** du document interrogé.
 - **C3 Refus** : si l'information n'est pas dans le contrat, la réponse le dit
   clairement sans rien inventer. « sans objet » si l'information est dans le
   contrat.
+
+## Comment cocher (lu automatiquement par `tests/judge/compare_juge_humain.py`)
+
+- Pour chaque critère, remplacer **☐ par ☒** devant l'option choisie, et
+  devant **une seule**. Exemple : `- **C1 Fidélité** : ☒ oui ☐ non`
+- Écrire la justification à la suite de `- **Commentaire** :` (une ou
+  plusieurs lignes, jusqu'au trait `---`), avant de cocher.
+- Ne rien modifier d'autre : titres, réponses, ordre des fiches, libellés des
+  options.
+- Une fiche sans case cochée pour un critère est signalée « incomplète » ; plus
+  d'une case cochée, ou une case autre que ☐ / ☒, est signalée « ambiguë ».
+  Rien n'est deviné : la comparaison s'arrête tant qu'il en reste.
 """
 
 
@@ -115,7 +127,18 @@ def render(reponses: list[dict]) -> str:
     return "\n".join(morceaux)
 
 
+def deja_remplie(texte: str) -> bool:
+    """Une case cochée ou un commentaire écrit : la fiche a commencé à être remplie."""
+    fiches = texte.split("\n## A01 ", 1)[-1]  # l'en-tête cite ☒ et « Commentaire » dans la consigne
+    if "☒" in fiches:
+        return True
+    return any(l.startswith("- **Commentaire** :") and l.split(":", 1)[1].strip() for l in fiches.splitlines())
+
+
 def main() -> int:
+    if SORTIE.exists() and deja_remplie(SORTIE.read_text(encoding="utf-8")):
+        print(f"Refus : {SORTIE.name} est déjà en partie remplie ; elle n'est pas écrasée.")
+        return 1
     SORTIE.write_text(render(charger_reponses()), encoding="utf-8")
     print(f"Fiche écrite : {SORTIE}")
     return 0

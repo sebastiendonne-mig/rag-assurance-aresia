@@ -13,7 +13,12 @@ import pytest
 HERE = Path(__file__).resolve().parent
 RUN = json.loads((HERE.parent / "results" / "upload_eval_20260925_104952.json").read_text(encoding="utf-8"))
 PIEGES = json.loads((HERE / "pieges.json").read_text(encoding="utf-8"))["pieges"]
-FICHE = (HERE / "annotation_humaine.md").read_text(encoding="utf-8")
+# Fiche telle que GÉNÉRÉE (en mémoire) : la fiche sur disque sera remplie à la main,
+# seule sa structure est contrôlée (test_fiche_sur_disque_structure_intacte).
+import build_annotation  # noqa: E402
+
+FICHE = build_annotation.render(build_annotation.charger_reponses())
+FICHES_SEULES = FICHE.split("\n## A01 ", 1)[1]
 
 TYPES = {
     "chiffre_modifie": "C1",
@@ -162,7 +167,7 @@ def test_fiche_ordre_melange():
 
 def test_fiche_a_l_aveugle():
     """Aucun verdict pré-rempli, aucun résultat automatique, aucun piège."""
-    assert "☒" not in FICHE and "[x]" not in FICHE.lower()
+    assert "☒" not in FICHES_SEULES and "[x]" not in FICHE.lower()
     for marqueur in ("verdict_historique", "garde-fou", "confirmé automatiquement", "À RELIRE", "latence"):
         assert marqueur not in FICHE
     for p in PIEGES:
@@ -182,3 +187,26 @@ def test_build_pieges_regenere_exactement_pieges_json():
     import build_pieges
 
     assert build_pieges.rendu(build_pieges.construire()) == (HERE / "pieges.json").read_text(encoding="utf-8")
+
+
+def test_fiche_sur_disque_structure_intacte():
+    """Structure seulement (40 titres dans l'ordre généré, 3 critères + commentaire par fiche) :
+    le contenu rempli à la main n'est pas lu."""
+    sur_disque = (HERE / "annotation_humaine.md").read_text(encoding="utf-8")
+    assert _FICHE_RE.findall(sur_disque) == _FICHE_RE.findall(FICHE)
+    fiches = sur_disque.split("\n## A01 ", 1)[1]
+    for libelle in ("- **C1 Fidélité** :", "- **C2 Citations** :", "- **C3 Refus** :", "- **Commentaire** :"):
+        assert sum(1 for l in fiches.splitlines() if l.startswith(libelle)) == 40, libelle
+
+
+def test_fiche_generee_documente_le_format_de_coche():
+    entete = FICHE.split("\n## A01 ", 1)[0]
+    assert "remplacer **☐ par ☒**" in entete and "une seule" in entete
+
+
+def test_generateur_refuse_d_ecraser_une_fiche_remplie():
+    assert not build_annotation.deja_remplie(FICHE)
+    assert build_annotation.deja_remplie(FICHE.replace("- **C1 Fidélité** : ☐ oui", "- **C1 Fidélité** : ☒ oui", 1))
+    entete, fiches = FICHE.split("\n## A01 ", 1)
+    rempli = fiches.replace("- **Commentaire** :", "- **Commentaire** : chiffre faux", 1)
+    assert build_annotation.deja_remplie(entete + "\n## A01 " + rempli)
