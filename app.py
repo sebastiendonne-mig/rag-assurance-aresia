@@ -32,6 +32,7 @@ sys.path.insert(0, str(Path(__file__).parent / "src"))
 # eux, puis _warm_up() les importe tout en bas du script (voir « Chargement de
 # l'agent »). demarrage dit si c'est déjà fait dans ce processus.
 import demarrage  # noqa: E402
+import pause  # noqa: E402  (bibliothèque standard uniquement, sans coût)
 
 MAX_INPUT_CHARS = int(os.environ.get("MAX_INPUT_CHARS", "500"))
 
@@ -250,6 +251,7 @@ if _agent_pret:
         configure_stdout_logging,
         exceeds_max_length,
         format_user_error,
+        log_memory,
         mistral_disponible,
         run_agent,
     )
@@ -325,6 +327,10 @@ st.markdown("""
     transition: color 0.15s;
 }
 .tk-footer-nav a:hover { color: #38C4E0; }
+/* Pause d'inactivité : le bloc (div caché + script) ne doit occuper aucune place. Le script,
+   déjà exécuté, et sa relecture du DOM ne dépendent pas de l'affichage. */
+div[data-testid="stElementContainer"]:has(#tk-pause) { display: none; }
+
 .tk-footer-copy {
     font-family: 'Inter', system-ui, sans-serif;
     font-size: 0.75rem;
@@ -385,6 +391,22 @@ _inactif = _busy or not _agent_pret
 _MSG_QUESTION_INTERROMPUE = "Votre question n'a pas pu être traitée. Merci de la reposer."
 
 _upload_session_id = upload_session.get_or_create_session_id() if _agent_pret else None
+
+# Pause d'inactivité (voir src/pause.py) : seul bloc st.html de l'app. Rendu uniquement une fois
+# l'agent prêt (jamais pendant le préchauffage), et AVANT l'exécuteur en bas du script : le rerun
+# qui suit la pose de busy_task affiche data-busy="1" avant que le calcul ne commence. Aucune
+# donnée utilisateur dans le bloc : seulement les durées validées et l'état occupé.
+if _agent_pret and pause.pause_active():
+    _pause_config = pause.lire_config()
+    st.html(
+        pause.bloc_html(
+            _busy,
+            _pause_config["inactivite_min"],
+            _pause_config["masque_min"],
+            _pause_config["occupe_max_min"],
+        ),
+        unsafe_allow_javascript=True,
+    )
 
 with st.sidebar:
     st.header("Conversation")
@@ -888,6 +910,8 @@ with col_chat:
                                 st.session_state.upload_doc_name = uploaded.name
                                 st.session_state.upload_warnings = warnings
                                 _index_termine = True
+                                # Mémoire après indexation d'un upload (mesures de la P3).
+                                log_memory(f"upload - indexation terminée ({len(chunks)} passages)")
                             finally:
                                 tmp_path.unlink(missing_ok=True)
             else:

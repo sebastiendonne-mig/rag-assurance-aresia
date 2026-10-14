@@ -1689,3 +1689,150 @@ def test_app_n_importe_l_agent_qu_apres_la_coquille():
         if isinstance(n, ast.If) and isinstance(n.test, ast.Name) and n.test.id == "_agent_pret"
     ]
     assert len(bloc_pret) == 1
+
+
+# ─────────────────────────────────────────────
+# Pause d'inactivité (lot « pause d'inactivité », P1) : bloc st.html rendu par app.py
+# ─────────────────────────────────────────────
+
+@pytest.fixture
+def blocs_pause(monkeypatch):
+    """Enregistre chaque appel à st.html (corps + drapeau JavaScript), sur toute la durée du test."""
+    appels: list[dict] = []
+    html_original = st.html
+
+    def _html_espion(body, *args, **kwargs):
+        appels.append({"body": body, "js": kwargs.get("unsafe_allow_javascript", False)})
+        return html_original(body, *args, **kwargs)
+
+    monkeypatch.setattr(st, "html", _html_espion)
+    for nom in ("PAUSE_ACTIVE", "PAUSE_INACTIVITE_MIN", "PAUSE_ONGLET_MASQUE_MIN", "PAUSE_OCCUPE_MAX_MIN"):
+        monkeypatch.delenv(nom, raising=False)
+    return appels
+
+
+def _etat_occupe(appel: dict) -> str:
+    return re.search(r'<div id="tk-pause" data-busy="([01])" hidden>', appel["body"]).group(1)
+
+
+def test_un_seul_bloc_st_html_dans_app_py():
+    arbre = ast.parse(Path(APP_PATH).read_text(encoding="utf-8"))
+    appels = [
+        n for n in ast.walk(arbre)
+        if isinstance(n, ast.Call)
+        and isinstance(n.func, ast.Attribute)
+        and n.func.attr == "html"
+        and isinstance(n.func.value, ast.Name)
+        and n.func.value.id == "st"
+    ]
+    assert len(appels) == 1
+
+
+def test_bloc_pause_rendu_agent_pret_libre_avec_javascript(monkeypatch, blocs_pause):
+    at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    assert not at.exception
+
+    assert len(blocs_pause) == 1
+    assert blocs_pause[0]["js"] is True
+    assert _etat_occupe(blocs_pause[0]) == "0"
+    assert "var INACTIVITE_MS = 360000;" in blocs_pause[0]["body"]
+    assert "var OCCUPE_MAX_MS = 1200000;" in blocs_pause[0]["body"]
+
+
+def test_bloc_pause_durees_lues_dans_l_environnement(monkeypatch, blocs_pause):
+    monkeypatch.setenv("PAUSE_INACTIVITE_MIN", "1")
+    monkeypatch.setenv("PAUSE_ONGLET_MASQUE_MIN", "2")
+    monkeypatch.setenv("PAUSE_OCCUPE_MAX_MIN", "abc")
+    at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    assert not at.exception
+
+    corps = blocs_pause[-1]["body"]
+    assert "var INACTIVITE_MS = 60000;" in corps
+    assert "var MASQUE_MS = 120000;" in corps
+    assert "var OCCUPE_MAX_MS = 1200000;" in corps  # valeur invalide → défaut 20 min
+
+
+def test_pause_active_false_n_injecte_aucun_script(monkeypatch, blocs_pause):
+    monkeypatch.setenv("PAUSE_ACTIVE", "false")
+    monkeypatch.setattr(agent, "run_agent", lambda question: _make_success_state("Réponse.", _USAGE_Q1))
+
+    at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    at.chat_input[0].set_value("Ma question").run()
+    assert not at.exception
+
+    assert blocs_pause == []
+
+
+def test_bloc_pause_occupe_pendant_le_calcul_d_une_question(monkeypatch, blocs_pause):
+    vu: dict = {}
+
+    def _fake_run_agent(question, *args, **kwargs):
+        vu["bloc"] = blocs_pause[-1]
+        vu["nb_blocs"] = len(blocs_pause)
+        return _make_success_state("Réponse de test.", _USAGE_Q1)
+
+    monkeypatch.setattr(agent, "run_agent", _fake_run_agent)
+
+    at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    at.chat_input[0].set_value("Ma question").run()
+    assert not at.exception
+
+    # Le bloc du run de calcul est déjà rendu (data-busy="1") quand le calcul commence.
+    assert _etat_occupe(vu["bloc"]) == "1"
+    # Run initial, run d'envoi (libre), run de calcul (occupé), run final (libre).
+    assert [_etat_occupe(a) for a in blocs_pause] == ["0", "0", "1", "0"]
+    assert vu["nb_blocs"] == 3
+
+
+def test_bloc_pause_occupe_pendant_l_indexation(monkeypatch, blocs_pause):
+    vu: dict = {}
+
+    def _embed(collection, chunks):
+        vu["bloc"] = blocs_pause[-1]
+
+    at, _liberations, _ = _app_avec_depot(monkeypatch, embed=_embed)
+    assert not at.exception
+
+    assert _etat_occupe(vu["bloc"]) == "1"
+    assert _etat_occupe(blocs_pause[-1]) == "0"
+
+
+def test_bloc_pause_absent_pendant_le_prechauffage(monkeypatch, instance_froide, blocs_pause):
+    vu: dict = {}
+
+    def _get_graph():
+        vu["blocs_pendant_warm_up"] = len(blocs_pause)
+        vu["pret"] = demarrage.est_pret()
+
+    monkeypatch.setattr(agent, "get_graph", _get_graph)
+
+    at = AppTest.from_file(APP_PATH, default_timeout=15).run()
+    assert not at.exception
+
+    # Coquille + préchauffage : aucun bloc. Une fois prêt (rerun) : le bloc, libre.
+    assert vu == {"blocs_pendant_warm_up": 0, "pret": False}
+    assert len(blocs_pause) == 1
+    assert _etat_occupe(blocs_pause[0]) == "0"
+
+
+def test_log_memory_apres_indexation_reussie(monkeypatch):
+    appels: list[str] = []
+    monkeypatch.setattr(agent, "log_memory", lambda label: appels.append(label))
+
+    at, _liberations, _ = _app_avec_depot(monkeypatch)
+    assert not at.exception
+
+    assert appels == ["upload - indexation terminée (0 passages)"]
+
+
+def test_pas_de_log_memory_si_indexation_refusee(monkeypatch):
+    appels: list[str] = []
+    monkeypatch.setattr(agent, "log_memory", lambda label: appels.append(label))
+
+    def _refuse(collection, chunks):
+        raise upload_session.FileTooLargeError("Fichier trop volumineux pour cette démo.")
+
+    at, _liberations, _ = _app_avec_depot(monkeypatch, embed=_refuse)
+    assert not at.exception
+
+    assert appels == []
