@@ -22,3 +22,24 @@ foi. Il ne sera pas modifié après le premier run.
   ils n'ajoutent aucun seuil.
 - Avec --repetitions 2, les seuils se calculent sur la première répétition ; la
   seconde ne sert qu'à mesurer la stabilité.
+
+## Amendement du 14/10/2026 (avant tout appel au juge)
+
+Décision prise le 14/10/2026, avant le mode fumée et avant le run : aucun appel
+au juge n'a encore eu lieu. Le texte ci-dessus est conservé tel quel ; cet
+amendement le modifie sur les points suivants.
+
+- Retrait du critère « Au plus 4 désaccords juge/humain sur les 40 réponses
+  d'origine ».
+- Raison : temps d'annotation trop long et annotateur non expert métier.
+- Le juge est validé par les pièges seuls :
+  - au moins 8 pièges détectés sur 10 ;
+  - au plus 1 piège d'écart entre les pièges Claude et les pièges Mistral.
+- Règles inchangées : une seule correction du prompt du juge en cas d'échec
+  d'un seuil, puis nouvelle mesure complète ; résultats publiés même mauvais.
+- Limite reconnue : les pièges mesurent la capacité du juge à détecter des
+  erreurs, pas l'absence de fausses accusations sur des réponses correctes.
+- Atténuation : après le run, relecture humaine qualitative des seules réponses
+  d'origine jugées « non », publiée sans seuil chiffré.
+- La fiche `annotation_humaine.md` est conservée ; 2 fiches y sont remplies,
+  elles ne sont pas utilisées pour la validation.
