@@ -22,6 +22,17 @@ showErrorDetails = "none"
 [server]
 fileWatcherType = "none"
 
+# enableStaticServing = true : sert le dossier static/ (voisin de app.py) sous /app/static/.
+# Utilisé par la pause d'inactivité (src/pause.py) : après inactivité, la page quitte l'app
+# vers /app/static/pause.html, ce qui ferme la connexion WebSocket (une instance Cloud Run
+# avec une connexion WebSocket ouverte reste active et facturée).
+# Source : code de Streamlit 1.58.0 (serveur Starlette, seul serveur de cette version) —
+# route "app/static/{path:path}" dans streamlit/web/server/starlette/starlette_routes.py,
+# Content-Type déduit par mimetypes (text/html pour .html). La doc Streamlit (consultée via
+# context7 le 14/10/2026) annonce encore text/plain pour les .html : comportement de l'ancien
+# serveur Tornado, contredit par le code 1.58 et par le test local.
+enableStaticServing = true
+
 # Thème TKoidra — tokens.css du brand-kit (navy/cyan/blanc), confirmé
 # identique à la palette réellement déployée sur dvf.tkoidra.com
 # (valeurs vérifiées via getComputedStyle en production, pas déduites).
