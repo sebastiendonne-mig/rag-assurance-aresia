@@ -18,8 +18,17 @@ Calculs (seuils sur la répétition 1 ; la 2e ne sert qu'à mesurer la stabilit�
   pièges détectés / manqués par moteur ; erreurs du juge ; détail par critère ;
   les 4 conditions de seuils.md et le verdict final.
 
+Mode --pieges-seuls (amendement du 14/10/2026 de seuils.md) : la fiche humaine
+n'est JAMAIS lue. Seuils sur les pièges seuls (au moins 8 détectés sur 10, au
+plus 1 d'écart entre Claude et Mistral), détail piège par piège, puis liste des
+réponses d'origine jugées « non » pour la relecture humaine qualitative (sans
+seuil). Code de sortie : 0 si les deux seuils sont atteints, 1 sinon, 2 si les
+résultats sont illisibles ou la mesure incomplète (jugement manquant ou en
+ERREUR) : rien n'est deviné.
+
 Usage (depuis la racine du dépôt) :
     .venv/bin/python tests/judge/compare_juge_humain.py --juge tests/results/judge_upload_<horodatage>.json
+    .venv/bin/python tests/judge/compare_juge_humain.py --juge tests/results/judge_upload_<horodatage>.json --pieges-seuls
 """
 from __future__ import annotations
 
@@ -43,10 +52,11 @@ for chemin in (str(HERE), str(TESTS)):
 
 import build_annotation  # noqa: E402
 from eval_upload_engines import ResultsWriter  # noqa: E402
-from judge_upload_answers import VERDICTS, verdict_global  # noqa: E402
+from judge_upload_answers import PIEGES, REFERENCE_RUN, VERDICTS, charger_elements, verdict_global  # noqa: E402
 
 EXIT_OK = 0
 EXIT_FICHE_INCOMPLETE = 1
+EXIT_SEUILS_NON_ATTEINTS = 1
 EXIT_ENTREE_INVALIDE = 2
 
 SEUIL_PIEGES_DETECTES = 8
@@ -185,6 +195,39 @@ def _verdicts_humains(fiche: FicheHumaine) -> dict:
     return {c: {"verdict": v} for c, v in fiche.verdicts.items()}
 
 
+def erreurs_du_juge(rep1: list[dict]) -> list[dict]:
+    return [
+        {"id_interne": j["id_interne"], "source": j["piege_id"] or "origine", "question_id": j["question_id"],
+         "moteur": j["moteur"], "type": j["erreur"]["type"], "motif": j["erreur"].get("motif", "")}
+        for j in rep1 if j["erreur"]
+    ]
+
+
+def tableau_des_pieges(pieges: list[dict]) -> list[dict]:
+    """Piège détecté = « non » du juge sur le critère visé (seuils.md) ; None si le juge est en ERREUR."""
+    tableau = []
+    for j in pieges:
+        detecte = None if j["erreur"] else j["verdicts"][j["critere_vise"]]["verdict"] == "non"
+        tableau.append({
+            "piege_id": j["piege_id"], "moteur": j["moteur"], "question_id": j["question_id"],
+            "critere_vise": j["critere_vise"], "detecte": detecte,
+            "verdict_juge": None if j["erreur"] else j["verdicts"][j["critere_vise"]]["verdict"],
+        })
+    return tableau
+
+
+def conditions_pieges(detectes: dict[str, int]) -> list[dict]:
+    """Les deux seuils sur les pièges, communs au texte d'origine et à l'amendement du 14/10/2026."""
+    return [
+        {"condition": f"Au moins {SEUIL_PIEGES_DETECTES} pièges détectés sur 10",
+         "valeur": f"{sum(detectes.values())} / 10",
+         "atteint": sum(detectes.values()) >= SEUIL_PIEGES_DETECTES},
+        {"condition": f"Au plus {SEUIL_ECART_MOTEURS} piège d'écart entre Claude et Mistral",
+         "valeur": f"Claude {detectes['anthropic']} / Mistral {detectes['mistral']} (écart {abs(detectes['anthropic'] - detectes['mistral'])})",
+         "atteint": abs(detectes["anthropic"] - detectes["mistral"]) <= SEUIL_ECART_MOTEURS},
+    ]
+
+
 def comparer(rapport_juge: dict, fiches: list[FicheHumaine]) -> dict:
     jugements = rapport_juge["jugements"]
     rep1 = [j for j in jugements if j["repetition"] == 1]
@@ -196,11 +239,7 @@ def comparer(rapport_juge: dict, fiches: list[FicheHumaine]) -> dict:
     if len(pieges) != 10:
         manquants.append(f"pièges : {len(pieges)} jugés sur 10")
 
-    erreurs = [
-        {"id_interne": j["id_interne"], "source": j["piege_id"] or "origine", "question_id": j["question_id"],
-         "moteur": j["moteur"], "type": j["erreur"]["type"], "motif": j["erreur"].get("motif", "")}
-        for j in rep1 if j["erreur"]
-    ]
+    erreurs = erreurs_du_juge(rep1)
 
     indulgents, severes, motifs = [], [], []
     accord_criteres = {c: {"accord": 0, "total": 0} for c in VERDICTS}
@@ -227,25 +266,12 @@ def comparer(rapport_juge: dict, fiches: list[FicheHumaine]) -> dict:
         elif g_juge == g_humain == "rejetée" and non_juge != non_humain:
             motifs.append({**ligne, "criteres_juge": sorted(non_juge), "criteres_humain": sorted(non_humain)})
 
-    tableau_pieges = []
-    for j in pieges:
-        detecte = None if j["erreur"] else j["verdicts"][j["critere_vise"]]["verdict"] == "non"
-        tableau_pieges.append({
-            "piege_id": j["piege_id"], "moteur": j["moteur"], "question_id": j["question_id"],
-            "critere_vise": j["critere_vise"], "detecte": detecte,
-            "verdict_juge": None if j["erreur"] else j["verdicts"][j["critere_vise"]]["verdict"],
-        })
+    tableau_pieges = tableau_des_pieges(pieges)
     detectes = {m: sum(1 for p in tableau_pieges if p["moteur"] == m and p["detecte"]) for m in MOTEURS}
     manques = [p for p in tableau_pieges if p["detecte"] is False]
 
     n_desaccords = len(indulgents) + len(severes)
-    conditions = [
-        {"condition": f"Au moins {SEUIL_PIEGES_DETECTES} pièges détectés sur 10",
-         "valeur": f"{sum(detectes.values())} / 10",
-         "atteint": sum(detectes.values()) >= SEUIL_PIEGES_DETECTES},
-        {"condition": f"Au plus {SEUIL_ECART_MOTEURS} piège d'écart entre Claude et Mistral",
-         "valeur": f"Claude {detectes['anthropic']} / Mistral {detectes['mistral']} (écart {abs(detectes['anthropic'] - detectes['mistral'])})",
-         "atteint": abs(detectes["anthropic"] - detectes["mistral"]) <= SEUIL_ECART_MOTEURS},
+    conditions = conditions_pieges(detectes) + [
         {"condition": f"Au plus {SEUIL_DESACCORDS} désaccords juge/humain sur les 40 réponses, chacun expliqué",
          "valeur": f"{n_desaccords} désaccord(s) — explications à rédiger ci-dessous",
          "atteint": n_desaccords <= SEUIL_DESACCORDS},
@@ -299,6 +325,69 @@ def stabilite(jugements: list[dict]) -> dict | None:
 
 
 # ─────────────────────────────────────────────
+# Mode --pieges-seuls (amendement du 14/10/2026 de seuils.md)
+# ─────────────────────────────────────────────
+
+
+def elements_attendus() -> tuple[list[str], list[tuple[str, str]]]:
+    """(ids des 10 pièges, (question, moteur) des 40 réponses d'origine) d'un run complet."""
+    run = json.loads(REFERENCE_RUN.read_text(encoding="utf-8"))
+    pieges = json.loads(PIEGES.read_text(encoding="utf-8"))["pieges"]
+    elements = charger_elements(run, pieges)
+    return (
+        sorted(e.piege_id for e in elements if e.source == "piege"),
+        sorted((e.question_id, e.moteur) for e in elements if e.source == "origine"),
+    )
+
+
+def pieges_seuls(rapport_juge: dict) -> dict:
+    """Seuils sur les pièges seuls ; la fiche humaine n'intervient pas.
+
+    Les réponses d'origine n'entrent dans aucun seuil : celles que le juge juge
+    « non » sur au moins un critère forment la liste de relecture humaine
+    qualitative. Un jugement manquant ou en ERREUR (pièges comme réponses
+    d'origine) donne « mesure incomplète » : il n'est jamais compté comme
+    détecté ni comme manqué.
+    """
+    rep1 = [j for j in rapport_juge["jugements"] if j["repetition"] == 1]
+    ids_pieges, cles_origine = elements_attendus()
+    pieges = {j["piege_id"]: j for j in rep1 if j["source"] == "piege"}
+    origine = {(j["question_id"], j["moteur"]): j for j in rep1 if j["source"] == "origine"}
+
+    manquants = [f"piège {p}" for p in ids_pieges if p not in pieges]
+    manquants += [f"{q} · {MOTEURS[m]}" for q, m in cles_origine if (q, m) not in origine]
+    erreurs = erreurs_du_juge(rep1)
+
+    tableau_pieges = tableau_des_pieges([pieges[p] for p in ids_pieges if p in pieges])
+    detectes = {m: sum(1 for p in tableau_pieges if p["moteur"] == m and p["detecte"]) for m in MOTEURS}
+    conditions = conditions_pieges(detectes)
+    if erreurs or manquants:
+        verdict_final = "mesure incomplète"
+    elif all(c["atteint"] for c in conditions):
+        verdict_final = "seuils atteints"
+    else:
+        verdict_final = "seuils non atteints"
+
+    relecture = [
+        {"id_interne": j["id_interne"], "moteur": j["moteur"], "question_id": j["question_id"],
+         "critere": c, "justification": j["verdicts"][c]["justification"]}
+        for j in sorted(origine.values(), key=lambda j: j["id_interne"]) if not j["erreur"]
+        for c in VERDICTS if j["verdicts"][c]["verdict"] == "non"
+    ]
+    return {
+        "mode": "pièges seuls (amendement du 14/10/2026)",
+        "pieges": tableau_pieges,
+        "pieges_detectes": detectes,
+        "pieges_manques": [p["piege_id"] for p in tableau_pieges if p["detecte"] is False],
+        "erreurs_juge": erreurs,
+        "jugements_manquants": manquants,
+        "conditions": conditions,
+        "verdict_final": verdict_final,
+        "relecture_humaine": relecture,
+    }
+
+
+# ─────────────────────────────────────────────
 # Rendu
 # ─────────────────────────────────────────────
 
@@ -324,6 +413,81 @@ def _bloc_desaccord(d: dict, criteres: list[str]) -> list[str]:
         "",
     ]
     return lignes
+
+
+def _lignes_pieges(c: dict) -> list[str]:
+    lignes = [
+        "## Pièges",
+        "",
+        "| Piège | Moteur | Question | Critère visé | Verdict du juge | Résultat |",
+        "|---|---|---|---|---|---|",
+    ]
+    for p in c["pieges"]:
+        resultat = "ERREUR du juge" if p["detecte"] is None else ("détecté" if p["detecte"] else "**manqué**")
+        lignes.append(
+            f"| {p['piege_id']} | {MOTEURS[p['moteur']]} | {p['question_id']} | {p['critere_vise']} | "
+            f"{p['verdict_juge'] or '—'} | {resultat} |"
+        )
+    d = c["pieges_detectes"]
+    return lignes + [
+        "",
+        f"Détectés : Claude {d['anthropic']} / 5 · Mistral {d['mistral']} / 5 · "
+        f"écart {abs(d['anthropic'] - d['mistral'])}",
+        "",
+    ]
+
+
+def _lignes_erreurs(c: dict) -> list[str]:
+    lignes = []
+    if not c["erreurs_juge"] and not c["jugements_manquants"]:
+        lignes.append("- Aucune.")
+    for e in c["erreurs_juge"]:
+        lignes.append(f"- {e['id_interne']} ({e['source']}, {e['question_id']} · {MOTEURS[e['moteur']]}) : {e['type']} — {e['motif']}")
+    for m in c["jugements_manquants"]:
+        lignes.append(f"- jugement manquant : {m}")
+    return lignes
+
+
+def render_markdown_pieges(res: dict, rapport_juge: dict, chemin_juge: str, date_utc: str) -> str:
+    h = rapport_juge["en_tete"]
+    lignes = [
+        "# Validation du juge LLM par les pièges seuls",
+        "",
+        f"- Date (UTC) : {date_utc}",
+        f"- Résultats du juge : `{Path(chemin_juge).name}` — modèle `{h['modele']}`, {h['traitement']}",
+        f"- Prompt du juge : sha256 `{h['empreintes']['prompt_juge.md']}`",
+        "- Seuils : `tests/judge/seuils.md`, amendement du 14/10/2026 (pièges seuls) ; calculés sur la répétition 1.",
+        "- La fiche d'annotation humaine n'est pas lue.",
+        "",
+        f"## Verdict final : **{res['verdict_final'].upper()}**",
+        "",
+        "| Condition (seuils.md, amendement du 14/10/2026) | Valeur | Résultat |",
+        "|---|---|---|",
+    ]
+    for cond in res["conditions"]:
+        lignes.append(f"| {cond['condition']} | {cond['valeur']} | {'atteint' if cond['atteint'] else 'NON ATTEINT'} |")
+    lignes.append("")
+    lignes += _lignes_pieges(res)
+    lignes += ["## Erreurs du juge et jugements manquants", ""]
+    lignes += _lignes_erreurs(res)
+    lignes += [
+        "",
+        f"## Relecture humaine qualitative (sans seuil) : {len(res['relecture_humaine'])} critère(s) « non »",
+        "",
+        "Réponses d'origine (pas les pièges) jugées « non » sur au moins un critère.",
+        "",
+    ]
+    if not res["relecture_humaine"]:
+        lignes.append("- Aucune réponse d'origine jugée « non ».")
+    else:
+        lignes += ["| Id | Moteur | Question | Critère | Justification du juge |", "|---|---|---|---|---|"]
+        for r in res["relecture_humaine"]:
+            lignes.append(
+                f"| {r['id_interne']} | {MOTEURS[r['moteur']]} | {r['question_id']} | {r['critere']} | "
+                f"{_cellule(r['justification'])} |"
+            )
+    lignes.append("")
+    return "\n".join(lignes)
 
 
 def render_markdown(comparaison: dict, rapport_juge: dict, chemin_juge: str, date_utc: str) -> str:
@@ -370,33 +534,9 @@ def render_markdown(comparaison: dict, rapport_juge: dict, chemin_juge: str, dat
         )
     lignes.append("")
 
-    lignes += [
-        "## Pièges",
-        "",
-        "| Piège | Moteur | Question | Critère visé | Verdict du juge | Résultat |",
-        "|---|---|---|---|---|---|",
-    ]
-    for p in c["pieges"]:
-        resultat = "ERREUR du juge" if p["detecte"] is None else ("détecté" if p["detecte"] else "**manqué**")
-        lignes.append(
-            f"| {p['piege_id']} | {MOTEURS[p['moteur']]} | {p['question_id']} | {p['critere_vise']} | "
-            f"{p['verdict_juge'] or '—'} | {resultat} |"
-        )
-    d = c["pieges_detectes"]
-    lignes += [
-        "",
-        f"Détectés : Claude {d['anthropic']} / 5 · Mistral {d['mistral']} / 5 · "
-        f"écart {abs(d['anthropic'] - d['mistral'])}",
-        "",
-        "## Erreurs du juge (ni accord ni désaccord)",
-        "",
-    ]
-    if not c["erreurs_juge"] and not c["jugements_manquants"]:
-        lignes.append("- Aucune.")
-    for e in c["erreurs_juge"]:
-        lignes.append(f"- {e['id_interne']} ({e['source']}, {e['question_id']} · {MOTEURS[e['moteur']]}) : {e['type']} — {e['motif']}")
-    for m in c["jugements_manquants"]:
-        lignes.append(f"- jugement manquant : {m}")
+    lignes += _lignes_pieges(c)
+    lignes += ["## Erreurs du juge (ni accord ni désaccord)", ""]
+    lignes += _lignes_erreurs(c)
     lignes += [
         "",
         "## Détail par critère (information, sur les 40 réponses d'origine)",
@@ -429,9 +569,34 @@ def render_markdown(comparaison: dict, rapport_juge: dict, chemin_juge: str, dat
 def parse_args(argv: list[str] | None) -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Compare le juge LLM à l'annotation humaine (sans réseau).")
     p.add_argument("--juge", required=True, help="fichier tests/results/judge_upload_<horodatage>.json")
-    p.add_argument("--fiche", default=str(FICHE), help="fiche d'annotation remplie")
+    p.add_argument("--fiche", default=str(FICHE), help="fiche d'annotation remplie (ignorée avec --pieges-seuls)")
+    p.add_argument(
+        "--pieges-seuls", action="store_true",
+        help="amendement du 14/10/2026 de seuils.md : seuils sur les pièges seuls, la fiche n'est jamais lue",
+    )
     p.add_argument("--out-dir", default=str(RESULTS_DIR), help=argparse.SUPPRESS)
     return p.parse_args(argv)
+
+
+def main_pieges_seuls(args: argparse.Namespace, rapport_juge: dict, out: Callable[[str], None], horodatage: datetime) -> int:
+    try:
+        res = pieges_seuls(rapport_juge)
+        md = render_markdown_pieges(res, rapport_juge, args.juge, horodatage.isoformat(timespec="seconds"))
+    except (KeyError, TypeError, AttributeError) as exc:
+        out(f"Résultats du juge illisibles ({type(exc).__name__}) : {args.juge}. Rien n'est deviné.")
+        return EXIT_ENTREE_INVALIDE
+    writer = ResultsWriter.reserve(
+        Path(args.out_dir), horodatage.strftime("%Y%m%d_%H%M%S"), False, [], prefix="judge_compare_pieges",
+    )
+    writer.write_json({"juge": str(args.juge), **res})
+    writer.write_markdown(md)
+    out(md)
+    out(f"Validation par les pièges : {writer.md_path}")
+    if res["verdict_final"] == "mesure incomplète":
+        n = len(res["erreurs_juge"]) + len(res["jugements_manquants"])
+        out(f"Mesure incomplète : {n} jugement(s) manquant(s) ou en ERREUR. Rien n'est deviné ; aucun verdict sur les seuils.")
+        return EXIT_ENTREE_INVALIDE
+    return EXIT_OK if res["verdict_final"] == "seuils atteints" else EXIT_SEUILS_NON_ATTEINTS
 
 
 def main(
@@ -447,6 +612,9 @@ def main(
     except (OSError, json.JSONDecodeError, KeyError, TypeError) as exc:
         out(f"Résultats du juge illisibles ({type(exc).__name__}) : {args.juge}")
         return EXIT_ENTREE_INVALIDE
+
+    if args.pieges_seuls:
+        return main_pieges_seuls(args, rapport_juge, out, (now or (lambda: datetime.now(timezone.utc)))())
 
     analyse = analyser_fiche(Path(args.fiche).read_text(encoding="utf-8"))
     if not analyse.complete:

@@ -3,9 +3,13 @@ Tests de la comparaison juge / humain sur données FICTIVES : fiches synthétiqu
 construites depuis le générateur (jamais la vraie fiche remplie), résultats de
 juge fabriqués. Aucun réseau.
 """
+import builtins
+import io
 import json
+import os
 import re
 from datetime import datetime, timezone
+from pathlib import Path
 
 import pytest
 
@@ -325,3 +329,138 @@ def test_main_resultats_du_juge_illisibles(tmp_path):
     mauvais.write_text("{", encoding="utf-8")
     code = cmp.main(["--juge", str(mauvais), "--fiche", str(tmp_path / "absente.md")], out=lambda s: None)
     assert code == cmp.EXIT_ENTREE_INVALIDE
+
+
+# ─────────────────────────────────────────────
+# Mode --pieges-seuls (amendement du 14/10/2026 de seuils.md)
+# ─────────────────────────────────────────────
+
+
+def lancer_pieges_seuls(tmp_path, rapport_juge, fiche=None):
+    juge_json = tmp_path / "judge_upload_x.json"
+    juge_json.write_text(json.dumps(rapport_juge), encoding="utf-8")
+    argv = ["--juge", str(juge_json), "--pieges-seuls", "--out-dir", str(tmp_path / "out")]
+    if fiche:
+        argv += ["--fiche", str(fiche)]
+    sorties = []
+    code = cmp.main(argv, out=sorties.append, now=NOW)
+    return code, "\n".join(sorties)
+
+
+def test_pieges_seuls_huit_sur_dix_atteint(tmp_path):
+    code, sortie = lancer_pieges_seuls(tmp_path, rapport(pieges={"P01": DEFAUT, "P02": DEFAUT}))
+    assert code == cmp.EXIT_OK
+    assert "## Verdict final : **SEUILS ATTEINTS**" in sortie
+    assert "| Au moins 8 pièges détectés sur 10 | 8 / 10 | atteint |" in sortie
+    assert "Claude 4 / Mistral 4 (écart 0) | atteint |" in sortie
+    # Détail piège par piège.
+    lignes = [l for l in sortie.splitlines() if re.match(r"\| P\d{2} \|", l)]
+    assert [l.split(" | ")[0] for l in lignes] == [f"| P{i:02d}" for i in range(1, 11)]
+    assert lignes[0].startswith("| P01 | Claude |") and lignes[0].endswith("| C1 | oui | **manqué** |")
+    assert lignes[6].startswith("| P07 | Claude |") and lignes[6].endswith("| C2 | non | détecté |")
+    md = (tmp_path / "out" / "judge_compare_pieges_20261102_080000.md").read_text(encoding="utf-8")
+    assert md in sortie
+    res = json.loads((tmp_path / "out" / "judge_compare_pieges_20261102_080000.json").read_text(encoding="utf-8"))
+    assert res["pieges_manques"] == ["P01", "P02"] and res["verdict_final"] == "seuils atteints"
+
+
+def test_pieges_seuls_sept_sur_dix_non_atteint(tmp_path):
+    code, sortie = lancer_pieges_seuls(tmp_path, rapport(pieges={p: DEFAUT for p in ("P01", "P02", "P03")}))
+    assert code == cmp.EXIT_SEUILS_NON_ATTEINTS == 1
+    assert "## Verdict final : **SEUILS NON ATTEINTS**" in sortie
+    assert "| Au moins 8 pièges détectés sur 10 | 7 / 10 | NON ATTEINT |" in sortie
+    assert "Claude 3 / Mistral 4 (écart 1) | atteint |" in sortie
+
+
+def test_pieges_seuls_ecart_de_deux_non_atteint(tmp_path):
+    code, sortie = lancer_pieges_seuls(tmp_path, rapport(pieges={"P02": DEFAUT, "P04": DEFAUT}))
+    assert code == cmp.EXIT_SEUILS_NON_ATTEINTS
+    assert "| Au moins 8 pièges détectés sur 10 | 8 / 10 | atteint |" in sortie
+    assert "Claude 5 / Mistral 3 (écart 2) | NON ATTEINT |" in sortie
+
+
+def test_pieges_seuls_piege_manquant_erreur_explicite(tmp_path):
+    r = rapport()
+    r["jugements"] = [j for j in r["jugements"] if j["piege_id"] != "P04"]
+    code, sortie = lancer_pieges_seuls(tmp_path, r)
+    assert code == cmp.EXIT_ENTREE_INVALIDE
+    assert "## Verdict final : **MESURE INCOMPLÈTE**" in sortie
+    assert "- jugement manquant : piège P04" in sortie
+    assert "Rien n'est deviné ; aucun verdict sur les seuils." in sortie
+
+
+def test_pieges_seuls_resultats_de_fumee_mesure_incomplete(tmp_path):
+    r = rapport()
+    r["jugements"] = r["jugements"][:1]
+    code, sortie = lancer_pieges_seuls(tmp_path, r)
+    assert code == cmp.EXIT_ENTREE_INVALIDE
+    assert sortie.count("- jugement manquant :") == 49
+
+
+@pytest.mark.parametrize("cle", ["P07", ("Q05", "mistral")])
+def test_pieges_seuls_erreur_du_juge_mesure_incomplete(tmp_path, cle):
+    code, sortie = lancer_pieges_seuls(tmp_path, rapport(erreurs={cle}))
+    assert code == cmp.EXIT_ENTREE_INVALIDE
+    assert "MESURE INCOMPLÈTE" in sortie and "reponse_invalide" in sortie
+
+
+def test_pieges_seuls_fichier_absent(tmp_path):
+    sorties = []
+    code = cmp.main(["--juge", str(tmp_path / "absent.json"), "--pieges-seuls", "--out-dir", str(tmp_path / "out")],
+                    out=sorties.append, now=NOW)
+    assert code == cmp.EXIT_ENTREE_INVALIDE and "illisibles" in sorties[0]
+    assert not (tmp_path / "out").exists()
+
+
+def test_pieges_seuls_jugement_malforme(tmp_path):
+    r = rapport()
+    del next(j for j in r["jugements"] if j["piege_id"] == "P01")["verdicts"]["C1"]
+    code, sortie = lancer_pieges_seuls(tmp_path, r)
+    assert code == cmp.EXIT_ENTREE_INVALIDE and "illisibles (KeyError)" in sortie
+    assert not (tmp_path / "out").exists()
+
+
+def test_pieges_seuls_liste_de_relecture_sans_seuil(tmp_path):
+    r = rapport(origine={("Q07", "mistral"): ("oui", "non", "sans objet"),
+                         ("Q09", "anthropic"): ("non", "non", "sans objet")})
+    res = cmp.pieges_seuls(r)
+    # Réponses d'origine seulement (les pièges, tous « non », n'y figurent pas), une ligne par critère « non ».
+    assert sorted((x["question_id"], x["moteur"], x["critere"]) for x in res["relecture_humaine"]) == [
+        ("Q07", "mistral", "C2"), ("Q09", "anthropic", "C1"), ("Q09", "anthropic", "C2"),
+    ]
+    assert all(x["justification"] == f"justification du juge ({x['critere']})" for x in res["relecture_humaine"])
+    assert res["verdict_final"] == "seuils atteints"          # aucun seuil sur la relecture
+    code, sortie = lancer_pieges_seuls(tmp_path, r)
+    assert code == cmp.EXIT_OK
+    assert "## Relecture humaine qualitative (sans seuil) : 3 critère(s) « non »" in sortie
+    assert "| Mistral | Q07 | C2 | justification du juge (C2) |" in sortie
+
+
+def test_pieges_seuls_relecture_vide():
+    res = cmp.pieges_seuls(rapport())
+    assert res["relecture_humaine"] == []
+    md = cmp.render_markdown_pieges(res, rapport(), "x.json", "2026-11-02T08:00:00+00:00")
+    assert "- Aucune réponse d'origine jugée « non »." in md
+
+
+def test_pieges_seuls_ne_lit_jamais_la_fiche(tmp_path, monkeypatch):
+    fiche = tmp_path / "fiche.md"
+    fiche.write_text(remplir(), encoding="utf-8")
+    r = rapport()
+    ouverts = []
+    vrai_open = io.open
+
+    def espion(fichier, *args, **kwargs):
+        if isinstance(fichier, (str, os.PathLike)):
+            ouverts.append(Path(fichier).resolve())
+        return vrai_open(fichier, *args, **kwargs)
+
+    monkeypatch.setattr(io, "open", espion)
+    monkeypatch.setattr(builtins, "open", espion)
+    monkeypatch.setattr(cmp, "analyser_fiche", lambda *a, **k: pytest.fail("la fiche ne doit pas être analysée"))
+    code, _ = lancer_pieges_seuls(tmp_path, r, fiche=fiche)
+    assert code == cmp.EXIT_OK
+    # Témoin : l'espion voit bien les lectures réelles (résultats du juge, run de référence).
+    assert (tmp_path / "judge_upload_x.json").resolve() in ouverts
+    assert juge.REFERENCE_RUN.resolve() in ouverts
+    assert fiche.resolve() not in ouverts and cmp.FICHE.resolve() not in ouverts
