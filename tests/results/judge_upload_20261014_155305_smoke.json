@@ -1,0 +1,125 @@
+{
+  "fichier_json": "/Users/migranche/Documents/dev/tkoidra/assur2/tests/results/judge_upload_20261014_155305_smoke.json",
+  "en_tete": {
+    "date_utc": "2026-10-14T15:53:05+00:00",
+    "mode": "fumée",
+    "modele": "gemini-3.8-flash",
+    "location": "eu",
+    "traitement": "traité dans l'UE (multi-région eu, pays non précisé)",
+    "endpoint": "https://aiplatform.eu.rep.googleapis.com/",
+    "projet": "défini (valeur non enregistrée)",
+    "authentification": "Application Default Credentials",
+    "tarif": {
+      "entree": 0.825,
+      "sortie": 4.125,
+      "note": "tarif promotionnel jusqu'au 31/12/2026 (1,65 $ / 8,25 $ à partir du 01/01/2027) ; aucune date de retrait publiée pour ce modèle (page modèle consultée le 13/10/2026)",
+      "source": "https://cloud.google.com/gemini-enterprise-agent-platform/generative-ai/pricing",
+      "consulte_le": "13/10/2026"
+    },
+    "temperature": 0.0,
+    "temperature_note": "demandée à 0, probablement sans effet : la documentation Gemini 3 indique que temperature n'est plus recommandé et qu'il est ignoré par le modèle",
+    "thinking_level": "MEDIUM",
+    "max_output_tokens": 8192,
+    "graine": 20261013,
+    "repetitions": 1,
+    "plafond_appels": 2,
+    "cout_estime_borne_haute_usd": {
+      "jugements": 0.0373,
+      "plafond": 0.0746
+    },
+    "empreintes": {
+      "prompt_juge.md": "ca37389fe9f00e5970c98ad1e153056b013f58b464bc1964d215cd858630b96e",
+      "prompt_systeme_envoye": "ce124e3a62284eaf47b871dd6a27bad5b1a6b46329cd370eb872b7feb07e26b3",
+      "grille.md": "ec58fb0846d14f3b4d14f375d40c24533a32fa213074253734e029c6236658c5",
+      "pieges.json": "9da1c77594fb10959821a1c6e1f825eaedfc522ba32de1395af1f9c1af3724a3",
+      "upload_eval_20260925_104952.json": "01b78e86025e1ab62debfc25ed889e14037a73c9f02bdec1bdafde2403f990fe",
+      "contrats/ACPR-REC-2024-12.json": "5e0b1525e7fcff137a096b7c4dafd4d013977edb8ac48ca5eb0e3ded04a38624",
+      "contrats/BAR-IARD-2024-V2.json": "f84b6ba89cca4bb526d46d59fea3d4bb429c93de11e91074eb101f1f31b9e7da",
+      "contrats/CG-AV-MULTI-2024.json": "c1e8ed1ba2c41f0ca8f098ef45326362c5a21d1a1f1d7fe7abbb2d26d75c136f",
+      "contrats/CG-PREV-INV-2024.json": "d3bff568c01137a20d737cbd88e1b5402b525a7737f72345ce3a0abc91ebbf7d"
+    },
+    "git": {
+      "commit": "a1deda7951f0dac5229e42e29de19e3eb4e6dbe9",
+      "arbre_modifie": true
+    },
+    "versions": {
+      "python": "3.13.5",
+      "google-genai": "2.25.0"
+    }
+  },
+  "correspondance": [
+    {
+      "id_interne": "J33",
+      "source": "piege",
+      "question_id": "Q16",
+      "moteur": "anthropic",
+      "doc": "BAR-IARD-2024-V2",
+      "piege_id": "P03",
+      "critere_vise": "C1",
+      "verdict_attendu": {
+        "C1": "non",
+        "C2": "inchangé",
+        "C3": "sans objet"
+      }
+    }
+  ],
+  "jugements": [
+    {
+      "id_interne": "J33",
+      "source": "piege",
+      "question_id": "Q16",
+      "moteur": "anthropic",
+      "doc": "BAR-IARD-2024-V2",
+      "piege_id": "P03",
+      "critere_vise": "C1",
+      "verdict_attendu": {
+        "C1": "non",
+        "C2": "inchangé",
+        "C3": "sans objet"
+      },
+      "repetition": 1,
+      "verdicts": {
+        "C1": {
+          "justification": "La réponse affirme que « Les moyens de paiement dérobés lors du cambriolage sont également couverts : les retraits frauduleux effectués avec une carte bancaire volée sont remboursés dans la même limite de 5 000 € ». Or, le contrat (Article 1.1) mentionne uniquement « 5 000 € (espèces) » pour la garantie Vol et actes de vandalisme, sans jamais mentionner les moyens de paiement ni la couverture des retraits frauduleux par carte bancaire.",
+          "verdict": "non"
+        },
+        "C2": {
+          "justification": "Les articles cités (Article 1.1 et Article 4.1) existent tous deux dans le document et traitent bien des sujets auxquels ils sont rattachés (plafond/franchise pour le vol et modalités/délais de déclaration de sinistre).",
+          "verdict": "oui"
+        },
+        "C3": {
+          "justification": "L'information demandée figure dans le contrat à l'article 1.1.",
+          "verdict": "sans objet"
+        }
+      },
+      "verdict_global": "rejetée",
+      "erreur": null,
+      "tentatives": [
+        {
+          "finish_reason": "STOP",
+          "latence_s": 67.387
+        }
+      ],
+      "tokens_in": 4206,
+      "tokens_out": 265,
+      "tokens_raisonnement": 1098,
+      "finish_reason": "STOP",
+      "model_version": "gemini-3.8-flash",
+      "response_id": "laXPatrVO9qC6doP-8O3sQo",
+      "latence_s": 67.387,
+      "cout_usd": 0.009092325
+    }
+  ],
+  "appels_effectues": 1,
+  "interrompu": false,
+  "resume": {
+    "jugements": 1,
+    "valides": 1,
+    "erreurs": 0,
+    "appels_effectues": 1,
+    "tokens_in": 4206,
+    "tokens_out": 265,
+    "tokens_raisonnement": 1098,
+    "cout_usd": 0.0091
+  }
+}
