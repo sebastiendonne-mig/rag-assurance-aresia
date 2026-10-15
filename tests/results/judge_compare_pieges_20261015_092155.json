@@ -1,0 +1,173 @@
+{
+  "juge": "tests/results/judge_upload_20261014_155950.json",
+  "mode": "pièges seuls (amendement du 14/10/2026)",
+  "pieges": [
+    {
+      "piege_id": "P01",
+      "moteur": "anthropic",
+      "question_id": "Q09",
+      "critere_vise": "C1",
+      "detecte": true,
+      "verdict_juge": "non"
+    },
+    {
+      "piege_id": "P02",
+      "moteur": "mistral",
+      "question_id": "Q18",
+      "critere_vise": "C1",
+      "detecte": true,
+      "verdict_juge": "non"
+    },
+    {
+      "piege_id": "P03",
+      "moteur": "anthropic",
+      "question_id": "Q16",
+      "critere_vise": "C1",
+      "detecte": true,
+      "verdict_juge": "non"
+    },
+    {
+      "piege_id": "P04",
+      "moteur": "mistral",
+      "question_id": "Q10",
+      "critere_vise": "C1",
+      "detecte": true,
+      "verdict_juge": "non"
+    },
+    {
+      "piege_id": "P05",
+      "moteur": "anthropic",
+      "question_id": "Q01",
+      "critere_vise": "C1",
+      "detecte": true,
+      "verdict_juge": "non"
+    },
+    {
+      "piege_id": "P06",
+      "moteur": "mistral",
+      "question_id": "Q15",
+      "critere_vise": "C1",
+      "detecte": false,
+      "verdict_juge": "oui"
+    },
+    {
+      "piege_id": "P07",
+      "moteur": "anthropic",
+      "question_id": "Q17",
+      "critere_vise": "C2",
+      "detecte": true,
+      "verdict_juge": "non"
+    },
+    {
+      "piege_id": "P08",
+      "moteur": "mistral",
+      "question_id": "Q07",
+      "critere_vise": "C2",
+      "detecte": true,
+      "verdict_juge": "non"
+    },
+    {
+      "piege_id": "P09",
+      "moteur": "anthropic",
+      "question_id": "Q20",
+      "critere_vise": "C3",
+      "detecte": true,
+      "verdict_juge": "non"
+    },
+    {
+      "piege_id": "P10",
+      "moteur": "mistral",
+      "question_id": "Q20",
+      "critere_vise": "C3",
+      "detecte": true,
+      "verdict_juge": "non"
+    }
+  ],
+  "pieges_detectes": {
+    "anthropic": 5,
+    "mistral": 4
+  },
+  "pieges_manques": [
+    "P06"
+  ],
+  "erreurs_juge": [],
+  "jugements_manquants": [],
+  "conditions": [
+    {
+      "condition": "Au moins 8 pièges détectés sur 10",
+      "valeur": "9 / 10",
+      "atteint": true
+    },
+    {
+      "condition": "Au plus 1 piège d'écart entre Claude et Mistral",
+      "valeur": "Claude 5 / Mistral 4 (écart 1)",
+      "atteint": true
+    }
+  ],
+  "verdict_final": "seuils atteints",
+  "relecture_humaine": [
+    {
+      "id_interne": "J02",
+      "moteur": "mistral",
+      "question_id": "Q12",
+      "critere": "C1",
+      "justification": "La réponse affirme qu'« En gestion libre, 4 arbitrages par an sont gratuits », omettant la condition essentielle du tableau de l'Article 9 qui réserve cette gratuité au « Taux partenaire conseiller » par opposition au « Taux standard » (0,50 % avec min. 15 €). Cette omission élargit indûment la gratuité à tous les souscripteurs en gestion libre."
+    },
+    {
+      "id_interne": "J02",
+      "moteur": "mistral",
+      "question_id": "Q12",
+      "critere": "C2",
+      "justification": "La réponse cite l'« Article 9.4 » pour les frais d'arbitrage, or le paragraphe 9.4 traite exclusivement des modalités de prélèvement des frais de gestion annuels sur le fonds euros et les UC. Les frais d'arbitrage figurent dans le tableau général de l'Article 9."
+    },
+    {
+      "id_interne": "J10",
+      "moteur": "mistral",
+      "question_id": "Q05",
+      "critere": "C1",
+      "justification": "La réponse affirme que pour l'IPT, le burn-out est couvert « uniquement si l’assuré a souscrit l’option Premium » et indique « Option Premium requise pour l’IPT : Sans cette option, le burn-out peut être soumis à une surprime ou une exclusion spécifique ». Or, l'Article 5.1 (« Les affections psychiatriques (dépression, burn-out, troubles anxieux) sont couvertes sans limitation de durée spécifique pour les assurés ayant souscrit l'option Premium, sous réserve d'un suivi psychiatrique régulier attesté ») ne restreint pas son champ à l'IPT et ne subordonne pas l'accès à la garantie IPT à la souscription de l'option Premium (qui n'est par ailleurs qu'un niveau de barème de rente à l'Article 7). De plus, la surprime ou exclusion prévue à l'Article 5 repose sur le questionnaire médical de santé et non sur l'absence d'option Premium."
+    },
+    {
+      "id_interne": "J14",
+      "moteur": "mistral",
+      "question_id": "Q08",
+      "critere": "C1",
+      "justification": "La réponse affirme qu'« Aucun frais n'est appliqué sur les versements complémentaires libres », or l'Article 9 indique des « Frais sur versements » de « 0% à 4,5% selon le réseau » (taux standard) et réserve le taux de 0% aux seuls « versements programmés » pour le taux partenaire conseiller. Le contrat n'indique pas que les versements complémentaires libres sont exonérés de frais."
+    },
+    {
+      "id_interne": "J18",
+      "moteur": "anthropic",
+      "question_id": "Q06",
+      "critere": "C1",
+      "justification": "La réponse affirme en ouverture : « Dans le cas décrit — reprise du travail pendant 3 semaines (21 jours) puis nouvel arrêt — **une nouvelle franchise s'applique** », ce qui contredit directement l'Article 4.1 du contrat (« En cas de rechute survenant dans les 30 jours suivant la reprise d'activité, l'arrêt est considéré comme la continuité du sinistre initial et aucune nouvelle franchise ne s'applique »). Même si la suite du texte se contredit et affirme l'inverse, cette affirmation initiale erronée constitue un manquement."
+    },
+    {
+      "id_interne": "J21",
+      "moteur": "mistral",
+      "question_id": "Q04",
+      "critere": "C1",
+      "justification": "La réponse affirme que « La reconnaissance de l’IPT est définitive après consolidation, sauf amélioration significative justifiant une réévaluation ([Article 6]) », or cette règle et cette modalité de réévaluation ne figurent nulle part dans l'Article 6 ni dans le contrat. De plus, la mention « Aucune prestation n’est versée pour un taux inférieur à 66% » contredit l'Article 6.2 qui prévoit le versement d'une rente pour l'IPP entre 33% et 65%."
+    },
+    {
+      "id_interne": "J34",
+      "moteur": "anthropic",
+      "question_id": "Q07",
+      "critere": "C1",
+      "justification": "Dans son tableau pour les contrats de plus de 8 ans dépassant 150 000 €, la réponse inverse les colonnes du tableau de l'article 23. Elle attribue aux « Primes versées avant septembre 2017 » la formule « Au-delà de 150 000 € : 7,5% jusqu'au seuil + 12,8% au-delà + PS » et aux « Primes versées après septembre 2017 » la mention « Même règle — seuil de 150 000 € tous contrats confondus ». Or, dans le tableau de l'article 23, la colonne « Primes versées avant 09/2017 » indique « Même règle — seuil 150 k€ tous contrats » tandis que la colonne « Primes versées après 09/2017 (PFU) » porte la mention « 7,5% IR sur 150 k€ + 12,8% au-delà + PS »."
+    },
+    {
+      "id_interne": "J47",
+      "moteur": "anthropic",
+      "question_id": "Q18",
+      "critere": "C1",
+      "justification": "La réponse indique pour le Journal des interactions de conseil : « base de données horodatée et immuable (archivage électronique NF Z42-013 recommandé) ». Or, dans le tableau de l'Article 6, la recommandation « Archivage électronique NF Z42-013 recommandé » est spécifiquement rattachée aux « Correspondances contractuelles », tandis que le support recommandé pour le « Journal des interactions de conseil » est uniquement « Base de données horodatée et immuable »."
+    },
+    {
+      "id_interne": "J50",
+      "moteur": "mistral",
+      "question_id": "Q19",
+      "critere": "C1",
+      "justification": "La réponse indique que les 15 heures « sont réparties par domaines obligatoires » et évoque des « thèmes imposés », alors que le tableau de l'Article 7 mentionne explicitement une « Durée minimale recommandée » pour chaque domaine et non une répartition obligatoire."
+    }
+  ]
+}
