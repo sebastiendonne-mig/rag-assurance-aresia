@@ -39,3 +39,6 @@ build/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+
+# Captures de page du MCP Playwright (tests navigateur locaux)
+.playwright-mcp/

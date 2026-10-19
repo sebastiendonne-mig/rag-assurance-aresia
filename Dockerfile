@@ -13,6 +13,8 @@ COPY src/ ./src/
 COPY data/ ./data/
 COPY assets/ ./assets/
 COPY .streamlit/ ./.streamlit/
+# Page de pause d'inactivité, servie sous /app/static/ (server.enableStaticServing).
+COPY static/ ./static/
 COPY *.pdf ./
 
 # Construit l'index Chroma au build, à partir des embeddings PRÉ-CALCULÉS
